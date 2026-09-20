@@ -1,0 +1,142 @@
+{
+  "COMP1007": {
+    "name": "程序设计基础",
+    "credit": 4.0,
+    "description": "大一编程入门核心课（基础I/O、分支结构、循环迭代、数组字符串与函数）",
+    "recommended_categories": [
+      "01-basic-io",
+      "02-branching",
+      "03-loops",
+      "04-nested-loops",
+      "05-array-1d",
+      "06-array-2d",
+      "07-strings",
+      "08-functions",
+      "09-recursion-divide",
+      "10-struct-pointer",
+      "24-number-theory"
+    ]
+  },
+  "COMP1011": {
+    "name": "程序设计思维与实践",
+    "credit": 4.0,
+    "description": "计科核心编程思维（C语言深度应用、嵌套循环、递归分治、链表与经典排序）",
+    "recommended_categories": [
+      "01-basic-io",
+      "02-branching",
+      "03-loops",
+      "04-nested-loops",
+      "05-array-1d",
+      "06-array-2d",
+      "07-strings",
+      "08-functions",
+      "09-recursion-divide",
+      "10-struct-pointer",
+      "11-sorting",
+      "13-linear-list",
+      "24-number-theory"
+    ]
+  },
+  "COMP2001": {
+    "name": "计算机专业导论",
+    "credit": 2.0,
+    "description": "大一专业启蒙与通识导论（程序结构、逻辑表达、基础算法思维、数制与进制转换）",
+    "recommended_categories": [
+      "01-basic-io",
+      "02-branching",
+      "03-loops",
+      "24-number-theory"
+    ]
+  },
+  "COMP2012": {
+    "name": "计算机设计与实践",
+    "credit": 2.0,
+    "description": "硬件设计与CPU实验（位运算逻辑、二进制转换、寄存器与简单算术指令模拟）",
+    "recommended_categories": [
+      "01-basic-io",
+      "02-branching",
+      "24-number-theory"
+    ]
+  },
+  "COMP2014": {
+    "name": "C++语言程序设计",
+    "credit": 3.0,
+    "description": "面向对象与泛型编程（类与对象、std::string、STL标准容器与高阶栈队列堆）",
+    "recommended_categories": [
+      "07-strings",
+      "08-functions",
+      "10-struct-pointer",
+      "13-linear-list",
+      "14-stack-queue",
+      "16-heap-priority"
+    ]
+  },
+  "COMP2050": {
+    "name": "数据结构与算法（自动化类）",
+    "credit": 3.5,
+    "description": "工科自动化核心数据结构（数组二分、链表栈队列、二叉树堆、并查集与基础图论）",
+    "recommended_categories": [
+      "05-array-1d",
+      "06-array-2d",
+      "11-sorting",
+      "12-binary-search",
+      "13-linear-list",
+      "14-stack-queue",
+      "15-binary-tree",
+      "16-heap-priority",
+      "17-dsu",
+      "22-graph-shortest",
+      "23-graph-mst-topo"
+    ]
+  },
+  "COMP2052": {
+    "name": "数据结构与算法",
+    "credit": 4.0,
+    "description": "计科核心主干课（线性表、栈队列、二叉树、堆、图的最短路/MST、并查集与搜索）",
+    "recommended_categories": [
+      "09-recursion-divide",
+      "11-sorting",
+      "12-binary-search",
+      "13-linear-list",
+      "14-stack-queue",
+      "15-binary-tree",
+      "16-heap-priority",
+      "17-dsu",
+      "18-greedy",
+      "19-dfs-backtracking",
+      "20-dp-knapsack",
+      "21-dp-linear-interval",
+      "22-graph-shortest",
+      "23-graph-mst-topo"
+    ]
+  },
+  "COMP3001": {
+    "name": "算法设计与分析",
+    "credit": 3.0,
+    "description": "算法进阶与复杂度理论（递归分治、贪心、动态规划背包/线性/区间、图论高阶、数论）",
+    "recommended_categories": [
+      "09-recursion-divide",
+      "11-sorting",
+      "12-binary-search",
+      "15-binary-tree",
+      "16-heap-priority",
+      "17-dsu",
+      "18-greedy",
+      "19-dfs-backtracking",
+      "20-dp-knapsack",
+      "21-dp-linear-interval",
+      "22-graph-shortest",
+      "23-graph-mst-topo",
+      "24-number-theory"
+    ]
+  },
+  "COMP3011": {
+    "name": "计算机体系结构",
+    "credit": 3.0,
+    "description": "高阶体系结构与系统性能（二维矩阵访存局部性、Cache友好型优化、贪心任务调度）",
+    "recommended_categories": [
+      "06-array-2d",
+      "18-greedy"
+    ]
+  }
+}

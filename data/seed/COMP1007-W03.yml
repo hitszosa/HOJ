@@ -1,0 +1,103 @@
+# 种子题单 · 第 3 批（格式说明见 COMP1007-W01.yml 顶部注释）
+
+course: COMP1007
+batch: W03-函数与数组
+seq: 3
+title: 第 3 周 · 函数、数组与字符串
+open_at: 2026-09-22 08:00
+due_at: 2026-09-29 23:59
+problems:
+  - slug: array-sum
+    title: 数组求和
+    knowledge: [数组, 循环]
+    difficulty: easy
+    statement: |
+      第一行读入 n（1 ≤ n ≤ 1000），第二行读入 n 个整数（绝对值不超过 10^6），
+      输出它们的和。
+    samples:
+      - input: "5
+1 2 3 4 5"
+        output: "15"
+
+  - slug: array-max-index
+    title: 最大值与下标
+    knowledge: [数组, 循环, 边界条件]
+    difficulty: easy
+    statement: |
+      第一行读入 n，第二行读入 n 个互不相同的整数。
+      输出最大值以及它第一次出现的下标（下标从 0 开始），用空格分隔。
+    samples:
+      - input: "4
+3 9 2 7"
+        output: "9 1"
+
+  - slug: bubble-sort
+    title: 冒泡排序
+    knowledge: [数组, 排序, 嵌套循环]
+    difficulty: medium
+    statement: |
+      第一行读入 n（1 ≤ n ≤ 1000），第二行读入 n 个整数。
+      按从小到大的顺序输出，相邻两个数之间用一个空格分隔。
+    samples:
+      - input: "5
+5 1 4 2 3"
+        output: "1 2 3 4 5"
+
+  - slug: string-length
+    title: 字符串长度
+    knowledge: [字符串, 输入处理]
+    difficulty: easy
+    statement: |
+      读入一行字符串（可能含空格，长度不超过 1000），输出它的长度。
+    samples:
+      - input: "hello world"
+        output: "11"
+
+  - slug: count-vowels
+    title: 统计元音
+    knowledge: [字符串, 循环, 字符判断]
+    difficulty: medium
+    statement: |
+      读入一行只含英文字母和空格的字符串，统计其中元音字母
+      （a、e、i、o、u，不区分大小写）的个数。
+    samples:
+      - input: "Hello World"
+        output: "3"
+
+  - slug: reverse-string
+    title: 反转字符串
+    knowledge: [字符串, 数组]
+    difficulty: easy
+    statement: |
+      读入一行字符串，按字符逆序输出。
+    samples:
+      - input: "abc"
+        output: "cba"
+
+  - slug: is-palindrome
+    title: 回文串判断
+    knowledge: [字符串, 双指针, 边界条件]
+    difficulty: medium
+    statement: |
+      读入一行字符串，忽略大小写后若为回文串输出 yes，否则输出 no。
+      空串与单字符按回文处理。
+    samples:
+      - input: "Level"
+        output: "yes"
+      - input: "abca"
+        output: "no"
+
+  - slug: matrix-transpose
+    title: 矩阵转置
+    knowledge: [二维数组, 嵌套循环]
+    difficulty: hard
+    statement: |
+      第一行读入行数 r 与列数 c（1 ≤ r, c ≤ 100），随后 r 行每行 c 个整数。
+      输出转置后的矩阵：c 行，每行 r 个整数，用空格分隔。
+    samples:
+      - input: "2 3
+1 2 3
+4 5 6"
+        output: "1 4
+2 5
+3 6"

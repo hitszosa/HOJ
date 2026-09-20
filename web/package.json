@@ -1,0 +1,37 @@
+{
+  "name": "codemind-course-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "HUSTOJ 校内编程作业平台：独立学生端与教师端，统一视觉",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@types/katex": "^0.16.8",
+    "clsx": "^2.1.1",
+    "echarts": "^6.1.0",
+    "katex": "^0.18.7",
+    "marked": "^18.0.13",
+    "next": "15.0.3",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
+    "@types/node": "^20.17.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "autoprefixer": "^10.4.20",
+    "jsdom": "^25.0.1",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5"
+  }
+}

@@ -1,0 +1,183 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================================
+   单一蓝白风格：一组 CSS 变量。组件只消费变量，不定义颜色。
+   用户已确认取消多风格（hustoj-portals-3），保留教学蓝作为唯一风格。
+   ========================================================================== */
+
+:root {
+  color-scheme: light;
+
+  --brand: 37 99 235;
+  --brand-fg: 255 255 255;
+  --brand-soft: 219 234 254;
+
+  --surface: 255 255 255;
+  --surface-raised: 255 255 255;
+  --surface-muted: 248 250 252;
+
+  --border: 226 232 240;
+  --border-strong: 203 213 225;
+
+  --fg: 15 23 42;
+  --fg-muted: 100 116 139;
+  --fg-subtle: 148 163 184;
+
+  --ok: 22 163 74;
+  --ok-soft: 220 252 231;
+  --warn: 217 119 6;
+  --warn-soft: 254 249 195;
+  --danger: 220 38 38;
+  --danger-soft: 254 226 226;
+
+  --chart-1: 37 99 235;
+  --chart-2: 56 189 248;
+  --chart-3: 249 168 37;
+  --chart-4: 244 114 182;
+
+  --zebra: 250 251 253;
+
+  --radius-card: 4px;
+  --radius-control: 3px;
+  --pad-card: 22px;
+  --gap-stack: 18px;
+  --gap-inline: 10px;
+
+  --fs-display: 26px;
+  --fs-title: 17px;
+  --fs-body: 14px;
+  --fs-meta: 12.5px;
+  --lh-body: 1.6;
+
+  --shadow-card: none;
+}
+
+@layer components {
+  .eyebrow { @apply mb-3 text-meta font-semibold tracking-widest text-brand; }
+  .brand-symbol { @apply flex h-11 w-11 items-center justify-center rounded-control bg-brand text-xl font-semibold text-brand-fg; }
+  .course-number { @apply text-4xl font-light tracking-tight text-fg-subtle; }
+  .sample { @apply mt-2 overflow-auto whitespace-pre-wrap rounded-control bg-surface-muted p-4 font-mono text-sm; }
+}
+button:disabled { cursor: not-allowed; }
+a:focus-visible, button:focus-visible { outline: 2px solid rgb(var(--brand)); outline-offset: 4px; }
+
+/* Code entry uses a rectangular editor frame and horizontal tool/status bars. */
+.code-frame { display: flex; flex-direction: column; border: 1px solid rgb(var(--border-strong)); border-radius: 0; background: rgb(var(--surface)); overflow: hidden; }
+.code-toolbar, .code-status { display: flex; justify-content: space-between; gap: 12px; padding: 8px 12px; background: rgb(var(--surface-muted)); color: rgb(var(--fg-muted)); font-size: 12px; }
+.code-toolbar { border-bottom: 1px solid rgb(var(--border-strong)); }
+.code-status { border-top: 1px solid rgb(var(--border-strong)); }
+.code-editor { flex: 1 1 auto; min-height: 320px; width: 100%; font-family: Menlo, Monaco, Consolas, monospace; }
+.code-editor .ace_gutter { background: rgb(var(--surface-muted)); color: rgb(var(--fg-muted)); border-right: 1px solid rgb(var(--border)); }
+.code-editor .ace_marker-layer .ace_active-line { background: rgb(var(--brand-soft) / .35); border-top: 1px solid rgb(var(--border)); border-bottom: 1px solid rgb(var(--border)); }
+.code-fallback { display: block; width: 100%; min-height: 340px; resize: vertical; border: 0; border-radius: 0; padding: 12px; outline: none; background: rgb(var(--surface)); color: rgb(var(--fg)); font: 14px/1.6 Menlo, Monaco, Consolas, monospace; tab-size: 4; white-space: pre; overflow: auto; }
+.trial-output { min-height: 96px; max-height: 260px; overflow: auto; white-space: pre; border: 1px solid rgb(var(--border)); padding: 10px 12px; background: rgb(var(--surface-muted)); font: 13px/1.6 Menlo, Monaco, Consolas, monospace; }
+
+/* Markdown Statement & Content Typography */
+.markdown-body {
+  color: rgb(var(--fg));
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+  word-break: break-word;
+}
+.markdown-body h1, .markdown-body h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: rgb(var(--fg));
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+.markdown-body h3 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: rgb(var(--fg));
+  margin-top: 0.85rem;
+  margin-bottom: 0.35rem;
+}
+.markdown-body h4, .markdown-body h5, .markdown-body h6 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgb(var(--fg-muted));
+  margin-top: 0.65rem;
+  margin-bottom: 0.25rem;
+}
+.markdown-body p {
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.markdown-body ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin: 0.4rem 0;
+}
+.markdown-body ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin: 0.4rem 0;
+}
+.markdown-body li {
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+}
+.markdown-body pre {
+  background: rgb(var(--surface-muted));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--radius-control);
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  font-family: Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+  margin: 0.5rem 0;
+}
+.markdown-body code {
+  font-family: Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+  background: rgb(var(--surface-muted));
+  border: 1px solid rgb(var(--border));
+  padding: 0.1rem 0.35rem;
+  border-radius: var(--radius-control);
+}
+.markdown-body pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5rem 0;
+  font-size: 13px;
+}
+.markdown-body th, .markdown-body td {
+  border: 1px solid rgb(var(--border));
+  padding: 0.45rem 0.75rem;
+  text-align: left;
+}
+.markdown-body th {
+  background: rgb(var(--surface-muted));
+  font-weight: 600;
+}
+.markdown-body blockquote {
+  border-left: 3px solid rgb(var(--brand));
+  padding-left: 0.75rem;
+  color: rgb(var(--fg-muted));
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+.markdown-body a {
+  color: rgb(var(--brand));
+  text-decoration: underline;
+}
+.markdown-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-control);
+  border: 1px solid rgb(var(--border));
+  margin: 0.5rem 0;
+}
+.markdown-body hr {
+  border: 0;
+  border-top: 1px solid rgb(var(--border));
+  margin: 1rem 0;
+}

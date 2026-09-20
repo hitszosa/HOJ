@@ -1,0 +1,108 @@
+# 种子题单 · 第 1 批
+#
+# 格式定义见 CodeMind-OJ重构规划.md §4.2：
+# 同一份文件有三个用途 —— 教师导入、AI 辅助出题的输出格式、HOA 课程仓库里的公开资料。
+#
+# 注意：本文件只描述题面与**样例**。完整测试数据不进这个文件（导入后由教师在平台补充，
+# 或由标程生成）。把测试数据写进公开仓库等于泄题 —— 见 §4.3 红线第 2 条。
+
+course: COMP1007
+batch: W01-分支与顺序
+seq: 1
+title: 第 1 周 · 顺序结构与分支
+open_at: 2026-09-08 08:00
+due_at: 2026-09-15 23:59
+problems:
+  - slug: a-plus-b
+    title: A+B Problem
+    knowledge: [输入输出, 整数运算]
+    difficulty: easy
+    statement: |
+      读入两个整数 a 和 b（-10^9 ≤ a, b ≤ 10^9），输出它们的和。
+    samples:
+      - input: "1 2"
+        output: "3"
+
+  - slug: even-or-odd
+    title: 判断奇偶
+    knowledge: [条件分支, 取余]
+    difficulty: easy
+    statement: |
+      读入一个整数 n，若 n 为偶数输出 even，否则输出 odd。
+    samples:
+      - input: "7"
+        output: "odd"
+
+  - slug: max-of-three
+    title: 三数最大值
+    knowledge: [条件分支]
+    difficulty: easy
+    statement: |
+      读入三个整数，输出其中的最大值。
+    samples:
+      - input: "3 9 5"
+        output: "9"
+
+  - slug: grade-letter
+    title: 成绩等级
+    knowledge: [条件分支, 区间划分]
+    difficulty: easy
+    statement: |
+      读入一个 0 到 100 的整数分数，按下面规则输出等级：
+      90 及以上为 A，80 到 89 为 B，70 到 79 为 C，60 到 69 为 D，60 以下为 F。
+    samples:
+      - input: "85"
+        output: "B"
+      - input: "60"
+        output: "D"
+
+  - slug: leap-year
+    title: 闰年判断
+    knowledge: [条件分支, 布尔逻辑]
+    difficulty: medium
+    statement: |
+      读入年份 y，判断是否为闰年：能被 4 整除且不能被 100 整除，或者能被 400 整除。
+      是则输出 yes，否则输出 no。
+    samples:
+      - input: "2000"
+        output: "yes"
+      - input: "1900"
+        output: "no"
+
+  - slug: absolute-value
+    title: 绝对值
+    knowledge: [条件分支]
+    difficulty: easy
+    statement: |
+      读入一个整数 n，输出它的绝对值。
+    samples:
+      - input: "-12"
+        output: "12"
+
+  - slug: triangle-type
+    title: 三角形判定
+    knowledge: [条件分支, 布尔逻辑, 边界条件]
+    difficulty: medium
+    statement: |
+      读入三个整数 a、b、c 表示三条边长。若不构成三角形输出 none；
+      若构成等边三角形输出 equilateral；等腰输出 isosceles；其余输出 scalene。
+      注意退化三角形（任意两边之和不大于第三边）按不构成处理。
+    samples:
+      - input: "3 4 5"
+        output: "scalene"
+      - input: "1 2 3"
+        output: "none"
+
+  - slug: quadratic-roots
+    title: 一元二次方程求根
+    knowledge: [数学计算, 浮点输出, 条件分支]
+    difficulty: hard
+    statement: |
+      读入 a、b、c（a ≠ 0），解方程 ax^2 + bx + c = 0。
+      判别式小于 0 时输出 none；否则按从大到小输出两个实根，保留两位小数
+      （重根只输出一次）。
+    samples:
+      - input: "1 -5 6"
+        output: "3.00 2.00"
+      - input: "1 0 1"
+        output: "none"
