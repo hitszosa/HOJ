@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { JudgeDetailView } from "@/components/JudgeDetailView";
 
 describe("JudgeDetailView 组件", () => {
-  it("能将 HUSTOJ 节点测试结果表格渲染为结构化节点表格", () => {
+  it("能将 HOJ 节点测试结果表格渲染为结构化节点表格", () => {
     const tableText = `filename|size|result|memory|time
 --|--|--|--|--
 1.in|610|AC|2328k|7ms

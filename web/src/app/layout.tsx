@@ -4,8 +4,8 @@ import "katex/dist/katex.min.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HUSTOJ 教学平台",
-  description: "基于 HUSTOJ 的校内编程作业平台",
+  title: "HOJ 教学平台",
+  description: "基于 HOJ 的校内编程作业平台",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

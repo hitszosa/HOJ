@@ -1,6 +1,6 @@
 # HOJ (HITSZ Online Judge) 教学平台
 
-基于 HUSTOJ 底层判题能力的现代化校内编程作业与程序设计教学实验平台。提供学生沉浸式编程工作台、教师题库编排与多班级学情管理体系。
+基于 HOJ 底层判题能力的现代化校内编程作业与程序设计教学实验平台。提供学生沉浸式编程工作台、教师题库编排与多班级学情管理体系。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
@@ -21,7 +21,7 @@
 - **独立内部平滑滚动**：四块卡片在行内通过 CSS Grid 绝对等高对齐，各自正文区使用 `flex-1 overflow-y-auto min-h-0` 独立滚动，避免长题干或多测试点拉扯整体页面。
 
 ### 2. 评测节点详情结构化展现 (`JudgeDetailView`)
-- 深度适配 HUSTOJ 评测机输出，自动解析 `filename|size|result|memory|time` 测试点日志；
+- 深度适配 HOJ 评测机输出，自动解析 `filename|size|result|memory|time` 测试点日志；
 - 转换为结构化评测表格，提供总通过率徽章、耗时、内存占用及 `AC` / `WA` / `TLE` / `MLE` / `RE` 语义状态徽章；
 - 兼顾 GCC / G++ 等编译器报错文本，平滑降级为终端代码块诊断。
 
@@ -47,7 +47,7 @@
 ## 🏗️ 架构概览
 
 ```
-├── service.py            # FastAPI 后端服务（业务逻辑、鉴权、HUSTOJ 数据库连接、本地题库 API、AI 接口）
+├── service.py            # FastAPI 后端服务（业务逻辑、鉴权、HOJ 数据库连接、本地题库 API、AI 接口）
 ├── requirements.txt      # 后端依赖配置
 ├── schema/               # 教学域 MySQL/SQLite 表结构迁移脚本
 ├── data/
@@ -70,7 +70,7 @@
 ### 1. 环境准备
 - **Python**: 3.10+
 - **Node.js**: 18.0+
-- **HUSTOJ 运行环境**: MySQL 数据库已就绪（配置账号密码）
+- **HOJ 运行环境**: MySQL 数据库已就绪（配置账号密码）
 
 ### 2. 后端服务启动 (`FastAPI`)
 ```bash
