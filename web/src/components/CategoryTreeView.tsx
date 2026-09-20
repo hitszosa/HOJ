@@ -513,30 +513,58 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
           </p>
         </div>
 
-        {/* View Mode Switcher */}
-        <div className="flex items-center gap-1 rounded-control border border-line bg-surface p-1 shadow-sm">
-          <button
-            type="button"
-            className={`flex items-center gap-1.5 rounded-control px-3 py-1.5 text-xs font-medium transition ${
-              viewMode === "tree"
-                ? "bg-brand text-brand-fg shadow"
-                : "text-fg-muted hover:text-fg hover:bg-surface-muted"
-            }`}
-            onClick={() => setViewMode("tree")}
-          >
-            <span>🌲 折叠树状目录与题目流</span>
-          </button>
-          <button
-            type="button"
-            className={`flex items-center gap-1.5 rounded-control px-3 py-1.5 text-xs font-medium transition ${
-              viewMode === "echarts"
-                ? "bg-brand text-brand-fg shadow"
-                : "text-fg-muted hover:text-fg hover:bg-surface-muted"
-            }`}
-            onClick={() => setViewMode("echarts")}
-          >
-            <span>🗺️ 全景知识图谱 (ECharts)</span>
-          </button>
+        {/* Actions & View Mode Switcher */}
+        <div className="flex flex-wrap items-center gap-3">
+          {portal === "teacher" && (
+            <div className="flex items-center gap-2">
+              <Link
+                href={
+                  selectedOfferingIds.length === 1
+                    ? `/teacher/offerings/${selectedOfferingIds[0]}?tab=ai`
+                    : "/teacher"
+                }
+                className="flex items-center gap-1 rounded-control border border-brand/40 bg-brand/5 px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand/10 transition"
+              >
+                <span>🤖 AI 辅助出题 →</span>
+              </Link>
+              <Link
+                href={
+                  selectedOfferingIds.length === 1
+                    ? `/teacher/offerings/${selectedOfferingIds[0]}?tab=import`
+                    : "/teacher"
+                }
+                className="flex items-center gap-1 rounded-control border border-line bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-surface-muted transition"
+              >
+                <span>📂 导入题单 →</span>
+              </Link>
+            </div>
+          )}
+
+          {/* View Mode Switcher */}
+          <div className="flex items-center gap-1 rounded-control border border-line bg-surface p-1 shadow-sm">
+            <button
+              type="button"
+              className={`flex items-center gap-1.5 rounded-control px-3 py-1.5 text-xs font-medium transition ${
+                viewMode === "tree"
+                  ? "bg-brand text-brand-fg shadow"
+                  : "text-fg-muted hover:text-fg hover:bg-surface-muted"
+              }`}
+              onClick={() => setViewMode("tree")}
+            >
+              <span>🌲 折叠树状目录与题目流</span>
+            </button>
+            <button
+              type="button"
+              className={`flex items-center gap-1.5 rounded-control px-3 py-1.5 text-xs font-medium transition ${
+                viewMode === "echarts"
+                  ? "bg-brand text-brand-fg shadow"
+                  : "text-fg-muted hover:text-fg hover:bg-surface-muted"
+              }`}
+              onClick={() => setViewMode("echarts")}
+            >
+              <span>🗺️ 全景知识图谱 (ECharts)</span>
+            </button>
+          </div>
         </div>
       </header>
 

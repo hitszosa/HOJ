@@ -319,11 +319,19 @@ function CourseList({rows,history=false,teacher=false,prefix,reload}:{rows:Row[]
        <div className="mt-7 flex flex-wrap items-center gap-3">
         <Link className={action} href={`${prefix}/courses/${r.offering_id}`}>进入班级查看 →</Link>
         {teacher && r.role==='teacher' && (
-         <Link className="px-4 py-2 border border-brand/40 text-brand rounded-control text-meta hover:bg-brand/5 flex items-center gap-1" href={`/teacher/categories?oid=${r.offering_id}`}>
-          🌲 选题布置
-         </Link>
+         <>
+          <Link className="px-3.5 py-2 border border-brand/40 text-brand rounded-control text-meta hover:bg-brand/5 flex items-center gap-1.5" href={`/teacher/offerings/${r.offering_id}?tab=ai`}>
+           🤖 AI 出题
+          </Link>
+          <Link className="px-3.5 py-2 border border-line rounded-control text-meta hover:bg-surface-muted flex items-center gap-1.5" href={`/teacher/offerings/${r.offering_id}?tab=import`}>
+           📂 导入题单
+          </Link>
+          <Link className="px-3.5 py-2 border border-line rounded-control text-meta hover:bg-surface-muted flex items-center gap-1.5" href={`/teacher/categories?oid=${r.offering_id}`}>
+           🌲 题库选题
+          </Link>
+         </>
         )}
-        <Link className="px-4 py-2 border border-line rounded-control text-meta hover:bg-surface-muted flex items-center gap-1" href={`${prefix}/courses/${r.offering_id}?tab=ranklist`}>
+        <Link className="px-3.5 py-2 border border-line rounded-control text-meta hover:bg-surface-muted flex items-center gap-1" href={`${prefix}/courses/${r.offering_id}?tab=ranklist`}>
          🏆 班级天梯榜
         </Link>
         {teacher && <Link className="text-fg-muted hover:text-fg py-2 text-meta" href={`/teacher/classes/${r.offering_id}`}>班级花名册</Link>}
@@ -372,72 +380,116 @@ function Course({data,prefix,user}:{data:Row;prefix:string;user?:string}) {
     title={o.title||'课程详情'}
     description={`${o.code ? o.code + ' · ' : ''}${o.term} · ${o.section} 班 · ${o.status==='archived'?'历史归档 · 只读':'当前教学班'}`}
    >
-    {!student && (
-     <div className="flex flex-wrap items-center gap-2">
-      <Link className={action} href={`/teacher/categories?oid=${o.offering_id}`}>🌲 题库选题布置作业 →</Link>
-      <Link className="px-4 py-2 border border-line rounded-control text-meta hover:bg-surface-muted" href={`/teacher/classes/${o.offering_id}`}>班级花名册</Link>
-     </div>
-    )}
-   </Heading>
+     {!student && (
+      <div className="flex flex-wrap items-center gap-2">
+       <Link className={action} href={`/teacher/offerings/${o.offering_id}`}>🤖 出题工作台 (AI / 导入) →</Link>
+       <Link className="px-4 py-2 border border-brand/40 text-brand rounded-control text-meta hover:bg-brand/5 flex items-center gap-1.5" href={`/teacher/categories?oid=${o.offering_id}`}>🌲 题库选题布置</Link>
+       <Link className="px-4 py-2 border border-line rounded-control text-meta hover:bg-surface-muted" href={`/teacher/classes/${o.offering_id}`}>班级花名册</Link>
+      </div>
+     )}
+    </Heading>
 
-   {/* Course Internal Navigation Tabs */}
-   <div className="flex items-center gap-2 border-b border-line pb-px">
-    <button
-     type="button"
-     onClick={()=>switchTab('batches')}
-     className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
-      tab==='batches'
-       ? 'border-brand text-brand font-semibold'
-       : 'border-transparent text-fg-muted hover:text-fg'
-     }`}
-    >
-     📑 班级作业 ({data.batches?.length ?? 0})
-    </button>
-    {!student && (
+    {/* Course Internal Navigation Tabs */}
+    <div className="flex items-center gap-2 border-b border-line pb-px">
      <button
       type="button"
-      onClick={()=>switchTab('insights')}
+      onClick={()=>switchTab('batches')}
       className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
-       tab==='insights'
+       tab==='batches'
         ? 'border-brand text-brand font-semibold'
         : 'border-transparent text-fg-muted hover:text-fg'
       }`}
      >
-      📊 班级学情与完成情况
+      📑 班级作业 ({data.batches?.length ?? 0})
      </button>
-    )}
-    <button
-     type="button"
-     onClick={()=>switchTab('ranklist')}
-     className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
-      tab==='ranklist'
-       ? 'border-brand text-brand font-semibold'
-       : 'border-transparent text-fg-muted hover:text-fg'
-     }`}
-    >
-     🏆 班级天梯榜
-    </button>
-   </div>
+     {!student && (
+      <button
+       type="button"
+       onClick={()=>switchTab('insights')}
+       className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+        tab==='insights'
+         ? 'border-brand text-brand font-semibold'
+         : 'border-transparent text-fg-muted hover:text-fg'
+       }`}
+      >
+       📊 班级学情与完成情况
+      </button>
+     )}
+     <button
+      type="button"
+      onClick={()=>switchTab('ranklist')}
+      className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+       tab==='ranklist'
+        ? 'border-brand text-brand font-semibold'
+        : 'border-transparent text-fg-muted hover:text-fg'
+      }`}
+     >
+      🏆 班级天梯榜
+     </button>
+    </div>
 
-   {/* Tab 1: Batches */}
-   {tab==='batches' && (
-    <div className="space-y-4">
-     {data.batches.length===0?(
-      student?(
-       <Empty title="还没有开放的题单" hint="教师发布后，你会在这里看到本周作业。"/>
-      ):(
-       <Card>
-        <CardTitle title="本教学班尚未发布作业批次" meta={`当前课程: ${o.code || ''} · ${o.title || ''}`}/>
-        <p className="mt-3 text-fg-muted leading-relaxed">
-         系统已集成 5 大知识支柱与 2,148 道精品题库，支持跨分类自由选题与多班级批量布置。点击下方按钮即可进入分类题库树，勾选试题一键发布！
-        </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-         <Link className={action} href={`/teacher/categories?oid=${o.offering_id}`}>🌲 进入分类题库选题布置 →</Link>
-         <Link className="px-4 py-2 border border-line rounded-control text-meta hover:bg-surface-muted" href={`/teacher/classes/${o.offering_id}`}>查看班级学生花名册</Link>
+    {/* Tab 1: Batches */}
+    {tab==='batches' && (
+     <div className="space-y-4">
+      {!student && (
+       <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-control border border-brand/20 bg-brand/5 shadow-sm">
+        <div>
+         <h3 className="font-semibold text-fg flex items-center gap-2">
+          <span>✨ 新建作业与试题管理</span>
+          <Badge tone="brand">快捷出题通道</Badge>
+         </h3>
+         <p className="mt-0.5 text-xs text-fg-muted">
+          支持 AI 按教学需求一键出题、导入外部 YAML/JSON/FPS XML 题单、或从 2,148 道算法题库中自由组合。
+         </p>
         </div>
-       </Card>
-      )
-     ):data.batches.map((b:Row)=>(
+        <div className="flex flex-wrap items-center gap-2">
+         <Link className={action} href={`/teacher/offerings/${o.offering_id}?tab=ai`}>
+          🤖 AI 辅助出题
+         </Link>
+         <Link className="px-3.5 py-1.5 border border-brand/40 text-brand rounded-control text-meta hover:bg-brand/10 transition-colors" href={`/teacher/offerings/${o.offering_id}?tab=import`}>
+          📂 导入题单 (YAML/XML)
+         </Link>
+         <Link className="px-3.5 py-1.5 border border-line rounded-control text-meta hover:bg-surface-muted transition-colors" href={`/teacher/categories?oid=${o.offering_id}`}>
+          🌲 从算法题库选题
+         </Link>
+        </div>
+       </div>
+      )}
+      {data.batches.length===0?(
+       student?(
+        <Empty title="还没有开放的题单" hint="教师发布后，你会在这里看到本周作业。"/>
+       ):(
+        <Card>
+         <CardTitle title="本教学班尚未发布作业批次" meta={`当前课程: ${o.code || ''} · ${o.title || ''}`}/>
+         <p className="mt-3 text-fg-muted leading-relaxed">
+          平台为您提供三种出题与布置作业途径，发布前均可在工作台反复预览测试、修改题面与配置用例：
+         </p>
+         <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <div className="border border-line rounded-control p-4 hover:border-brand/40 transition">
+           <h4 className="font-semibold text-fg">🤖 AI 辅助智能出题</h4>
+           <p className="mt-1 text-xs text-fg-muted">输入自然语言教学目标或题型要求，AI 秒级生成题面、公开样例与隐藏边界评测点。</p>
+           <Link className="mt-3 inline-block text-xs font-semibold text-brand hover:underline" href={`/teacher/offerings/${o.offering_id}?tab=ai`}>
+            立即体验 AI 出题 →
+           </Link>
+          </div>
+          <div className="border border-line rounded-control p-4 hover:border-brand/40 transition">
+           <h4 className="font-semibold text-fg">📂 导入自编题单</h4>
+           <p className="mt-1 text-xs text-fg-muted">支持上传或粘贴 YAML、JSON 以及 HOJ / HUSTOJ FPS XML 导出文件，自动解析为草稿。</p>
+           <Link className="mt-3 inline-block text-xs font-semibold text-brand hover:underline" href={`/teacher/offerings/${o.offering_id}?tab=import`}>
+            导入题单文件 →
+           </Link>
+          </div>
+          <div className="border border-line rounded-control p-4 hover:border-brand/40 transition">
+           <h4 className="font-semibold text-fg">🌲 算法题库全景选题</h4>
+           <p className="mt-1 text-xs text-fg-muted">5 大算法支柱、2,148 道核心试题与思维导图，跨分类自由勾选，支持多班级批量布置。</p>
+           <Link className="mt-3 inline-block text-xs font-semibold text-brand hover:underline" href={`/teacher/categories?oid=${o.offering_id}`}>
+            进入题库选题 →
+           </Link>
+          </div>
+         </div>
+        </Card>
+       )
+      ):data.batches.map((b:Row)=>(
       <Card key={b.batch_id}>
        <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -773,7 +825,36 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
 
- const [activeTab, setActiveTab] = useState<'recommended'|'categories'|'contests'|'custom'>('recommended');
+ const [activeTab, setActiveTab] = useState<'recommended'|'ai'|'custom'|'categories'|'contests'>(() => {
+  if (typeof window !== 'undefined') {
+   const t = new URLSearchParams(window.location.search).get('tab');
+   if (t === 'ai') return 'ai';
+   if (t === 'custom' || t === 'import') return 'custom';
+   if (t === 'categories' || t === 'contests') return t;
+  }
+  return 'recommended';
+ });
+
+ useEffect(() => {
+  if (typeof window !== 'undefined') {
+   const t = new URLSearchParams(window.location.search).get('tab');
+   if (t === 'ai') setActiveTab('ai');
+   else if (t === 'custom' || t === 'import') setActiveTab('custom');
+   else if (t === 'categories') setActiveTab('categories');
+   else if (t === 'contests') setActiveTab('contests');
+   else if (t === 'recommended') setActiveTab('recommended');
+  }
+ }, []);
+
+ const switchTab = (t: 'recommended'|'ai'|'custom'|'categories'|'contests') => {
+  setActiveTab(t);
+  if (typeof window !== 'undefined') {
+   const url = new URL(window.location.href);
+   url.searchParams.set('tab', t);
+   window.history.replaceState(null, '', url.toString());
+  }
+ };
+
  const [setsData, setSetsData] = useState<Row|null>(null);
  const [loadingSets, setLoadingSets] = useState(true);
  const [expandedId, setExpandedId] = useState<string|null>(null);
@@ -957,15 +1038,30 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
     <button
      type="button"
      className={`px-4 py-2.5 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab==='recommended'?'border-brand text-brand font-semibold':'border-transparent text-fg-muted hover:text-fg'}`}
-     onClick={()=>setActiveTab('recommended')}
+     onClick={()=>switchTab('recommended')}
     >
-     <span>🎯 本课程推荐题单</span>
+     <span>🎯 课程推荐题单</span>
      {setsData && <span className="rounded-full bg-brand/10 text-brand px-2 py-0.5 text-xs font-mono">{recommendedItems.length}</span>}
     </button>
     <button
      type="button"
+     className={`px-4 py-2.5 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab==='ai'?'border-brand text-brand font-semibold bg-brand/5':'border-transparent text-fg-muted hover:text-fg'}`}
+     onClick={()=>switchTab('ai')}
+    >
+     <span>🤖 AI 智能辅助出题</span>
+     <span className="rounded-full bg-brand/10 text-brand px-1.5 py-0.2 text-[11px] font-semibold">DeepSeek</span>
+    </button>
+    <button
+     type="button"
+     className={`px-4 py-2.5 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab==='custom'?'border-brand text-brand font-semibold':'border-transparent text-fg-muted hover:text-fg'}`}
+     onClick={()=>switchTab('custom')}
+    >
+     <span>📂 导入题单 / 自编 YAML</span>
+    </button>
+    <button
+     type="button"
      className={`px-4 py-2.5 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab==='categories'?'border-brand text-brand font-semibold':'border-transparent text-fg-muted hover:text-fg'}`}
-     onClick={()=>setActiveTab('categories')}
+     onClick={()=>switchTab('categories')}
     >
      <span>📚 全学科 24 知识库</span>
      <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-mono">24</span>
@@ -973,22 +1069,215 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
     <button
      type="button"
      className={`px-4 py-2.5 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab==='contests'?'border-brand text-brand font-semibold':'border-transparent text-fg-muted hover:text-fg'}`}
-     onClick={()=>setActiveTab('contests')}
+     onClick={()=>switchTab('contests')}
     >
      <span>🏆 竞赛与名校题单</span>
      {setsData && <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-mono">{contestItems.length}</span>}
     </button>
-    <button
-     type="button"
-     className={`px-4 py-2.5 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab==='custom'?'border-brand text-brand font-semibold':'border-transparent text-fg-muted hover:text-fg'}`}
-     onClick={()=>setActiveTab('custom')}
-    >
-     <span>✏️ 自编 YAML / AI 生成</span>
-    </button>
    </div>
 
-   {loadingSets && activeTab !== 'custom' && (
+   {loadingSets && (activeTab === 'recommended' || activeTab === 'categories' || activeTab === 'contests') && (
     <Card><p className="py-8 text-center text-fg-muted">正在加载该课程题库与知识点映射…</p></Card>
+   )}
+
+   {/* Tab: AI Generation */}
+   {activeTab === 'ai' && (
+    <div className="space-y-6">
+     <Card className="border border-brand/30 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+       <div>
+        <div className="flex items-center gap-2">
+         <h2 className="text-xl font-semibold text-fg">🤖 AI 智能辅助出题</h2>
+         <Badge tone="brand">DeepSeek 模型支持</Badge>
+        </div>
+        <p className="mt-1 text-sm text-fg-muted">
+         根据您的教学目标、知识点要求或生活场景，AI 全自动构思并输出完整题面、公开输入输出样例与隐藏边界评测用例。
+        </p>
+       </div>
+       <div className="text-right">
+        <span className="inline-block rounded-control bg-surface-muted px-2.5 py-1 text-xs text-fg-muted font-mono">
+         教学班: {setsData ? `${setsData.courseCode} · ${setsData.courseName}` : ''}
+        </span>
+       </div>
+      </div>
+
+      <div className="mt-5 space-y-4">
+       <div>
+        <label className="block text-sm font-medium text-fg mb-1.5">
+         教学目标与题型要求 <span className="text-brand">*</span>
+        </label>
+        <textarea
+         aria-label="AI 教学目标"
+         className={`${field} min-h-36 text-sm leading-relaxed`}
+         placeholder="例如：面向大一程序设计初学者，练习双重循环与条件判断，设计一道校园宿舍电费阶梯计费与宿舍各成员分摊金额的题目。要求给出严格的数据范围和边界测试样例（如用电量为0或超大值）。"
+         value={topic}
+         onChange={e=>setTopic(e.target.value)}
+         disabled={busy||readonly}
+        />
+       </div>
+
+       {/* Quick Prompt Presets */}
+       <div>
+        <p className="text-xs text-fg-muted mb-2 font-medium">💡 点击下方快捷示例填入教学需求：</p>
+        <div className="flex flex-wrap gap-2">
+         {[
+          { label: '循环与累加求和', text: '面向初学者，练习单层与双重 for 循环，设计累加求和与奇偶数分类统计题目，难度入门，结合校园生活场景。' },
+          { label: '双指针与回文检测', text: '面向进阶学生，练习双指针在字符串处理中的应用，判断回文字符串并统计最长回文子串长度，包含空串和特殊字符边界。' },
+          { label: '单向链表核心操作', text: '数据结构课程：实现单向链表的创建、尾部插入、指定节点删除与就地反转，提供完整样例和隐藏边界测试。' },
+          { label: '宿舍阶梯电费分摊', text: '生活场景应用题：根据阶梯电价（档位1/2/3不同单价）计算宿舍总电费并按人头平均分摊，处理精度四舍五入。' },
+          { label: '二叉树深度与遍历', text: '树与二叉树模块：根据前序与中序遍历序列还原二叉树，并输出其后序遍历与树的最大深度。' },
+         ].map((preset, idx) => (
+          <button
+           key={idx}
+           type="button"
+           className="text-xs px-2.5 py-1.5 rounded-control border border-line bg-surface hover:border-brand/40 hover:text-brand hover:bg-brand/5 text-fg-muted transition text-left"
+           onClick={() => setTopic(preset.text)}
+           disabled={busy||readonly}
+          >
+           ✨ {preset.label}
+          </button>
+         ))}
+        </div>
+       </div>
+
+       <div className="pt-2 flex flex-wrap items-center gap-3">
+        <button
+         type="button"
+         disabled={busy||!topic.trim()||readonly}
+         className={`${action} disabled:opacity-40 flex items-center gap-2`}
+         onClick={()=>run(true)}
+        >
+         {busy ? (
+          <>
+           <span className="inline-block animate-spin">⏳</span>
+           <span>正在连接 DeepSeek 智能生成题单草稿（约需 3~8 秒）…</span>
+          </>
+         ) : (
+          <>
+           <span>🚀 立即生成 AI 题单草稿 →</span>
+          </>
+         )}
+        </button>
+        <span className="text-xs text-fg-muted">
+         生成产物将自动保存为草稿，供您在发布前审核、修改题面与补充测试用例。
+        </span>
+       </div>
+      </div>
+     </Card>
+
+     <Card>
+      <CardTitle title="出题规范与 AI 生成建议" meta="保障学生练习质量与评测准确性" />
+      <div className="grid gap-4 sm:grid-cols-3 mt-4 text-xs text-fg-muted leading-relaxed">
+       <div className="border-l-2 border-brand/50 pl-3">
+        <h4 className="font-semibold text-fg mb-1">清晰的数据范围</h4>
+        <p>在需求中注明数据规模（如 1 ≤ n ≤ 10^5），AI 生成的题目将明确写出范围，便于学生选择合适复杂度的算法。</p>
+       </div>
+       <div className="border-l-2 border-brand/50 pl-3">
+        <h4 className="font-semibold text-fg mb-1">严格的格式与边界</h4>
+        <p>模型会自动生成 1~2 组公开样例和 3~5 组隐藏测试点。建议重点检查 0、负数、极大值等极限边界测试。</p>
+       </div>
+       <div className="border-l-2 border-brand/50 pl-3">
+        <h4 className="font-semibold text-fg mb-1">教师审核发布机制</h4>
+        <p>生成的试题不会直接对学生可见，需任课教师进入审核页面确认题面表述无歧义后点击“审核并发布”。</p>
+       </div>
+      </div>
+     </Card>
+    </div>
+   )}
+
+   {/* Tab: Import / Custom YAML */}
+   {activeTab === 'custom' && (
+    <div className="space-y-6">
+     <Card>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
+       <div>
+        <h2 className="text-xl font-semibold text-fg">📂 导入题单文件 / 自编试题</h2>
+        <p className="mt-1 text-sm text-fg-muted">
+         支持上传或粘贴平台标准 YAML、JSON 格式题单，以及 HOJ / HUSTOJ FPS XML 导出文件。
+        </p>
+       </div>
+       <div className="flex items-center gap-2">
+        <button
+         type="button"
+         className="px-3 py-1 text-xs border border-line rounded-control hover:bg-surface-muted text-fg"
+         onClick={() => setContent(JSON.stringify(EXAMPLE, null, 2))}
+        >
+         载入 JSON 模板
+        </button>
+        <button
+         type="button"
+         className="px-3 py-1 text-xs border border-line rounded-control hover:bg-surface-muted text-fg"
+         onClick={() => setContent(`title: 第一周 · 顺序与分支结构
+problems:
+  - slug: sum-two
+    title: 两个整数的和
+    statement: "输入两个整数 a 和 b，输出它们的和。\\n数据范围：-1000000 ≤ a,b ≤ 1000000。"
+    knowledge:
+      - 顺序结构
+      - 整数运算
+    samples:
+      - input: "1 2\\n"
+        output: "3\\n"
+    tests:
+      - input: "-2 5\\n"
+        output: "3\\n"
+      - input: "0 0\\n"
+        output: "0\\n"
+`)}
+        >
+         载入 YAML 模板
+        </button>
+       </div>
+      </div>
+
+      <div className="mt-4 space-y-4">
+       <label className="block text-sm font-medium text-fg">
+        选择本地题单文件 (.yaml, .yml, .json, .xml)
+        <input
+         className="mt-2 block w-full text-xs text-fg-muted file:mr-4 file:py-2 file:px-4 file:rounded-control file:border-0 file:text-xs file:font-semibold file:bg-brand/10 file:text-brand hover:file:bg-brand/20 cursor-pointer"
+         type="file"
+         accept=".json,.yaml,.yml,.xml"
+         disabled={readonly}
+         onChange={async e => {
+          const f = e.target.files?.[0];
+          if (f) {
+           if (f.size > 1048576) { setError('文件不能超过 1MB'); return; }
+           setContent(await f.text());
+          }
+         }}
+        />
+       </label>
+
+       <div>
+        <div className="flex items-center justify-between mb-1.5">
+         <label className="text-sm font-medium text-fg">题单文档内容</label>
+         <span className="text-xs text-fg-muted font-mono">平台标准 YAML / JSON / HOJ FPS XML</span>
+        </div>
+        <textarea
+         aria-label="题单文档"
+         className={`${field} min-h-96 font-mono text-xs leading-relaxed`}
+         value={content}
+         onChange={e => setContent(e.target.value)}
+         disabled={readonly}
+        />
+       </div>
+
+       <div className="pt-2 flex items-center gap-3">
+        <button
+         type="button"
+         className={`${action} disabled:opacity-40`}
+         disabled={busy||readonly||!content.trim()}
+         onClick={()=>run(false)}
+        >
+         {busy ? '正在解析保存…' : (readonly ? (archived ? '历史班只读' : '助教只读') : '💾 保存并进入草稿审核 →')}
+        </button>
+        <span className="text-xs text-fg-muted">
+         保存后可继续在线修改题面、增删测试用例或调整分值与截止时间。
+        </span>
+       </div>
+      </div>
+     </Card>
+    </div>
    )}
 
    {/* Tab 1: Recommended */}
@@ -1086,44 +1375,6 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
         readonly={readonly}
        />
       ))}
-     </div>
-    </div>
-   )}
-
-   {/* Tab 4: Custom YAML / AI */}
-   {activeTab === 'custom' && (
-    <div className="grid gap-stack lg:grid-cols-[1.6fr_1fr]">
-     <Card>
-      <CardTitle title="新建或导入题单" meta="支持平台 YAML、JSON 与 HOJ FPS XML。上传后先形成草稿。"/>
-      <label className="block text-meta">
-       选择题单文件
-       <input className="my-3 block w-full" type="file" accept=".json,.yaml,.yml,.xml" disabled={readonly} onChange={async e=>{
-        const f=e.target.files?.[0];
-        if(f){
-         if(f.size>1048576){setError('文件不能超过 1MB');return;}
-         setContent(await f.text());
-        }
-       }}/>
-      </label>
-      <textarea aria-label="题单文档" className={`${field} min-h-96 font-mono text-sm`} value={content} onChange={e=>setContent(e.target.value)}/>
-      <button className={`${action} mt-4 disabled:opacity-40`} disabled={busy||readonly} onClick={()=>run()}>
-       {readonly?(archived?'历史班只读':'助教只读'):'保存为草稿 →'}
-      </button>
-     </Card>
-     <div className="space-y-stack">
-      <Card>
-       <CardTitle title="AI 辅助出题" meta="输入教学目标，生成可审核的题面、样例与测试草稿。"/>
-       <textarea aria-label="AI 教学目标" className={`${field} min-h-32`} placeholder="例如：面向初学者，练习循环边界，难度基础，使用校园生活场景。" value={topic} onChange={e=>setTopic(e.target.value)}/>
-       <button disabled={busy||!topic.trim()||readonly} className={`${action} mt-3 disabled:opacity-40`} onClick={()=>run(true)}>
-        {busy?'正在处理…':'生成 AI 草稿'}
-       </button>
-       <p className="mt-3 text-meta text-fg-muted">需配置 AI 服务。生成结果不会自动发布。</p>
-      </Card>
-      <Card>
-       <CardTitle title="教学参考资源" meta="教学大纲、配套讲义与经验共享"/>
-       <p className="text-body text-fg">系统已内置与各门课程教学大纲匹配的标准知识点题库。</p>
-       <p className="mt-3 text-meta text-fg-muted">支持跨题单多选、自编题目及导入自定义题单。公开导出保护私有测试用例。</p>
-      </Card>
      </div>
     </div>
    )}
