@@ -15,6 +15,7 @@ import { FaqView } from "@/components/FaqView";
 import { CategoryTreeView } from "@/components/CategoryTreeView";
 import { MarkdownView } from "@/components/MarkdownView";
 import { JudgeDetailView } from "@/components/JudgeDetailView";
+import { TeacherLibraryView } from "@/components/TeacherLibraryView";
 
 type Row = Record<string, any>;
 async function api(path:string, method="GET", body?:unknown) {
@@ -260,12 +261,17 @@ function CourseList({rows,history=false,teacher=false,prefix,reload}:{rows:Row[]
     title={teacher?'教学工作台':history?'走过的学习旅程':'我的课程'}
     description={teacher?'从一份好作业开始，关注每位同学的学习过程。严格按您的授课名单隔离。':history?'已归档课程保留题单与学习记录，供你随时回顾。':'课程、每周作业和学习反馈，都在这里。'}
    >
-    <div className="flex items-center gap-2">
-     <Badge tone="brand">{filtered.length} 门课程</Badge>
+    <div className="flex flex-wrap items-center gap-2">
+     <Badge tone="brand">{filtered.length} 个任课教学班</Badge>
      {teacher && (
-      <Button onClick={()=>setShowNewOffering(!showNewOffering)}>
-       {showNewOffering ? '取消' : '＋ 开设新班级'}
-      </Button>
+      <>
+       <Link className="px-3.5 py-1.5 border border-brand/40 bg-brand/5 text-brand rounded-control text-meta hover:bg-brand/10 flex items-center gap-1 font-semibold" href="/teacher/library">
+        ⭐ 我的题库与题单
+       </Link>
+       <Button onClick={()=>setShowNewOffering(!showNewOffering)}>
+        {showNewOffering ? '取消' : '＋ 开设新班级'}
+       </Button>
+      </>
      )}
     </div>
    </Heading>
@@ -825,9 +831,10 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
 
- const [activeTab, setActiveTab] = useState<'recommended'|'ai'|'custom'|'categories'|'contests'>(() => {
+ const [activeTab, setActiveTab] = useState<'recommended'|'my-sets'|'ai'|'custom'|'categories'|'contests'>(() => {
   if (typeof window !== 'undefined') {
    const t = new URLSearchParams(window.location.search).get('tab');
+   if (t === 'my-sets' || t === 'library') return 'my-sets';
    if (t === 'ai') return 'ai';
    if (t === 'custom' || t === 'import') return 'custom';
    if (t === 'categories' || t === 'contests') return t;
@@ -838,7 +845,8 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
  useEffect(() => {
   if (typeof window !== 'undefined') {
    const t = new URLSearchParams(window.location.search).get('tab');
-   if (t === 'ai') setActiveTab('ai');
+   if (t === 'my-sets' || t === 'library') setActiveTab('my-sets');
+   else if (t === 'ai') setActiveTab('ai');
    else if (t === 'custom' || t === 'import') setActiveTab('custom');
    else if (t === 'categories') setActiveTab('categories');
    else if (t === 'contests') setActiveTab('contests');
@@ -846,7 +854,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
   }
  }, []);
 
- const switchTab = (t: 'recommended'|'ai'|'custom'|'categories'|'contests') => {
+ const switchTab = (t: 'recommended'|'my-sets'|'ai'|'custom'|'categories'|'contests') => {
   setActiveTab(t);
   if (typeof window !== 'undefined') {
    const url = new URL(window.location.href);
@@ -991,6 +999,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
    : setsData.allCategories
  ) : [];
  const contestItems = setsData?.contestSets || [];
+ const myProblemSetItems = setsData?.myProblemSets || [];
 
  const distinctSets = Array.from(new Set(basket.map(b => b.setName)));
  const basketDiffCounts: Record<string, number> = {};
@@ -1006,10 +1015,11 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
     title="把教学目标，变成一次好练习。"
     description={setsData ? `当前课程: ${setsData.courseCode} · ${setsData.courseName} (${setsData.offeringTitle})` : "自编题、选择课程题单或让 AI 辅助起草，统一经过审核发布。"}
    >
-    <div className="flex gap-2">
+    <div className="flex flex-wrap gap-2">
      <Link className="px-4 py-2 border border-line rounded-control text-meta hover:bg-surface-muted" href={`/teacher/courses/${oid}`}>查看已发布作业</Link>
      <Link className="px-4 py-2 border border-line rounded-control text-meta hover:bg-surface-muted" href={`/teacher/classes/${oid}`}>班级管理</Link>
      <Link className="px-4 py-2 border border-brand/40 text-brand rounded-control text-meta hover:bg-brand/5 flex items-center gap-1.5" href="/teacher/categories"><span>🌲 分类题库树 ↗</span></Link>
+     <Link className="px-4 py-2 border border-brand/40 text-brand rounded-control text-meta hover:bg-brand/5 flex items-center gap-1.5" href="/teacher/library"><span>⭐ 我的题库 ↗</span></Link>
     </div>
    </Heading>
 
@@ -1045,6 +1055,14 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
     </button>
     <button
      type="button"
+     className={`px-4 py-2.5 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab==='my-sets'?'border-brand text-brand font-semibold bg-brand/5':'border-transparent text-fg-muted hover:text-fg'}`}
+     onClick={()=>switchTab('my-sets')}
+    >
+     <span>⭐ 我的题单库</span>
+     {setsData && <span className="rounded-full bg-brand/10 text-brand px-2 py-0.5 text-xs font-mono">{myProblemSetItems.length}</span>}
+    </button>
+    <button
+     type="button"
      className={`px-4 py-2.5 font-medium border-b-2 transition-colors flex items-center gap-2 ${activeTab==='ai'?'border-brand text-brand font-semibold bg-brand/5':'border-transparent text-fg-muted hover:text-fg'}`}
      onClick={()=>switchTab('ai')}
     >
@@ -1076,7 +1094,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
     </button>
    </div>
 
-   {loadingSets && (activeTab === 'recommended' || activeTab === 'categories' || activeTab === 'contests') && (
+   {loadingSets && (activeTab === 'recommended' || activeTab === 'my-sets' || activeTab === 'categories' || activeTab === 'contests') && (
     <Card><p className="py-8 text-center text-fg-muted">正在加载该课程题库与知识点映射…</p></Card>
    )}
 
@@ -1298,6 +1316,44 @@ problems:
      ) : (
       <div className="grid gap-3">
        {recommendedItems.map((item: Row) => (
+        <ProblemSetCard
+         key={item.id}
+         item={item}
+         expanded={expandedId === item.id}
+         onToggleExpand={() => setExpandedId(expandedId === item.id ? null : item.id)}
+         basketSlugs={basket.filter(b => b.setId === item.id).map(b => b.slug)}
+         onToggleBasketItem={(prob) => handleToggleBasketItem(item, prob)}
+         onToggleBasketAll={() => handleToggleBasketAll(item)}
+         onQuickImport={() => handleQuickImport(item)}
+         busy={importingId === item.id}
+         readonly={readonly}
+        />
+       ))}
+      </div>
+     )}
+    </div>
+   )}
+
+   {/* Tab: My Sets */}
+   {!loadingSets && activeTab === 'my-sets' && (
+    <div className="space-y-4">
+     <div className="flex flex-wrap items-center justify-between gap-3 bg-surface-muted/60 p-4 rounded-control border border-line">
+      <div>
+       <h2 className="font-semibold text-fg">教师专属个人题单库 ({myProblemSetItems.length} 份)</h2>
+       <p className="mt-1 text-meta text-fg-muted">
+        您在所有学期和教学班中编写、导入或通过 AI 智能起草的个人题单。支持单题勾选加入跨题单选题篮，或一键导入当前教学班。
+       </p>
+      </div>
+      <Link href="/teacher/library" className="text-xs px-3 py-1.5 rounded-control border border-brand/40 text-brand hover:bg-brand/5 font-medium transition">
+       进入我的题库中心管理与新建 ↗
+      </Link>
+     </div>
+
+     {myProblemSetItems.length === 0 ? (
+      <Empty title="您的题单库暂无题单" hint="可通过上方「AI 智能辅助出题」生成新题单，或进入「我的题库」统一导入与管理。"/>
+     ) : (
+      <div className="grid gap-3">
+       {myProblemSetItems.map((item: Row) => (
         <ProblemSetCard
          key={item.id}
          item={item}
@@ -1848,6 +1904,7 @@ function PlatformPage() {
   if(route.name==='student-problems') { router.replace('/student/categories'); return null; }
   if(route.name==='student-problem-detail')return <PublicProblemWorkspace pid={route.pid} user={me.user}/>;
   if(route.name==='student-categories'||route.name==='teacher-categories')return <CategoryTreeView portal={me.portal} user={me.user}/>;
+  if(route.name==='teacher-library')return <TeacherLibraryView portal={me.portal} user={me.user}/>;
  if(error)return <div className="space-y-4"><Empty title={error.split('|').pop()||'加载失败'} hint="请检查当前登录身份与课程权限。"/><Button onClick={reload}>重新加载</Button><Link className="ml-3 text-brand" href={home}>返回工作台</Link></div>;
  if(!data)return <p role="status" className="py-20 text-center text-fg-muted">正在读取课程数据…</p>;
  if(route.name==='student')return <CourseList rows={data.filter((r:Row)=>r.role==='student')} prefix={prefix}/>;

@@ -50,6 +50,9 @@ describe("matchRoute", () => {
     expect(matchRoute("/teacher/ranklist")).toEqual({ name: "teacher-ranklist" });
     expect(matchRoute("/teacher/insights/10")).toEqual({ name: "insights", oid: "10" });
     expect(matchRoute("/teacher/classes/10")).toEqual({ name: "classes", oid: "10" });
+    expect(matchRoute("/teacher/library")).toEqual({ name: "teacher-library" });
+    expect(matchRoute("/teacher/problems")).toEqual({ name: "teacher-library" });
+    expect(matchRoute("/teacher/problem-sets")).toEqual({ name: "teacher-library" });
   });
 
   it("旧公共链接标记为 legacy，由 Platform 按 me.portal 迁移", () => {
@@ -90,6 +93,7 @@ describe("routePortal", () => {
     expect(routePortal(matchRoute("/teacher/ranklist"))).toBe("teacher");
     expect(routePortal(matchRoute("/teacher/courses/10"))).toBe("teacher");
     expect(routePortal(matchRoute("/teacher/drafts/7"))).toBe("teacher");
+    expect(routePortal(matchRoute("/teacher/library"))).toBe("teacher");
     expect(routePortal(matchRoute("/faq"))).toBeNull();
   });
 

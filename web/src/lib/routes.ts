@@ -28,6 +28,7 @@ export type Route =
   | { name: "student-batch"; bid: string }
   | { name: "student-workspace"; bid: string; pid: string }
   | { name: "teacher" }
+  | { name: "teacher-library" }
   | { name: "teacher-categories" }
   | { name: "teacher-status" }
   | { name: "teacher-ranklist" }
@@ -73,6 +74,8 @@ export function matchRoute(pathname: string): Route {
     return { name: "student-workspace", bid: c, pid: parts[4] };
   // 教师端
   if (parts.length === 1 && a === "teacher") return { name: "teacher" };
+  if (parts.length === 2 && a === "teacher" && (b === "library" || b === "problems" || b === "problem-sets"))
+    return { name: "teacher-library" };
   if (parts.length === 2 && a === "teacher" && b === "categories") return { name: "teacher-categories" };
   if (parts.length === 2 && a === "teacher" && b === "status") return { name: "teacher-status" };
   if (parts.length === 2 && a === "teacher" && b === "ranklist") return { name: "teacher-ranklist" };
@@ -113,6 +116,7 @@ export function routePortal(route: Route): "student" | "teacher" | null {
     case "student-workspace":
       return "student";
     case "teacher":
+    case "teacher-library":
     case "teacher-categories":
     case "teacher-status":
     case "teacher-ranklist":

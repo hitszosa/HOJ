@@ -13,6 +13,7 @@ const STUDENT_NAV = [
 ];
 const TEACHER_NAV = [
   ['/teacher', '教学工作台'],
+  ['/teacher/library', '我的题库'],
   ['/teacher/categories', '算法题库'],
   ['/teacher/status', '实时评测流'],
   ['/faq', '常见问答'],
