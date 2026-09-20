@@ -1594,7 +1594,7 @@ function PlatformPage() {
  if(route.name==='not-found')return <div className="space-y-4"><Empty title="页面未找到" hint={`路径 /${parts.join('/')} 不属于课程工作台的任何功能，请检查链接是否正确。`}/><Link className={action} href={home}>返回工作台</Link></div>;
   if(route.name==='student-status'||route.name==='teacher-status')return <StatusStreamView portal={me.portal} user={me.user}/>;
   if(route.name==='student-ranklist'||route.name==='teacher-ranklist')return <RankListView portal={me.portal} user={me.user}/>;
-  if(route.name==='student-problems')return <PublicProblemListView/>;
+  if(route.name==='student-problems') { router.replace('/student/categories'); return null; }
   if(route.name==='student-problem-detail')return <PublicProblemWorkspace pid={route.pid} user={me.user}/>;
   if(route.name==='student-categories'||route.name==='teacher-categories')return <CategoryTreeView portal={me.portal} user={me.user}/>;
  if(error)return <div className="space-y-4"><Empty title={error.split('|').pop()||'加载失败'} hint="请检查当前登录身份与课程权限。"/><Button onClick={reload}>重新加载</Button><Link className="ml-3 text-brand" href={home}>返回工作台</Link></div>;

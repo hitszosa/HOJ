@@ -95,6 +95,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
   const [problemSearch, setProblemSearch] = useState("");
   const [selectedDiff, setSelectedDiff] = useState<string>("ALL");
   const [expandedProblemSlug, setExpandedProblemSlug] = useState<string | null>(null);
+  const [myStatus, setMyStatus] = useState<Record<string, string>>({});
 
   // Teacher Problem Basket & Multi-Class Publishing
   const [basket, setBasket] = useState<BasketItem[]>([]);
@@ -122,6 +123,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
         setTreeData(res.root);
         setTotalProblems(res.totalProblems);
         setTotalSets(res.totalSets);
+        if (res.myStatus) setMyStatus(res.myStatus);
         setLoading(false);
       })
       .catch((e) => {
@@ -129,6 +131,14 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
         setError(String(e).split("|").pop() || "加载题库树失败");
         setLoading(false);
       });
+
+    if (portal === "student") {
+      api("/problem-sets/my-status")
+        .then((st) => {
+          if (active && st) setMyStatus((prev) => ({ ...prev, ...st }));
+        })
+        .catch(() => {});
+    }
 
     if (portal === "teacher") {
       api("/courses")
@@ -853,6 +863,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                   const isExpanded = expandedProblemSlug === prob.slug;
                   const inBasket = basket.some((b) => b.slug === prob.slug);
                   const tone = getDifficultyTone(prob.difficulty || "L1");
+                  const status = myStatus[prob.slug];
 
                   return (
                     <Card
@@ -875,9 +886,25 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                             <Badge tone={tone}>
                               {prob.difficulty || "L1-入门"}
                             </Badge>
-                            <h3 className="text-base font-semibold text-fg hover:text-brand transition">
-                              {prob.title}
-                            </h3>
+                            {status === "passed" && (
+                              <Badge tone="ok">✓ 已完成</Badge>
+                            )}
+                            {status === "tried" && (
+                              <Badge tone="warn">尝试中</Badge>
+                            )}
+                            {portal === "student" ? (
+                              <Link
+                                href={`/student/problems/${prob.slug}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-base font-semibold text-fg hover:text-brand transition hover:underline"
+                              >
+                                {prob.title}
+                              </Link>
+                            ) : (
+                              <h3 className="text-base font-semibold text-fg hover:text-brand transition">
+                                {prob.title}
+                              </h3>
+                            )}
                           </div>
 
                           <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-fg-muted">
@@ -902,6 +929,14 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
 
                         {/* Actions */}
                         <div className="flex items-center gap-2">
+                          {portal === "student" && (
+                            <Link
+                              href={`/student/problems/${prob.slug}`}
+                              className="rounded-control bg-brand px-3 py-1.5 text-xs font-medium text-brand-fg hover:opacity-90 transition inline-flex items-center gap-1"
+                            >
+                              {status === "passed" ? "再次练习 →" : "开始解题 →"}
+                            </Link>
+                          )}
                           {portal === "teacher" && (
                             <button
                               type="button"
@@ -973,6 +1008,17 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                                   </div>
                                 ))}
                               </div>
+                            </div>
+                          )}
+
+                          {portal === "student" && (
+                            <div className="pt-3 flex justify-end border-t border-line/60">
+                              <Link
+                                href={`/student/problems/${prob.slug}`}
+                                className="inline-flex items-center gap-1.5 rounded-control bg-brand px-4 py-2 text-xs font-medium text-brand-fg hover:opacity-90 transition shadow-sm"
+                              >
+                                进入解题工作台并提交代码 →
+                              </Link>
                             </div>
                           )}
                         </div>

@@ -5,16 +5,15 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 const STUDENT_NAV = [
   ['/student', '我的课程'],
-  ['/student/categories', '分类题库树'],
+  ['/student/categories', '算法题库与知识图谱'],
   ['/student/status', '评测状态'],
   ['/student/ranklist', '排行榜'],
-  ['/student/problems', '开放题库'],
   ['/faq', '常见问答'],
   ['/student/history', '历史课程'],
 ];
 const TEACHER_NAV = [
   ['/teacher', '教学工作台'],
-  ['/teacher/categories', '分类题库树'],
+  ['/teacher/categories', '算法题库与知识图谱'],
   ['/teacher/status', '实时评测流'],
   ['/faq', '常见问答'],
 ];

@@ -223,5 +223,30 @@ class ProblemSetsEndpointsTests(unittest.TestCase):
         self.assertEqual(sub_resp.status_code, 400)
         self.assertIn('该作业限制仅允许使用以下语言提交', sub_resp.json()['detail'])
 
+    def test_category_bank_problem_solve_and_status(self):
+        self.client.post('/api/session', json={'userId': 'student_auto01'})
+        # 1. Test /api/problem-sets/my-status
+        status_resp = self.client.get('/api/problem-sets/my-status')
+        self.assertEqual(status_resp.status_code, 200)
+        self.assertIsInstance(status_resp.json(), dict)
+
+        # 2. Test getting problem by slug
+        prob_resp = self.client.get('/api/public-problems/01-basic-io-p01')
+        self.assertEqual(prob_resp.status_code, 200)
+        prob = prob_resp.json()
+        self.assertEqual(prob['slug'], '01-basic-io-p01')
+        self.assertEqual(prob['title'], '单词翻转')
+        self.assertIn('description', prob)
+        self.assertTrue(len(prob['samples']) > 0)
+
+        # 3. Test submitting solution by slug
+        sub_resp = self.client.post('/api/public-problems/01-basic-io-p01/submissions', json={
+            'code': 'import sys\nfor line in sys.stdin:\n    print(line)\n',
+            'language': 'python'
+        })
+        self.assertEqual(sub_resp.status_code, 200)
+        sid = sub_resp.json().get('submissionId')
+        self.assertIsNotNone(sid)
+
 if __name__ == '__main__':
     unittest.main()

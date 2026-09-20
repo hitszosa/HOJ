@@ -59,10 +59,12 @@ export function matchRoute(pathname: string): Route {
   if (parts.length === 2 && a === "student" && b === "history") return { name: "student-history" };
   if (parts.length === 2 && a === "student" && b === "status") return { name: "student-status" };
   if (parts.length === 2 && a === "student" && b === "ranklist") return { name: "student-ranklist" };
-  if (parts.length === 2 && a === "student" && b === "problems") return { name: "student-problems" };
+  if (parts.length === 2 && a === "student" && b === "problems") return { name: "redirect", to: "/student/categories" };
   if (parts.length === 2 && a === "student" && b === "categories") return { name: "student-categories" };
   if (parts.length === 3 && a === "student" && b === "problems" && c)
     return { name: "student-problem-detail", pid: c };
+  if (parts.length === 4 && a === "student" && b === "categories" && c === "problems" && d)
+    return { name: "student-problem-detail", pid: d };
   if (parts.length === 3 && a === "student" && b === "courses" && c)
     return { name: "student-course", oid: c };
   if (parts.length === 3 && a === "student" && b === "batches" && c)

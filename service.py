@@ -1263,12 +1263,55 @@ def category_tree_view(request: Request):
         'children': tree_nodes
     }
 
+    user_status = {}
+    try:
+        if user:
+            rows = db.rows(f"""
+                SELECT p.source,
+                       MAX(CASE WHEN s.result = 4 THEN 1 ELSE 0 END) as passed,
+                       COUNT(s.solution_id) as tries
+                FROM jol.solution s
+                JOIN jol.problem p ON s.problem_id = p.problem_id
+                WHERE s.user_id = {q(user)} AND p.source LIKE 'bank:%'
+                GROUP BY p.source
+            """)
+            for r in rows:
+                src = r['source']
+                pslug = src.split(':', 1)[1] if ':' in src else src
+                user_status[pslug] = 'passed' if int(r['passed']) == 1 else ('tried' if int(r['tries']) > 0 else 'unattempted')
+    except Exception:
+        pass
+
     return {
         'root': root_tree,
         'pillars': tree_nodes,
         'totalProblems': total_problems,
-        'totalSets': total_sets
+        'totalSets': total_sets,
+        'myStatus': user_status
     }
+
+
+@app.get('/api/problem-sets/my-status')
+def get_bank_my_status(request: Request):
+    user = principal(request)
+    status_map = {}
+    try:
+        rows = db.rows(f"""
+            SELECT p.source,
+                   MAX(CASE WHEN s.result = 4 THEN 1 ELSE 0 END) as passed,
+                   COUNT(s.solution_id) as tries
+            FROM jol.solution s
+            JOIN jol.problem p ON s.problem_id = p.problem_id
+            WHERE s.user_id = {q(user)} AND p.source LIKE 'bank:%'
+            GROUP BY p.source
+        """)
+        for r in rows:
+            src = r['source']
+            pslug = src.split(':', 1)[1] if ':' in src else src
+            status_map[pslug] = 'passed' if int(r['passed']) == 1 else ('tried' if int(r['tries']) > 0 else 'unattempted')
+    except Exception:
+        pass
+    return status_map
 
 
 def resolve_set_file(set_id: str):
@@ -1285,6 +1328,69 @@ def resolve_set_file(set_id: str):
         if not target_path.is_file():
             target_path = ps_dir / 'problems' / 'categories' / f'{code}.yml'
     return code, target_path
+
+
+def find_problem_by_slug(slug: str):
+    data = get_problem_sets_index()
+    target_set_id = None
+    for cat in data['categories']:
+        for p in cat.get('problems', []):
+            if p.get('slug') == slug:
+                target_set_id = cat['id']
+                break
+        if target_set_id:
+            break
+    if not target_set_id:
+        for s in data['standalone_sets']:
+            for p in s.get('problems', []):
+                if p.get('slug') == slug:
+                    target_set_id = s['id']
+                    break
+            if target_set_id:
+                break
+    if not target_set_id:
+        return None
+    code, path = resolve_set_file(target_set_id)
+    if not path.is_file():
+        return None
+    with open(path, 'r', encoding='utf-8') as f:
+        doc = yaml_load(f) or {}
+    for p in doc.get('problems', []):
+        if p.get('slug') == slug:
+            prob = dict(p)
+            prob['set_id'] = target_set_id
+            prob['category_name'] = doc.get('title', code)
+            return prob
+    return None
+
+
+def ensure_bank_problem(slug: str):
+    source = f'bank:{slug}'
+    existing = db.one(f"SELECT problem_id FROM jol.problem WHERE source={q(source)}")
+    if existing:
+        return int(existing['problem_id'])
+    prob = find_problem_by_slug(slug)
+    if not prob:
+        return None
+    title = str(prob.get('title') or slug).strip()
+    statement = str(prob.get('statement') or '').strip()
+    samples = prob.get('samples') or [{'input': '1\n', 'output': '1\n'}]
+    sample_in = str(samples[0].get('input', '')) if samples else ''
+    sample_out = str(samples[0].get('output', '')) if samples else ''
+    tests = prob.get('tests') or samples
+    hint = '、'.join(str(x) for x in (prob.get('tags', []) or prob.get('knowledge', [])) if x)
+    sql = f"""
+        INSERT INTO jol.problem(title, description, input, output, sample_input, sample_output, hint, source, in_date, defunct, time_limit, memory_limit)
+        VALUES({q(title)}, {q(statement)}, '', '', {q(sample_in)}, {q(sample_out)}, {q(hint)}, {q(source)}, NOW(), 'N', 1, 128);
+    """
+    db.write(sql, ops=True)
+    row = db.one(f"SELECT problem_id FROM jol.problem WHERE source={q(source)}")
+    pid = int(row['problem_id'])
+    try:
+        write_test_files(pid, tests)
+    except Exception:
+        pass
+    return pid
 
 
 @app.post('/api/offerings/{oid}/import-set')
@@ -2000,33 +2106,90 @@ def get_public_problems(request: Request, keyword: str = None, page: int = 1, pa
 
 
 @app.get('/api/public-problems/{pid}')
-def get_public_problem(pid: int, request: Request):
-    principal(request)
-    p = db.one(f"SELECT problem_id, title, description, input, output, sample_input, sample_output, hint, time_limit, memory_limit, accepted, submit FROM jol.problem WHERE problem_id={int(pid)} AND defunct='N'")
-    if not p:
+def get_public_problem(pid: str, request: Request):
+    user = principal(request)
+    pid_str = str(pid).strip()
+
+    if pid_str.isdigit():
+        p = db.one(f"SELECT problem_id, title, description, input, output, sample_input, sample_output, hint, source, time_limit, memory_limit, accepted, submit FROM jol.problem WHERE problem_id={int(pid_str)} AND defunct='N'")
+        if p:
+            sbm = db.one(f"SELECT MAX(CASE WHEN result=4 THEN 1 ELSE 0 END) as passed, COUNT(*) as tries FROM jol.solution WHERE problem_id={int(pid_str)} AND user_id={q(user)}")
+            solved = 'passed' if sbm and sbm.get('passed') == '1' else ('tried' if sbm and int(sbm.get('tries') or 0) > 0 else 'unattempted')
+            slug = pid_str
+            if p.get('source', '') and str(p.get('source', '')).startswith('bank:'):
+                slug = str(p['source']).split(':', 1)[1]
+            return {
+                'problemId': int(pid_str),
+                'numericPid': int(p['problem_id']),
+                'slug': slug,
+                'title': p['title'],
+                'description': p['description'],
+                'input': p['input'],
+                'output': p['output'],
+                'sampleInput': p['sample_input'],
+                'sampleOutput': p['sample_output'],
+                'samples': [{'input': p['sample_input'] or '', 'output': p['sample_output'] or ''}] if p.get('sample_input') else [],
+                'hint': p['hint'],
+                'timeLimit': float(p['time_limit']),
+                'memoryLimit': int(p['memory_limit']),
+                'accepted': int(p.get('accepted') or 0),
+                'submit': int(p.get('submit') or 0),
+                'solvedStatus': solved
+            }
+
+    prob = find_problem_by_slug(pid_str)
+    if not prob:
         raise HTTPException(404, '题目不存在或未开放')
+
+    num_pid = ensure_bank_problem(pid_str)
+    samples = prob.get('samples') or []
+    s_in = samples[0].get('input', '') if samples else ''
+    s_out = samples[0].get('output', '') if samples else ''
+
+    solved = 'unattempted'
+    if num_pid:
+        sbm = db.one(f"SELECT MAX(CASE WHEN result=4 THEN 1 ELSE 0 END) as passed, COUNT(*) as tries FROM jol.solution WHERE problem_id={num_pid} AND user_id={q(user)}")
+        solved = 'passed' if sbm and sbm.get('passed') == '1' else ('tried' if sbm and int(sbm.get('tries') or 0) > 0 else 'unattempted')
+
     return {
-        'problemId': int(p['problem_id']),
-        'title': p['title'],
-        'description': p['description'],
-        'input': p['input'],
-        'output': p['output'],
-        'sampleInput': p['sample_input'],
-        'sampleOutput': p['sample_output'],
-        'hint': p['hint'],
-        'timeLimit': float(p['time_limit']),
-        'memoryLimit': int(p['memory_limit']),
-        'accepted': int(p.get('accepted') or 0),
-        'submit': int(p.get('submit') or 0)
+        'problemId': pid_str,
+        'numericPid': num_pid,
+        'slug': pid_str,
+        'title': prob['title'],
+        'description': prob.get('statement', ''),
+        'input': prob.get('input', ''),
+        'output': prob.get('output', ''),
+        'sampleInput': s_in,
+        'sampleOutput': s_out,
+        'samples': samples,
+        'hint': '、'.join(str(x) for x in (prob.get('tags', []) or prob.get('knowledge', [])) if x),
+        'difficulty': prob.get('difficulty', 'L1-入门'),
+        'tags': prob.get('tags', []),
+        'provenance': prob.get('provenance', ''),
+        'categoryName': prob.get('category_name', ''),
+        'timeLimit': 1.0,
+        'memoryLimit': 128,
+        'accepted': 0,
+        'submit': 0,
+        'solvedStatus': solved
     }
 
 
 @app.post('/api/public-problems/{pid}/submissions')
-def submit_public_problem(pid: int, data: dict, request: Request):
+def submit_public_problem(pid: str, data: dict, request: Request):
     user = principal(request)
-    p = db.one(f"SELECT problem_id FROM jol.problem WHERE problem_id={int(pid)} AND defunct='N'")
-    if not p:
-        raise HTTPException(404, '题目不存在或未开放')
+    pid_str = str(pid).strip()
+
+    if pid_str.isdigit():
+        p = db.one(f"SELECT problem_id FROM jol.problem WHERE problem_id={int(pid_str)} AND defunct='N'")
+        if not p:
+            raise HTTPException(404, '题目不存在或未开放')
+        numeric_pid = int(pid_str)
+    else:
+        numeric_pid = ensure_bank_problem(pid_str)
+        if not numeric_pid:
+            raise HTTPException(404, '题目不存在或未开放')
+
     code = data.get('code')
     lang_str = data.get('language')
     if not isinstance(lang_str, str) or lang_str not in LANGUAGES:
@@ -2042,12 +2205,12 @@ def submit_public_problem(pid: int, data: dict, request: Request):
 
     sql = f"""
         INSERT INTO jol.solution(problem_id, user_id, in_date, language, ip, code_length, result)
-        VALUES({int(pid)}, {q(user)}, NOW(), {lang}, '127.0.0.1', {len(code.encode('utf-8'))}, 0);
+        VALUES({numeric_pid}, {q(user)}, NOW(), {lang}, '127.0.0.1', {len(code.encode('utf-8'))}, 0);
         SET @sid = LAST_INSERT_ID();
         INSERT INTO jol.source_code(solution_id, source) VALUES(@sid, {q(code)});
     """
     db.write(sql, ops=True)
-    sid = int(db.one(f"SELECT MAX(solution_id) as sid FROM jol.solution WHERE user_id={q(user)} AND problem_id={int(pid)}")['sid'])
+    sid = int(db.one(f"SELECT MAX(solution_id) as sid FROM jol.solution WHERE user_id={q(user)} AND problem_id={numeric_pid}")['sid'])
     return {'submissionId': sid}
 
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { Badge, Button, Card, CardTitle, Empty, Progress } from "@/components/ui";
 import { CodeEditor } from "@/components/CodeEditor";
@@ -24,204 +25,34 @@ function getVerdictTone(result: number): "ok" | "warn" | "danger" | "brand" | "n
   return "neutral";
 }
 
+function getDifficultyTone(diff: string): "ok" | "brand" | "warn" | "danger" | "neutral" {
+  if (!diff) return "neutral";
+  if (diff.startsWith("L1") || diff.includes("入门")) return "ok";
+  if (diff.startsWith("L2") || diff.includes("基础")) return "brand";
+  if (diff.startsWith("L3") || diff.includes("进阶")) return "warn";
+  if (diff.startsWith("L4") || diff.includes("综合")) return "danger";
+  return "neutral";
+}
+
 export function PublicProblemListView() {
-  const [problems, setProblems] = useState<Row[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [keyword, setKeyword] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const limit = 25;
-
-  const loadProblems = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const params = new URLSearchParams();
-      params.set("page", String(page));
-      params.set("pageSize", String(limit));
-      params.set("limit", String(limit));
-      if (searchQuery.trim()) {
-        params.set("keyword", searchQuery.trim());
-        params.set("q", searchQuery.trim());
-      }
-
-      const res = await api(`/public-problems?${params.toString()}`);
-      setProblems(res.items || res.problems || []);
-      setTotal(res.total || 0);
-    } catch (e) {
-      setError(String(e).split("|").pop() || "加载公开题库失败");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, limit, searchQuery]);
-
+  const router = useRouter();
   useEffect(() => {
-    loadProblems();
-  }, [loadProblems]);
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    setPage(1);
-    setSearchQuery(keyword);
-  };
-
-  const totalPages = Math.ceil(total / limit) || 1;
+    router.replace("/student/categories");
+  }, [router]);
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="eyebrow">OPEN PRACTICE BANK</p>
-          <h1 className="text-3xl font-semibold tracking-tight">开放练习题库</h1>
-          <p className="mt-2 text-fg-muted">
-            面向全校开放的算法与程序设计公开题库，支持日常自主刷题、练习积累与自我测评。
-          </p>
-        </div>
-      </header>
-
-      {/* Search Bar */}
+    <div className="mx-auto max-w-xl py-20 text-center">
       <Card>
-        <form onSubmit={handleSearch} className="flex gap-3">
-          <input
-            type="text"
-            placeholder="输入题目编号或题目标题关键词搜索…"
-            className={fieldClass}
-            value={keyword}
-            onChange={(e) => setKeyword(e.target.value)}
-          />
-          <Button type="submit" variant="primary" disabled={loading}>
-            搜索
-          </Button>
-          {searchQuery && (
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                setKeyword("");
-                setSearchQuery("");
-                setPage(1);
-              }}
-            >
-              重置
-            </Button>
-          )}
-        </form>
-      </Card>
-
-      {/* Problems Table */}
-      <Card>
-        <CardTitle
-          title={`题目列表 (共 ${total} 道题)`}
-          meta={`第 ${page} / ${totalPages} 页`}
+        <CardTitle title="开放题库已全面升级" meta="已整合至算法分类体系与知识图谱" />
+        <Empty
+          title="正在为您跳转至算法题库与知识图谱"
+          hint="平台现已全面升级为包含 5 大知识支柱、48 个算法专题与 2,148 道试题的知识图谱题库。"
         />
-
-        {error ? (
-          <div className="py-4 text-center text-danger">{error}</div>
-        ) : problems.length === 0 ? (
-          <Empty
-            title="未找到匹配的题目"
-            hint={searchQuery ? "请尝试更换搜索词后再试。" : "题库目前尚无公开题目。"}
-          />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left zebra">
-              <thead>
-                <tr>
-                  <th className="py-3 w-20">我的状态</th>
-                  <th className="w-24">编号</th>
-                  <th>题目名称</th>
-                  <th>通过 / 提交</th>
-                  <th className="w-36">通过率</th>
-                  <th>资源限制</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                {problems.map((p) => {
-                  const pid = p.problemId ?? p.problem_id;
-                  const passRateVal = Number(p.passRate ?? p.pass_rate) || 0;
-                  const passRatePct = passRateVal <= 1 ? Math.round(passRateVal * 100) : Math.round(passRateVal);
-                  const status = p.solvedStatus || p.my_status;
-                  const timeLimit = p.timeLimit ?? p.time_limit;
-                  const memoryLimit = p.memoryLimit ?? p.memory_limit;
-                  return (
-                    <tr key={pid} className="border-t border-line">
-                      <td className="py-3">
-                        {status === "passed" || status === "accepted" ? (
-                          <Badge tone="ok">已通过</Badge>
-                        ) : status === "tried" || status === "attempted" ? (
-                          <Badge tone="warn">尝试中</Badge>
-                        ) : (
-                          <Badge tone="neutral">未尝试</Badge>
-                        )}
-                      </td>
-                      <td className="font-mono text-meta text-fg-muted">#{pid}</td>
-                      <td>
-                        <Link
-                          href={`/student/problems/${pid}`}
-                          className="font-medium text-fg hover:text-brand hover:underline transition-colors"
-                        >
-                          {p.title}
-                        </Link>
-                      </td>
-                      <td className="text-meta text-fg">
-                        <span className="text-ok font-medium">{p.accepted}</span>
-                        <span className="text-fg-subtle"> / {p.submit}</span>
-                      </td>
-                      <td>
-                        <div className="space-y-1">
-                          <span className="text-meta text-fg-muted">{passRatePct}%</span>
-                          <Progress
-                            value={passRatePct}
-                            tone={passRatePct > 50 ? "ok" : "brand"}
-                          />
-                        </div>
-                      </td>
-                      <td className="text-meta text-fg-muted font-mono whitespace-nowrap">
-                        {timeLimit}s / {memoryLimit}MB
-                      </td>
-                      <td>
-                        <Link
-                          href={`/student/problems/${pid}`}
-                          className="text-meta font-medium text-brand hover:underline"
-                        >
-                          开始解题 →
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between border-t border-line pt-4">
-            <span className="text-meta text-fg-muted">
-              显示 {(page - 1) * limit + 1} - {Math.min(page * limit, total)} 共 {total} 道
-            </span>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                disabled={page <= 1 || loading}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                上一页
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={page >= totalPages || loading}
-                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              >
-                下一页
-              </Button>
-            </div>
-          </div>
-        )}
+        <div className="mt-6">
+          <Link href="/student/categories" className={actionClass}>
+            立即进入算法题库与知识图谱 →
+          </Link>
+        </div>
       </Card>
     </div>
   );
@@ -343,15 +174,15 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
   if (error || !problem) {
     return (
       <div className="space-y-4">
-        <Empty title={error || "题目不存在"} hint="请核对题目编号或返回题库浏览。" />
-        <Link href="/student/problems" className={actionClass}>
-          返回公开题库
+        <Empty title={error || "题目不存在"} hint="请核对题目编号或返回算法题库浏览。" />
+        <Link href="/student/categories" className={actionClass}>
+          返回算法题库与知识图谱
         </Link>
       </div>
     );
   }
 
-  const problemId = problem.problemId ?? problem.problem_id;
+  const problemId = problem.slug || problem.problemId || problem.problem_id;
   const timeLimit = problem.timeLimit ?? problem.time_limit;
   const memoryLimit = problem.memoryLimit ?? problem.memory_limit;
   const sampleInput = problem.sampleInput ?? problem.sample_input;
@@ -362,33 +193,70 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
   return (
     <div className="space-y-6">
       {/* Header */}
-      <header className="flex flex-wrap items-end justify-between gap-4">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-4">
         <div>
           <div className="flex items-center gap-2">
             <Link
-              href="/student/problems"
-              className="text-meta text-brand hover:underline"
+              href="/student/categories"
+              className="text-meta text-brand hover:underline inline-flex items-center gap-1 font-medium"
             >
-              ← 返回公开题库
+              ← 返回算法题库与知识图谱
             </Link>
             <span className="text-fg-subtle">/</span>
-            <span className="text-meta text-fg-muted">自主练习</span>
+            <span className="text-meta text-fg-muted">算法解题工作台</span>
           </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight">
-            #{problemId} · {problem.title}
-          </h1>
-          <p className="mt-2 text-meta text-fg-muted">
-            时间限制: {timeLimit} 秒 · 内存限制: {memoryLimit} MB · 通过率:{" "}
-            {passRatePct}% ({problem.accepted}/{problem.submit})
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2.5">
+            {problem.difficulty && (
+              <Badge tone={getDifficultyTone(problem.difficulty)}>
+                {problem.difficulty}
+              </Badge>
+            )}
+            {problem.solvedStatus === "passed" && (
+              <Badge tone="ok">✓ 已完成</Badge>
+            )}
+            {problem.solvedStatus === "tried" && (
+              <Badge tone="warn">尝试中</Badge>
+            )}
+            <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight text-fg">
+              {problem.title}
+            </h1>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-meta text-fg-muted">
+            {problem.categoryName && (
+              <span className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg-muted">
+                {problem.categoryName}
+              </span>
+            )}
+            {problem.provenance && (
+              <span className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg-muted">
+                来源: {problem.provenance}
+              </span>
+            )}
+            {(problem.tags || []).slice(0, 3).map((tag: string) => (
+              <span key={tag} className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg-muted">
+                #{tag}
+              </span>
+            ))}
+            <span>时间限制: {timeLimit} 秒</span>
+            <span>·</span>
+            <span>内存限制: {memoryLimit} MB</span>
+            {problem.submit > 0 && (
+              <>
+                <span>·</span>
+                <span>通过率: {passRatePct}% ({problem.accepted}/{problem.submit})</span>
+              </>
+            )}
+          </div>
         </div>
         <div>
-          <Link
-            href={`/student/status?problemId=${problemId}`}
-            className="text-meta text-brand hover:underline"
-          >
-            查看本题全站提交记录 ↗
-          </Link>
+          {problem.numericPid && (
+            <Link
+              href={`/student/status?problemId=${problem.numericPid}`}
+              className="text-meta text-brand hover:underline"
+            >
+              查看本题评测记录 ↗
+            </Link>
+          )}
         </div>
       </header>
 
@@ -502,6 +370,15 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
             {/* Verdict Result */}
             {result && (
               <div className="mt-4 border-t border-line pt-4 space-y-3">
+                {String(result.result) === "4" && (
+                  <div className="rounded-control bg-ok-soft p-4 border border-ok/30 flex items-center gap-3">
+                    <span className="text-2xl">🎉</span>
+                    <div>
+                      <h4 className="text-sm font-semibold text-ok">恭喜！本题已完全通过评测 (Accepted)！</h4>
+                      <p className="text-xs text-fg-muted mt-0.5">该题已记录至您的知识图谱与做题历史中，可随时返回分类体系继续挑战其他试题。</p>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-3">
                   <Badge tone={getVerdictTone(Number(result.result))}>
                     #{sid} · {result.label}

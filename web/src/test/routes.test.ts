@@ -41,9 +41,10 @@ describe("matchRoute", () => {
     expect(matchRoute("/faq")).toEqual({ name: "faq" });
     expect(matchRoute("/student/status")).toEqual({ name: "student-status" });
     expect(matchRoute("/student/ranklist")).toEqual({ name: "student-ranklist" });
-    expect(matchRoute("/student/problems")).toEqual({ name: "student-problems" });
+    expect(matchRoute("/student/problems")).toEqual({ name: "redirect", to: "/student/categories" });
     expect(matchRoute("/student/categories")).toEqual({ name: "student-categories" });
     expect(matchRoute("/student/problems/1025")).toEqual({ name: "student-problem-detail", pid: "1025" });
+    expect(matchRoute("/student/categories/problems/01-basic-io-p01")).toEqual({ name: "student-problem-detail", pid: "01-basic-io-p01" });
     expect(matchRoute("/teacher/categories")).toEqual({ name: "teacher-categories" });
     expect(matchRoute("/teacher/status")).toEqual({ name: "teacher-status" });
     expect(matchRoute("/teacher/ranklist")).toEqual({ name: "teacher-ranklist" });
@@ -79,8 +80,8 @@ describe("routePortal", () => {
     expect(routePortal(matchRoute("/student"))).toBe("student");
     expect(routePortal(matchRoute("/student/history"))).toBe("student");
     expect(routePortal(matchRoute("/student/status"))).toBe("student");
-    expect(routePortal(matchRoute("/student/ranklist"))).toBe("student");
-    expect(routePortal(matchRoute("/student/problems"))).toBe("student");
+    expect(routePortal(matchRoute("/student/problems/1025"))).toBe("student");
+    expect(routePortal(matchRoute("/student/categories/problems/01-basic-io-p01"))).toBe("student");
     expect(routePortal(matchRoute("/student/categories"))).toBe("student");
     expect(routePortal(matchRoute("/student/batches/10/problems/1025"))).toBe("student");
     expect(routePortal(matchRoute("/teacher"))).toBe("teacher");
