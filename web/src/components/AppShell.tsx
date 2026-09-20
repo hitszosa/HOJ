@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 const STUDENT_NAV = [
   ['/student', '我的课程'],
-  ['/student/categories', '算法题库与知识图谱'],
+  ['/student/categories', '算法题库'],
   ['/student/status', '评测状态'],
   ['/student/ranklist', '排行榜'],
   ['/faq', '常见问答'],
@@ -13,7 +13,7 @@ const STUDENT_NAV = [
 ];
 const TEACHER_NAV = [
   ['/teacher', '教学工作台'],
-  ['/teacher/categories', '算法题库与知识图谱'],
+  ['/teacher/categories', '算法题库'],
   ['/teacher/status', '实时评测流'],
   ['/faq', '常见问答'],
 ];

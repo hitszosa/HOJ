@@ -43,14 +43,14 @@ export function PublicProblemListView() {
   return (
     <div className="mx-auto max-w-xl py-20 text-center">
       <Card>
-        <CardTitle title="开放题库已全面升级" meta="已整合至算法分类体系与知识图谱" />
+        <CardTitle title="开放题库已全面升级" meta="已整合至算法题库" />
         <Empty
-          title="正在为您跳转至算法题库与知识图谱"
-          hint="平台现已全面升级为包含 5 大知识支柱、48 个算法专题与 2,148 道试题的知识图谱题库。"
+          title="正在为您跳转至算法题库"
+          hint="平台现已全面升级为包含 5 大知识支柱、48 个算法专题与 2,148 道试题的标准算法题库。"
         />
         <div className="mt-6">
           <Link href="/student/categories" className={actionClass}>
-            立即进入算法题库与知识图谱 →
+            立即进入算法题库 →
           </Link>
         </div>
       </Card>
@@ -176,7 +176,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
       <div className="space-y-4">
         <Empty title={error || "题目不存在"} hint="请核对题目编号或返回算法题库浏览。" />
         <Link href="/student/categories" className={actionClass}>
-          返回算法题库与知识图谱
+          返回算法题库
         </Link>
       </div>
     );
@@ -200,7 +200,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
               href="/student/categories"
               className="text-meta text-brand hover:underline inline-flex items-center gap-1 font-medium"
             >
-              ← 返回算法题库与知识图谱
+              ← 返回算法题库
             </Link>
             <span className="text-fg-subtle">/</span>
             <span className="text-meta text-fg-muted">算法解题工作台</span>
@@ -375,7 +375,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
                     <span className="text-2xl">🎉</span>
                     <div>
                       <h4 className="text-sm font-semibold text-ok">恭喜！本题已完全通过评测 (Accepted)！</h4>
-                      <p className="text-xs text-fg-muted mt-0.5">该题已记录至您的知识图谱与做题历史中，可随时返回分类体系继续挑战其他试题。</p>
+                      <p className="text-xs text-fg-muted mt-0.5">该题已记录至您的做题历史中，可随时返回算法题库继续挑战其他试题。</p>
                     </div>
                   </div>
                 )}

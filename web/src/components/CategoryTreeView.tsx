@@ -479,7 +479,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
   if (loading) {
     return (
       <div className="py-20 text-center text-fg-muted">
-        <p className="text-lg">正在加载算法题库分类体系与知识图谱…</p>
+        <p className="text-lg">正在加载算法题库…</p>
       </div>
     );
   }
@@ -506,7 +506,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
             </span>
           </div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-fg">
-            OJ 算法题库分类体系与知识图谱
+            算法题库
           </h1>
           <p className="mt-1 text-meta text-fg-muted">
             全面覆盖程序设计入门、核心数据结构、进阶算法模型、数论专项与高校竞赛真题，支持多级折叠检索与选题组合。
