@@ -24,7 +24,7 @@ TEACHERS = [
     ("teacher_wangq", "王强 教授", ["COMP3011"]),
     ("teacher_algo", "算法教学组", ["COMP3001"]),
     ("cm_pilot_teacher", "平台体验 · 教师", ["PILOT1007"]),
-    ("admin", "超级管理员 · admin", ["COMP1007", "COMP2052", "PILOT1007"]),
+    ("admin", "超级管理员 · admin", []),
 ]
 
 STUDENTS = [

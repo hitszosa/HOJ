@@ -2026,12 +2026,25 @@ def get_ranklist(request: Request, offeringId: int = None, page: int = 1, pageSi
                    MAX(s.in_date) as last_submit
             FROM jol.users u
             LEFT JOIN jol.solution s ON s.user_id = u.user_id
-            WHERE u.user_id NOT IN ('admin') AND u.user_id NOT LIKE 'cm_pilot_outsider%'
+            WHERE u.defunct = 'N'
+              AND u.user_id NOT IN ('admin')
+              AND u.user_id NOT LIKE 'teacher_%'
+              AND u.user_id NOT LIKE 'test_%'
+              AND u.user_id NOT IN ('cm_pilot_teacher', 'cm_pilot_ta', 'cm_pilot_outsider')
+              AND u.user_id NOT IN (SELECT DISTINCT user_id FROM jol.privilege WHERE rightstr IN ('administrator', 'teacher'))
             GROUP BY u.user_id, u.nick
             ORDER BY solved DESC, submit ASC, last_submit DESC
             LIMIT {limit} OFFSET {offset}
         """
-        total_sql = "SELECT COUNT(*) as n FROM jol.users WHERE user_id NOT IN ('admin') AND user_id NOT LIKE 'cm_pilot_outsider%'"
+        total_sql = """
+            SELECT COUNT(*) as n FROM jol.users u
+            WHERE u.defunct = 'N'
+              AND u.user_id NOT IN ('admin')
+              AND u.user_id NOT LIKE 'teacher_%'
+              AND u.user_id NOT LIKE 'test_%'
+              AND u.user_id NOT IN ('cm_pilot_teacher', 'cm_pilot_ta', 'cm_pilot_outsider')
+              AND u.user_id NOT IN (SELECT DISTINCT user_id FROM jol.privilege WHERE rightstr IN ('administrator', 'teacher'))
+        """
 
     rows = db.rows(sql)
     total_row = db.one(total_sql)
