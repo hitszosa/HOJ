@@ -1,0 +1,16 @@
+[Unit]
+Description=HOJ Course Service API (FastAPI)
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/oj/course-service
+EnvironmentFile=/opt/oj/course-service/.env
+ExecStart=/opt/oj/course-service/.venv/bin/python -m uvicorn service:app --host 127.0.0.1 --port 8100 --workers 4
+Restart=always
+RestartSec=3
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
