@@ -5,7 +5,7 @@ After=network.target hoj-api.service
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/opt/oj/course-service/web
+WorkingDirectory=/opt/oj/course-service/frontend
 Environment=NODE_ENV=production
 Environment=PORT=3100
 ExecStart=/usr/bin/npm run start -- -p 3100

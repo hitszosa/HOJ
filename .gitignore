@@ -1,12 +1,9 @@
-# course-service 是新建目录，尚未初始化 Git 仓库。
-# 这份 .gitignore 提前写好，避免将来初始化时把构建产物提交进去。
-
 # 前端
-web/node_modules/
-web/.next/
-web/out/
-web/next-env.d.ts
-web/*.tsbuildinfo
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+frontend/*.tsbuildinfo
 
 # Python
 __pycache__/
@@ -23,4 +20,4 @@ __pycache__/
 # 临时协同与私有存储
 .bus/
 .bus-peer*.json
-data/local/
+backend/data/local/
