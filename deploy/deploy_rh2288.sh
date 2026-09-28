@@ -30,6 +30,8 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 COURSE_DIR="${BASE_DIR}/course-service"
+BACKEND_DIR="${COURSE_DIR}/backend"
+FRONTEND_DIR="${COURSE_DIR}/frontend"
 HUSTOJ_DIR="${BASE_DIR}/hustoj"
 
 log_info "=========================================================="
@@ -125,7 +127,7 @@ docker exec -i hustoj /usr/bin/judged || true
 
 # 7. 自动执行教学域数据库初始化
 log_info ">>> 步骤 5/7: 初始化教学域数据库结构与账号..."
-for sql_file in "${COURSE_DIR}/schema"/00*.sql; do
+for sql_file in "${BACKEND_DIR}/schema"/00*.sql; do
     if [ -f "$sql_file" ]; then
         log_info "执行数据库脚本: $(basename "$sql_file")"
         docker exec -i hustoj mysql --default-character-set=utf8mb4 -uroot < "$sql_file" || true
@@ -134,7 +136,7 @@ done
 
 # 8. 安装与配置 Course Service (FastAPI) 与 前端 (Next.js)
 log_info ">>> 步骤 6/7: 配置 Python 虚拟环境与编译前端页面..."
-cd "${COURSE_DIR}"
+cd "${BACKEND_DIR}"
 
 if [ ! -d ".venv" ]; then
     python3 -m venv .venv
@@ -155,7 +157,7 @@ EOF
 fi
 
 # 前端依赖安装与构建
-cd "${COURSE_DIR}/web"
+cd "${FRONTEND_DIR}"
 npm install --production=false
 npm run build
 

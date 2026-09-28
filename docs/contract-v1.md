@@ -203,7 +203,7 @@ ORDER BY c.code, b.seq, bp.seq;
 
 ### 4.1 题单导入（已跑通）
 
-`data/seed/` 下有 3 份种子题单（COMP1007，共 24 题，格式见 `CodeMind-OJ重构规划.md` §4.2），导入器是 `tools/import_batch.py`：
+`backend/data/seed/` 下有 3 份种子题单（COMP1007，共 24 题，格式见 `CodeMind-OJ重构规划.md` §4.2），导入器是 `backend/tools/import_batch.py`（以下命令在 `backend/` 下执行）：
 
 ```bash
 # 题库导入需要写 jol.problem，属于运维/教师侧操作，用 codemind_ops 账号
