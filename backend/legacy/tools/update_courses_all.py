@@ -24,7 +24,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
-OJ_ROOT = ROOT.parents[1]  # backend/ 的上两级：与 hoa-oj 并列的工作区
+OJ_ROOT = ROOT.parents[2]  # backend/ 的上两级：与 hoa-oj 并列的工作区
 HOA_OJ = OJ_ROOT / "hoa-oj"
 
 COURSES_META = {
@@ -470,7 +470,7 @@ if __name__ == "__main__":
 
 
 def sync_to_course_service():
-    target_dir = ROOT / "data" / "problem_sets"
+    target_dir = ROOT.parent / "data" / "problem_sets"
     target_dir.mkdir(parents=True, exist_ok=True)
     
     # 复制 problems, index, search.py

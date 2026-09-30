@@ -15,7 +15,7 @@ def yaml_load(stream):
 
 
 # backend/ 根目录：.env、data/ 与 schema/ 都相对于它定位。
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def load_local_env():

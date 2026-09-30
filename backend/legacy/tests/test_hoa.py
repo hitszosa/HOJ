@@ -17,7 +17,7 @@ sys.path.insert(0, str(ROOT))
 
 from hoj import hoa  # noqa: E402
 
-SEED_DIR = ROOT / "data" / "seed"
+SEED_DIR = ROOT.parent / "data" / "seed"
 
 
 def published_batch(**overrides) -> dict:

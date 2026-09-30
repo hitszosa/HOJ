@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 # hoa.py 位于 <workspace>/HOJ/backend/hoj/，WORKSPACE 是与 codemind、hoa-oj 并列的上层目录。
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 WORKSPACE = ROOT.parent
 
 #: 权威映射源。不要复制成第二份表 —— 需要新增课程时走 registry 的审批流程。

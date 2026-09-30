@@ -8,7 +8,7 @@ from hoj.config import ROOT
 from hoj.infra.database import db, q
 
 def main():
-    db.write((ROOT/'schema/002_authoring.sql').read_text(),ops=True)
+    db.write((ROOT.parent/'schema/002_authoring.sql').read_text(),ops=True)
     for role,user in DEV_USERS.items():
         db.write(f"INSERT IGNORE INTO jol.users(user_id,nick,password,reg_time) VALUES({q(user)},{q('平台体验 · '+role)},'!local-pilot-no-password',NOW())",ops=True)
     db.write("INSERT IGNORE INTO cm_course(code,name,hoa_repo,created_at,updated_at) VALUES('PILOT1007','程序设计基础 · 功能体验','HITSZ-OpenAuto/COMP1007',NOW(),NOW())")
