@@ -73,22 +73,28 @@ sysctl -w net.core.somaxconn=4096 >/dev/null 2>&1 || true
 sysctl -w fs.file-max=2097152 >/dev/null 2>&1 || true
 
 # 5. 基础软件依赖安装检查
-log_info ">>> 步骤 3/7: 检查并安装基础软件依赖 (Docker, Node.js, Python, Nginx)..."
+log_info ">>> 步骤 3/7: 检查并安装基础软件依赖 (Docker, Node.js, Rust, Nginx)..."
 if command -v apt-get >/dev/null 2>&1; then
     apt-get update -y
-    apt-get install -y docker.io python3 python3-pip python3-venv nginx curl net-tools
+    apt-get install -y docker.io nginx curl net-tools build-essential pkg-config
     # 安装 Node.js 18+ (若未安装)
     if ! command -v node >/dev/null 2>&1; then
         curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
         apt-get install -y nodejs
     fi
 elif command -v yum >/dev/null 2>&1; then
-    yum install -y docker python3 python3-pip nginx curl net-tools
+    yum install -y docker nginx curl net-tools gcc make pkgconfig
     systemctl enable --now docker
 fi
 
 systemctl enable --now docker || true
 systemctl enable --now nginx || true
+
+# Rust 工具链（编译课程服务后端）
+if ! command -v cargo >/dev/null 2>&1 && [ ! -x "$HOME/.cargo/bin/cargo" ]; then
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal
+fi
+export PATH="$HOME/.cargo/bin:$PATH"
 
 # 6. 构建与启动 HUSTOJ 核心容器
 log_info ">>> 步骤 4/7: 启动 HUSTOJ 判题与数据库引擎..."
@@ -101,13 +107,26 @@ else
     log_info "正在从 ${HUSTOJ_DIR} 构建 hustoj-dev 镜像..."
     docker build -t hustoj-dev -f "${HUSTOJ_DIR}/codemind/docker/Dockerfile" "${HUSTOJ_DIR}"
     log_info "正在启动 hustoj 容器..."
+    mkdir -p /run/hoj-mysql
     docker run -d \
         --name hustoj \
         --restart always \
         --privileged \
         -p 8080:80 \
         -v /home/judge/data:/home/judge/data \
+        -v /run/hoj-mysql:/run/mysqld \
         hustoj-dev
+fi
+
+# 课程服务经 unix socket 连接 MariaDB（见 systemd/hoj-api.service 的 COURSE_DB_SOCKET）。
+# 旧版容器没有这个挂载；且其数据库未挂卷，重建容器会丢数据，所以这里只提示、不自动重建。
+if ! docker inspect -f '{{range .Mounts}}{{.Destination}} {{end}}' hustoj | grep -q '/run/mysqld'; then
+    log_err "hustoj 容器未挂载 /run/mysqld，课程服务无法连接数据库。"
+    log_err "处理方式二选一（均需人工确认）："
+    log_err "  1) 先 mysqldump 备份 jol 与 codemind_course，再按上面的 docker run 参数重建容器并导入；"
+    log_err "  2) 改走 TCP：给 hustoj 加 -p 127.0.0.1:3306:3306，并为 codemind/codemind_ops 增加来自 docker 网关地址的授权，"
+    log_err "     然后在 backend/.env 中删除 COURSE_DB_SOCKET 覆盖，设置 COURSE_DB_HOST/COURSE_DB_PORT。"
+    exit 1
 fi
 
 # 等待 MySQL 启动完毕
@@ -118,6 +137,9 @@ for attempt in {1..30}; do
     fi
     sleep 1
 done
+
+# mysqld 以容器内 mysql 用户创建 socket；目录需对其可写。
+docker exec -i hustoj sh -c 'chown mysql:mysql /run/mysqld 2>/dev/null || true'
 
 # 调整沙箱并发数并重启 judged
 docker exec -i hustoj bash -c "sed -i 's#^OJ_RUNNING=.*#OJ_RUNNING=${JUDGE_RUNNING}#' /home/judge/etc/judge.conf"
@@ -134,15 +156,12 @@ for sql_file in "${BACKEND_DIR}/schema"/00*.sql; do
     fi
 done
 
-# 8. 安装与配置 Course Service (FastAPI) 与 前端 (Next.js)
-log_info ">>> 步骤 6/7: 配置 Python 虚拟环境与编译前端页面..."
+# 8. 编译 Course Service (Rust) 与 前端 (Next.js)
+log_info ">>> 步骤 6/7: 编译课程服务后端与前端页面..."
 cd "${BACKEND_DIR}"
 
-if [ ! -d ".venv" ]; then
-    python3 -m venv .venv
-fi
-.venv/bin/pip install --upgrade pip
-.venv/bin/pip install -r requirements.txt
+# SQLX_OFFLINE：使用仓库内 .sqlx/ 的查询缓存编译，构建机不需要连数据库。
+SQLX_OFFLINE=true cargo build --release --locked
 
 # 生产环境 .env 配置
 if [ ! -f ".env" ]; then
