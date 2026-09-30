@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO cm_submission(submission_id,offering_id,batch_id,batch_problem_id,user_id,language,submit_state,created_at) VALUES(?,?,?,?,?,?,'placeholder',NOW())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "c03c61d4f19d7474be3a71f3083726013a1baac9cefea66bf75eabeadee73760"
+}

@@ -21,3 +21,6 @@ __pycache__/
 .bus/
 .bus-peer*.json
 backend/data/local/
+
+# Rust
+backend/target/

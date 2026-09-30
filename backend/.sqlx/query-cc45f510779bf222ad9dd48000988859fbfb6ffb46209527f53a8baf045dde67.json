@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE cm_submission SET submit_state='promoted',promoted_at=NOW() WHERE submission_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "cc45f510779bf222ad9dd48000988859fbfb6ffb46209527f53a8baf045dde67"
+}

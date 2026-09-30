@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT source FROM jol.source_code WHERE solution_id=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "source",
+        "type_info": {
+          "type": "Blob",
+          "flags": "NOT_NULL | BLOB | NO_DEFAULT_VALUE",
+          "max_size": 262140
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "8e3b4653ace66e25eaa484c24dc124210fbb6cfac575ed29546c087ef8881b26"
+}

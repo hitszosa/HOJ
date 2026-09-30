@@ -1,0 +1,124 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT p.problem_id, p.title, p.description, p.input, p.output, p.sample_input, p.sample_output, p.hint,\n                  CAST(p.time_limit AS DOUBLE) AS \"time_limit!: f64\", p.memory_limit, p.source\n           FROM jol.problem p JOIN cm_batch_problem bp USING(problem_id)\n           WHERE bp.batch_id=? AND p.problem_id=? AND (? = 0 OR p.defunct='N')",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 800
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 67108860
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "input",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 67108860
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "output",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 67108860
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "sample_input",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 262140
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "sample_output",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 262140
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "hint",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 67108860
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "time_limit!: f64",
+        "type_info": {
+          "type": "Double",
+          "flags": "BINARY",
+          "max_size": 22
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "memory_limit",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "source",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 400
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "8de86465f02b847d8f750a4f0a0a18a2763d8a8fd52b8c86fa7991b2d0467fe2"
+}

@@ -1,0 +1,34 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT s.result, COUNT(*) AS \"count!: i64\" FROM cm_submission cs JOIN jol.solution s ON s.solution_id=cs.submission_id\n           WHERE cs.offering_id=? GROUP BY s.result",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "result",
+        "type_info": {
+          "type": "Short",
+          "flags": "NOT_NULL | MULTIPLE_KEY",
+          "max_size": 6
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "count!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "bce69d2e769c666d5d17f1b5317d362852f3d91170e354e40e9a63e9b208ef7d"
+}

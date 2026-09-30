@@ -1,0 +1,104 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT bp.batch_problem_id, bp.problem_id, bp.seq, CAST(bp.score AS DOUBLE) AS \"score!: f64\", bp.required AS \"required: bool\",\n                  p.title, p.hint, p.defunct, p.source\n           FROM cm_batch_problem bp JOIN jol.problem p USING(problem_id)\n           WHERE bp.batch_id=? AND (? = 0 OR p.defunct='N') ORDER BY bp.seq",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "batch_problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "seq",
+        "type_info": {
+          "type": "Tiny",
+          "flags": "NOT_NULL | UNSIGNED | NO_DEFAULT_VALUE",
+          "max_size": 3
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "score!: f64",
+        "type_info": {
+          "type": "Double",
+          "flags": "BINARY",
+          "max_size": 22
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "required: bool",
+        "type_info": {
+          "type": "Tiny",
+          "flags": "NOT_NULL",
+          "max_size": 1
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 800
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "hint",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 67108860
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "defunct",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL",
+          "max_size": 4
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "source",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 400
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      true
+    ]
+  },
+  "hash": "fe1deb8ad1446032c90770ee7607001537d7b6dd7e3d143a0f5f5bb4a0045d1a"
+}

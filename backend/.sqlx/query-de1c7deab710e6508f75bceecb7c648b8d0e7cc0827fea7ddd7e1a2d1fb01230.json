@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO cm_authoring_draft(draft_id,offering_id,owner_id,title,payload,status,origin,updated_at) VALUES(?,?,?,?,?,'draft',?,NOW())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "de1c7deab710e6508f75bceecb7c648b8d0e7cc0827fea7ddd7e1a2d1fb01230"
+}

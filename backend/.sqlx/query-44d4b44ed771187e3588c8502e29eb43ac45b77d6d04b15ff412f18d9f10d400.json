@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT COUNT(*) FROM jol.problem p WHERE p.defunct='N' AND p.problem_id>0\n           AND (?='' OR p.problem_id=? OR p.title LIKE ? OR (? IS NULL AND p.source LIKE ?))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "COUNT(*)",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "44d4b44ed771187e3588c8502e29eb43ac45b77d6d04b15ff412f18d9f10d400"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE cm_batch SET title=?,read_only=GREATEST(read_only,?),source_ref=COALESCE(?,source_ref),updated_at=NOW() WHERE batch_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "8f4ac879cdcfd8d3693956a8218eb59c8de7537fdaf92ae457c8b572d4fa19b5"
+}

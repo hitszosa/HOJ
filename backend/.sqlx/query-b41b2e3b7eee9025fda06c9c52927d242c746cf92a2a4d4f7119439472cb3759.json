@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT IGNORE INTO cm_offering(course_id,term,section,title,teacher_id,status,created_at,updated_at) VALUES(?,?,?,?,?,'active',NOW(),NOW())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": []
+  },
+  "hash": "b41b2e3b7eee9025fda06c9c52927d242c746cf92a2a4d4f7119439472cb3759"
+}

@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "DELETE FROM cm_batch_problem WHERE batch_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "e4e13913bce50c5c87567fc70bb739a1df2f4cc7421fa674faf14d0f312b106e"
+}

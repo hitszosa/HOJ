@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO jol.solution(problem_id,user_id,language,in_date,result,code_length,ip) VALUES(0,?,?,NOW(),14,?,'127.0.0.1')",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "f074bce58c86a3f61438193288a3e9145d11e0b37c0d43c18f8a1f796d36cfad"
+}

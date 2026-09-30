@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT offering_id FROM cm_offering WHERE (teacher_id=? OR ?='admin') AND status='active' ORDER BY term DESC, offering_id DESC LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "offering_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 10
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "62884d59f353e766236710587717a705ff80df41c2305d52a52542b16dd92d48"
+}

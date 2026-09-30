@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "DO RELEASE_LOCK(?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "54b5538719a53c2404bde82e17ec58a2a6a94605b1167125d1b92832917ebf6e"
+}

@@ -1,0 +1,34 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT t.batch_id AS \"batch_id!: u32\", COUNT(*) AS \"n!: i64\" FROM (\n                 SELECT cs.batch_id, cs.user_id, COUNT(DISTINCT s.problem_id) AS passed\n                 FROM cm_submission cs JOIN jol.solution s ON s.solution_id=cs.submission_id\n                 JOIN cm_batch_problem bp ON bp.batch_id=cs.batch_id AND bp.problem_id=s.problem_id\n                 WHERE cs.offering_id=? AND s.result=4 GROUP BY cs.batch_id, cs.user_id) t\n               JOIN (SELECT batch_id, COUNT(*) AS total FROM cm_batch_problem GROUP BY batch_id) q ON q.batch_id=t.batch_id\n               WHERE t.passed >= q.total GROUP BY t.batch_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "batch_id!: u32",
+        "type_info": {
+          "type": "Long",
+          "flags": "UNSIGNED",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "n!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "670e813f91e8d686fadeda29ffd3a9b80f92ef1a714476959b23a9e2407f78a1"
+}

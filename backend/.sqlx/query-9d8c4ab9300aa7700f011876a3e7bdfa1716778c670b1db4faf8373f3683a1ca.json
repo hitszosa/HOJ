@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE jol.solution SET result=0 WHERE solution_id=? AND problem_id=0 AND result=14",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "9d8c4ab9300aa7700f011876a3e7bdfa1716778c670b1db4faf8373f3683a1ca"
+}

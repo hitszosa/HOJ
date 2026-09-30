@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT batch_problem_id FROM cm_batch_problem WHERE batch_id=? AND problem_id=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "batch_problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 10
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1a2927568d968a41cc8c156bfbc7532112a8e89fc2236d91d615a531081ec4fd"
+}

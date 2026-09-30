@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE cm_authoring_draft SET batch_id=?,status='published',updated_at=NOW() WHERE draft_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "33293455b53f9f020fa3b43ad02d4af9cba1ccf4d598793d80081bbee45f3220"
+}

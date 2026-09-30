@@ -1,0 +1,54 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT b.batch_id,\n                  (SELECT COUNT(*) FROM cm_batch_problem bp JOIN jol.problem p USING(problem_id)\n                    WHERE bp.batch_id=b.batch_id AND (? = 0 OR p.defunct='N')) AS \"problem_count!: i64\",\n                  (SELECT COUNT(DISTINCT s.problem_id) FROM cm_submission cs JOIN jol.solution s ON s.solution_id=cs.submission_id\n                    JOIN jol.problem p ON p.problem_id=s.problem_id\n                    WHERE cs.batch_id=b.batch_id AND cs.user_id=? AND s.result=4 AND p.defunct='N') AS \"done!: i64\",\n                  (SELECT COUNT(DISTINCT cs.user_id) FROM cm_submission cs WHERE cs.batch_id=b.batch_id) AS \"submitted!: i64\"\n           FROM cm_batch b WHERE b.offering_id=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "batch_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "problem_count!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "BINARY",
+          "max_size": 21
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "done!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "BINARY",
+          "max_size": 21
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "submitted!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "BINARY",
+          "max_size": 21
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "483a10e9001e5862e8d5c9eac04b24def50d8dd43236d6458d9e6922d5fa952a"
+}

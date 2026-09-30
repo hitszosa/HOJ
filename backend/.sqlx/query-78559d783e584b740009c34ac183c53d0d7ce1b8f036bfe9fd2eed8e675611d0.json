@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT COUNT(*) FROM jol.users u\n                  WHERE u.defunct='N' AND u.user_id<>'admin'\n                    AND u.user_id NOT LIKE 'teacher\\_%' AND u.user_id NOT LIKE 'test\\_%'\n                    AND u.user_id NOT IN ('cm_pilot_teacher','cm_pilot_ta','cm_pilot_outsider')\n                    AND u.user_id NOT IN (SELECT user_id FROM jol.privilege WHERE rightstr IN ('administrator','teacher'))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "COUNT(*)",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "78559d783e584b740009c34ac183c53d0d7ce1b8f036bfe9fd2eed8e675611d0"
+}

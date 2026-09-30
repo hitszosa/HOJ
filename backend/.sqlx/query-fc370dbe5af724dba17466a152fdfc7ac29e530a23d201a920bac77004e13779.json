@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO cm_enrollment(offering_id,user_id,role,student_no,status,created_at,updated_at) VALUES(?,?,?,?,'active',NOW(),NOW())\n             ON DUPLICATE KEY UPDATE status='active', role=VALUES(role), student_no=COALESCE(VALUES(student_no),student_no), updated_at=NOW()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "fc370dbe5af724dba17466a152fdfc7ac29e530a23d201a920bac77004e13779"
+}

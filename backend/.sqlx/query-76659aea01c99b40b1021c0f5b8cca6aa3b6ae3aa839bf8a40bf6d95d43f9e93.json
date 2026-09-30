@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT COALESCE((SELECT source FROM jol.source_code_user WHERE solution_id=?),(SELECT source FROM jol.source_code WHERE solution_id=?))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "COALESCE((SELECT source FROM jol.source_code_user WHERE solution_id=?),(SELECT source FROM jol.source_code WHERE solution_id=?))",
+        "type_info": {
+          "type": "MediumBlob",
+          "flags": "",
+          "max_size": 1048560
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "76659aea01c99b40b1021c0f5b8cca6aa3b6ae3aa839bf8a40bf6d95d43f9e93"
+}

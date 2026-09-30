@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE cm_batch SET status='published',due_at=?,ai_enabled=?,allowed_languages=?,read_only=GREATEST(read_only,?),\n                source_ref=COALESCE(?,source_ref),updated_at=NOW() WHERE batch_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "1b0cd9ef9ff71390b1288df905777cccce992efb1d411fb9a8c6e590ff6d134e"
+}

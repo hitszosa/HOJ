@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT IGNORE INTO jol.users(user_id,email,ip,nick,school,reg_time) VALUES(?,?,'127.0.0.1',?,'HITSZ',NOW())",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "e70dabcc10bcd66953d6a404750621aab4f350528178345dd2380c231e8f21bc"
+}

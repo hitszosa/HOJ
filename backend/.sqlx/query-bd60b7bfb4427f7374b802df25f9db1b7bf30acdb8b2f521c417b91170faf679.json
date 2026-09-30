@@ -1,0 +1,64 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT e.user_id, COALESCE(NULLIF(u.nick,''), e.user_id) AS \"nick!: String\",\n                          COUNT(DISTINCT CASE WHEN s.result=4 AND s.problem_id>0 THEN s.problem_id END) AS \"solved!: i64\",\n                          COUNT(CASE WHEN s.problem_id>0 THEN s.solution_id END) AS \"submit!: i64\",\n                          MAX(s.in_date) AS \"last_submit?: NaiveDateTime\"\n                   FROM cm_enrollment e\n                   LEFT JOIN jol.users u ON u.user_id=e.user_id\n                   LEFT JOIN cm_submission cs ON cs.user_id=e.user_id AND cs.offering_id=?\n                   LEFT JOIN jol.solution s ON s.solution_id=cs.submission_id\n                   WHERE e.offering_id=? AND e.role='student' AND e.status='active'\n                   GROUP BY e.user_id, u.nick\n                   ORDER BY 3 DESC, 4 ASC, 5 DESC\n                   LIMIT ? OFFSET ?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "nick!: String",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "solved!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "submit!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "last_submit?: NaiveDateTime",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "BINARY",
+          "max_size": 19
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "bd60b7bfb4427f7374b802df25f9db1b7bf30acdb8b2f521c417b91170faf679"
+}

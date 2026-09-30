@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT code FROM cm_course WHERE course_id=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "code",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 128
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "191eb36550e1307f9f436cebc22f3dd5e48cab28414b8b2aa9ef77ad7fe1c25d"
+}

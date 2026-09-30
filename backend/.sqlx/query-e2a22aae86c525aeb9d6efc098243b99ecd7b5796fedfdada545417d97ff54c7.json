@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT problem_id FROM jol.problem WHERE source=? ORDER BY problem_id LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e2a22aae86c525aeb9d6efc098243b99ecd7b5796fedfdada545417d97ff54c7"
+}

@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT solution_id FROM jol.solution WHERE user_id=? AND problem_id=0\n           AND in_date>DATE_SUB(NOW(),INTERVAL 10 MINUTE)\n           AND (result IN (0,1,2,3,14) OR in_date>DATE_SUB(NOW(),INTERVAL 3 SECOND)) LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "solution_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1030944ba413182a34015ab0064696e6c9956bafe202638301b3868d8438f41e"
+}

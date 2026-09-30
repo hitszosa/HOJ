@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE cm_offering SET status=COALESCE(?,status), title=COALESCE(?,title), section=COALESCE(?,section), updated_at=NOW() WHERE offering_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "180fc832dae586d3e68b45bdbd8422490e7a9ec6c09bec96dff2e2489a6e278e"
+}

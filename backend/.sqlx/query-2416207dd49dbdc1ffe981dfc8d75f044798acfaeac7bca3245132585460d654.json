@@ -1,0 +1,34 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT c.name, o.section FROM cm_offering o JOIN cm_course c USING(course_id) WHERE o.offering_id=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "max_size": 512
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "section",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 128
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "2416207dd49dbdc1ffe981dfc8d75f044798acfaeac7bca3245132585460d654"
+}
