@@ -3,13 +3,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { TrialPanel } from "@/components/TrialPanel";
 
 const props = { bid: "10", pid: "1025", code: "print(42)", language: "python", sampleInput: "12 30\n", sampleOutput: "42\n" };
-const result = { state: "finished", result: 13, label: "自测结束", time: 10, memory: 0, output: "42\n", compileError: "", truncated: false };
-function response(data: unknown, ok = true) { return { ok, json: async () => data } as Response; }
+const result = { state: "finished", result: 13, label: "自测结束", time: 10, memory: 0, output: "42\n", compile_error: "", truncated: false };
+/** 后端统一信封 {code, message, data}。 */
+function response(data: unknown, ok = true) { return { ok, status: ok ? 200 : 500, json: async () => ({ code: ok ? "OK" : "INTERNAL_ERROR", message: ok ? "success" : "失败", data }) } as Response; }
 afterEach(() => vi.unstubAllGlobals());
 
 describe("提交前自测", () => {
   it("固定发送题目样例，仅调用自测接口并展示真实输出", async () => {
-    const fetcher = vi.fn().mockResolvedValueOnce(response({ runId: "signed-token" })).mockResolvedValueOnce(response(result));
+    const fetcher = vi.fn().mockResolvedValueOnce(response({ run_id: "signed-token" })).mockResolvedValueOnce(response(result));
     vi.stubGlobal("fetch", fetcher);
     render(<TrialPanel {...props} />);
     expect(screen.getByLabelText("样例输入")).toHaveTextContent("12 30");
@@ -25,7 +26,7 @@ describe("提交前自测", () => {
   });
 
   it("编译错误单独显示，不把结束当作通过", async () => {
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(response({ runId: "ce" })).mockResolvedValueOnce(response({ ...result, result: 11, label: "编译错误", output: "", compileError: "SyntaxError: invalid syntax", truncated: true })));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(response({ run_id: "ce" })).mockResolvedValueOnce(response({ ...result, result: 11, label: "编译错误", output: "", compile_error: "SyntaxError: invalid syntax", truncated: true })));
     render(<TrialPanel {...props} />);
     fireEvent.click(screen.getByRole("button", { name: "运行自测" }));
     await waitFor(() => expect(screen.getByLabelText("自测运行输出")).toHaveTextContent("SyntaxError"));
@@ -45,7 +46,7 @@ describe("提交前自测", () => {
 
   it("代码变化后明确标识旧结果，不冒充新代码输出", async () => {
     let finish!: (value: Response) => void;
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(response({ runId: "slow" })).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; })));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValueOnce(response({ run_id: "slow" })).mockImplementationOnce(() => new Promise(resolve => { finish = resolve; })));
     const view = render(<TrialPanel {...props} />);
     fireEvent.click(screen.getByRole("button", { name: "运行自测" }));
     await waitFor(() => expect(finish).toBeDefined());

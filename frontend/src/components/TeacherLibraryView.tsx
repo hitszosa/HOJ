@@ -5,47 +5,11 @@ import { useEffect, useState } from "react";
 import { Badge, Button, Card, CardTitle, Empty, Stat } from "@/components/ui";
 import { api } from "@/lib/api";
 
-type ProblemItem = {
-  slug: string;
-  title: string;
-  statement: string;
-  knowledge: string[];
-  difficulty: string;
-  samples: { input: string; output: string }[];
-  samplesCount: number;
-  testsCount: number;
-  draftId: string;
-  draftTitle: string;
-  origin: string;
-  updatedAt: string;
-};
-
-type SetItem = {
-  draftId: string;
-  offeringId: number | null;
-  title: string;
-  status: "draft" | "published";
-  origin: "teacher" | "ai";
-  batchId: number | null;
-  updatedAt: string;
-  count: number;
-  problems: ProblemItem[];
-  courseCode?: string;
-  courseName?: string;
-  offeringTerm?: string;
-  offeringSection?: string;
-  offeringTitle?: string;
-};
-
-type OfferingItem = {
-  offering_id: number;
-  code: string;
-  name: string;
-  term: string;
-  section: string;
-  status: string;
-  title?: string;
-};
+import type { LibraryProblem as ProblemItem } from "@/api/generated/LibraryProblem";
+import type { LibrarySet as SetItem } from "@/api/generated/LibrarySet";
+import type { Library } from "@/api/generated/Library";
+import type { DraftCreated } from "@/api/generated/DraftCreated";
+import type { DeployResponse } from "@/api/generated/DeployResponse";
 
 const AVAILABLE_LANGUAGES = [
   { id: "c", label: "C" },
@@ -55,18 +19,7 @@ const AVAILABLE_LANGUAGES = [
 ];
 
 export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "student" | null; user?: string }) {
-  const [data, setData] = useState<{
-    sets: SetItem[];
-    problems: ProblemItem[];
-    offerings: OfferingItem[];
-    stats: {
-      totalSets: number;
-      totalProblems: number;
-      aiSets: number;
-      teacherSets: number;
-      publishedSets: number;
-    };
-  } | null>(null);
+  const [data, setData] = useState<Library | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -90,7 +43,7 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
   const [deployAiEnabled, setDeployAiEnabled] = useState(true);
   const [deployAllowedLanguages, setDeployAllowedLanguages] = useState<string[]>(["c", "cpp", "java", "python"]);
   const [deploying, setDeploying] = useState(false);
-  const [deployResult, setDeployResult] = useState<any | null>(null);
+  const [deployResult, setDeployResult] = useState<DeployResponse | null>(null);
 
   // In-page AI Generator state
   const [aiTopic, setAiTopic] = useState("");
@@ -105,7 +58,7 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
   const loadLibrary = () => {
     setLoading(true);
     setError("");
-    api("/teacher/library")
+    api<Library>("/teacher/library")
       .then((res) => {
         setData(res);
         setLoading(false);
@@ -124,7 +77,7 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
     if (!newSetTitle.trim()) return;
     setCreatingSet(true);
     try {
-      const res = await api("/teacher/library/sets", "POST", {
+      const res = await api<DraftCreated>("/teacher/library/sets", "POST", {
         title: newSetTitle.trim(),
       });
       setShowNewSetModal(false);
@@ -143,7 +96,7 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
     setAiBusy(true);
     setError("");
     try {
-      const res = await api("/teacher/library/sets", "POST", {
+      const res = await api<DraftCreated>("/teacher/library/sets", "POST", {
         topic: aiTopic.trim(),
       });
       setAiTopic("");
@@ -161,7 +114,7 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
     setImportBusy(true);
     setError("");
     try {
-      const res = await api("/teacher/library/sets", "POST", {
+      const res = await api<DraftCreated>("/teacher/library/sets", "POST", {
         content: importContent.trim(),
       });
       setImportContent("");
@@ -190,8 +143,8 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
     setDeployDraft(item);
     setDeployResult(null);
     if (data?.offerings && data.offerings.length > 0) {
-      if (item.offeringId && data.offerings.some((o) => o.offering_id === item.offeringId)) {
-        setSelectedOfferingIds([item.offeringId]);
+      if (item.offering_id && data.offerings.some((o) => o.offering_id === item.offering_id)) {
+        setSelectedOfferingIds([item.offering_id]);
       } else {
         setSelectedOfferingIds([data.offerings[0].offering_id]);
       }
@@ -203,12 +156,12 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
     setDeploying(true);
     setError("");
     try {
-      const res = await api("/teacher/library/deploy", "POST", {
-        draftId: deployDraft.draftId,
-        offeringIds: selectedOfferingIds,
-        dueAt: deployDueDate || undefined,
-        aiEnabled: deployAiEnabled,
-        allowedLanguages: deployAllowedLanguages,
+      const res = await api<DeployResponse>("/teacher/library/deploy", "POST", {
+        draft_id: deployDraft.draft_id,
+        offering_ids: selectedOfferingIds,
+        due_at: deployDueDate || undefined,
+        ai_enabled: deployAiEnabled,
+        allowed_languages: deployAllowedLanguages,
       });
       setDeployResult(res);
       loadLibrary();
@@ -253,7 +206,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
 
   const sets = data?.sets || [];
   const problems = data?.problems || [];
-  const stats = data?.stats || { totalSets: 0, totalProblems: 0, aiSets: 0, teacherSets: 0, publishedSets: 0 };
+  const stats = data?.stats || { total_sets: 0, total_problems: 0, ai_sets: 0, teacher_sets: 0, published_sets: 0 };
 
   const filteredSets = sets.filter((s) => {
     if (originFilter !== "ALL" && s.origin !== originFilter) return false;
@@ -319,10 +272,10 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
 
       {/* Stats Cards */}
       <div className="grid gap-stack grid-cols-2 lg:grid-cols-4">
-        <Stat label="我的题单总数" value={stats.totalSets} unit="份" tone="brand" />
-        <Stat label="自建/沉淀题目" value={stats.totalProblems} unit="道" tone="ok" />
-        <Stat label="AI 辅助生成" value={stats.aiSets} unit="份" tone="warn" />
-        <Stat label="已发布至班级" value={stats.publishedSets} unit="份" tone="neutral" />
+        <Stat label="我的题单总数" value={stats.total_sets} unit="份" tone="brand" />
+        <Stat label="自建/沉淀题目" value={stats.total_problems} unit="道" tone="ok" />
+        <Stat label="AI 辅助生成" value={stats.ai_sets} unit="份" tone="warn" />
+        <Stat label="已发布至班级" value={stats.published_sets} unit="份" tone="neutral" />
       </div>
 
       {actionMsg && (
@@ -445,9 +398,9 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
           ) : (
             <div className="grid gap-3">
               {filteredSets.map((item) => {
-                const isExpanded = expandedDraftId === item.draftId;
+                const isExpanded = expandedDraftId === item.draft_id;
                 return (
-                  <Card key={item.draftId} className="hover:border-brand/40 transition-colors">
+                  <Card key={item.draft_id} className="hover:border-brand/40 transition-colors">
                     <div className="flex flex-wrap items-start justify-between gap-4">
                       <div className="space-y-1.5 flex-1 min-w-[280px]">
                         <div className="flex flex-wrap items-center gap-2">
@@ -464,14 +417,14 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                         </div>
 
                         <p className="text-xs text-fg-muted">
-                          更新时间: {item.updatedAt}
-                          {item.courseName ? ` · 初始归属: ${item.courseCode} ${item.courseName} (${item.offeringSection}班)` : ""}
+                          更新时间: {item.updated_at}
+                          {item.course_name ? ` · 初始归属: ${item.course_code} ${item.course_name} (${item.offering_section}班)` : ""}
                         </p>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
                         <Link
-                          href={`/teacher/drafts/${item.draftId}`}
+                          href={`/teacher/drafts/${item.draft_id}`}
                           className="px-3 py-1.5 rounded-control border border-brand/40 bg-brand/5 text-xs font-semibold text-brand hover:bg-brand/10 transition"
                         >
                           📝 查看/修改试题
@@ -485,7 +438,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                         <button
                           type="button"
                           className="px-2.5 py-1.5 text-xs text-danger hover:bg-danger/10 rounded-control transition"
-                          onClick={() => handleDeleteDraft(item.draftId, item.title)}
+                          onClick={() => handleDeleteDraft(item.draft_id, item.title)}
                         >
                           🗑️
                         </button>
@@ -497,7 +450,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                       <button
                         type="button"
                         className="text-xs text-fg-muted hover:text-brand flex items-center gap-1 transition"
-                        onClick={() => setExpandedDraftId(isExpanded ? null : item.draftId)}
+                        onClick={() => setExpandedDraftId(isExpanded ? null : item.draft_id)}
                       >
                         <span>{isExpanded ? "▲ 收起题目预览" : "▼ 展开查看题目明细 (" + item.problems.length + " 题)"}</span>
                       </button>
@@ -521,7 +474,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                                   </span>
                                 ))}
                                 <span className="text-fg-muted text-[11px]">
-                                  样例: {p.samplesCount} | 隐藏测试: {p.testsCount}
+                                  样例: {p.samples_count} | 隐藏测试: {p.tests_count}
                                 </span>
                               </div>
                             </div>
@@ -558,7 +511,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
           ) : (
             <div className="grid gap-3">
               {filteredProblems.map((prob, idx) => {
-                const pKey = `${prob.draftId}_${prob.slug}_${idx}`;
+                const pKey = `${prob.draft_id}_${prob.slug}_${idx}`;
                 const isExpanded = expandedProblemKey === pKey;
                 return (
                   <Card key={pKey} className="hover:border-brand/40 transition">
@@ -578,10 +531,10 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                         </div>
                         <p className="text-xs text-fg-muted">
                           所属题单:{" "}
-                          <Link href={`/teacher/drafts/${prob.draftId}`} className="text-brand hover:underline font-medium">
-                            {prob.draftTitle}
+                          <Link href={`/teacher/drafts/${prob.draft_id}`} className="text-brand hover:underline font-medium">
+                            {prob.draft_title}
                           </Link>{" "}
-                          · 公开样例 {prob.samplesCount} 组 · 隐藏测试点 {prob.testsCount} 组
+                          · 公开样例 {prob.samples_count} 组 · 隐藏测试点 {prob.tests_count} 组
                         </p>
                       </div>
 
@@ -593,7 +546,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                           {isExpanded ? "▲ 收起题面" : "▼ 预览题面与样例"}
                         </Button>
                         <Link
-                          href={`/teacher/drafts/${prob.draftId}`}
+                          href={`/teacher/drafts/${prob.draft_id}`}
                           className="px-3 py-1.5 rounded-control border border-line bg-surface hover:bg-surface-muted text-xs font-medium text-fg transition"
                         >
                           编辑题目 →
@@ -815,17 +768,17 @@ problems:
                 <div className="space-y-2 mt-4">
                   {deployResult.results?.map((r: any) => (
                     <div
-                      key={r.offeringId}
+                      key={r.offering_id}
                       className="flex items-center justify-between p-3 rounded-control border border-ok/30 bg-ok/5 text-xs"
                     >
                       <div>
                         <span className="font-semibold text-fg">
-                          {r.courseName} · {r.section} 班
+                          {r.course_name} · {r.section} 班
                         </span>
-                        <span className="ml-2 text-fg-muted">BATCH ID: {r.batchId}</span>
+                        <span className="ml-2 text-fg-muted">BATCH ID: {r.batch_id}</span>
                       </div>
                       <Link
-                        href={`/teacher/batches/${r.batchId}`}
+                        href={`/teacher/batches/${r.batch_id}`}
                         className="text-brand font-semibold hover:underline"
                       >
                         查看班级作业 →
