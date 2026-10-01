@@ -78,14 +78,13 @@
 - 构建：`SQLX_OFFLINE=true cargo build --release --locked`，构建机不需要数据库。
 - 目前没有生产环境，部署按全新安装进行：`deploy_rh2288.sh` 创建 hustoj 容器时即挂载 `/run/mysqld`。若在旧的、没有该挂载的容器上重跑，脚本会停下提示，不会自动重建。
 - **排序规则**：HUSTOJ 的 `db.sql` 不指定排序规则，jol 跟随服务器默认（MariaDB 11 为 `uca1400_ai_ci`，MySQL 8 为 `0900_ai_ci`），教学域表固定 `utf8mb4_general_ci`。跨库字符串连接已显式加 `COLLATE`，不需要改库。
-- `hoj-infra/services/hoj/compose.yaml` 的 api 服务仍是 Python 命令，需要同步改为 Rust 镜像，并给 hustoj 与 api 共享 `/run/mysqld`。
 
 ## 5. 验证
 
 - 后端：单元测试与 HTTP 层测试全部通过，`cargo clippy --all-targets` 无警告。
 - 本地库（HUSTOJ `db.sql` + `schema/001–004`）上跑通完整流程：建草稿 → 发布（幂等）→ 学生提交 / 自测（频率限制 429）→ 结果与源码权限 → 班级统计 → 名单增删 → 复制 / 导出 → 题库导入与多班发布 → 公开题首访落库与提交。
 - 前端：`tsc` 无错误，vitest 全部通过；无头 Chrome 巡检教师端、学生端 22 个页面无报错，并实际操作了提交、自测、审核发布、选题篮发布、添加学生、题库部署。
-- syvps 隔离验证栈（`/srv/hoj-verify`：MariaDB 11.8 默认排序规则 + 真实 HUSTOJ 判题机，静态 musl 二进制，经挂载的 unix socket 连库）：
+- 隔离的 HUSTOJ 验证环境（MariaDB 11.8 默认排序规则 + 真实 HUSTOJ 判题机，静态 musl 二进制，经挂载的 unix socket 连库）：
   - 冒烟脚本全部符合预期（36 个成功，其余为预期的 4xx），服务日志无错误。首次运行暴露了跨库 `user_id` 连接的排序规则冲突（班级学生统计、名单、排行榜 503），已修复。
   - 真实判题：作业题 Python AC / WA、C++ AC、C 编译错误（含编译信息）、自测输出、公开题首访写入测试点并完成判题。
   - HUSTOJ 原生会话：注册并登录 HUSTOJ 后 `/api/me` 识别为 `hustoj` 来源；伪造或格式非法的会话 401；未配置 SSO 时忽略 `X-Remote-User`；HUSTOJ 登出后在缓存期内仍有效，过期后 401。
