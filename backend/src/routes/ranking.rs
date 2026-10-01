@@ -87,7 +87,7 @@ async fn ranklist(State(s): State<AppState>, who: Identity, Query(q): Query<Rank
                           COUNT(CASE WHEN s.problem_id>0 THEN s.solution_id END) AS "submit!: i64",
                           MAX(s.in_date) AS "last_submit?: NaiveDateTime"
                    FROM cm_enrollment e
-                   LEFT JOIN jol.users u ON u.user_id=e.user_id
+                   LEFT JOIN jol.users u ON u.user_id=e.user_id COLLATE utf8mb4_general_ci
                    LEFT JOIN cm_submission cs ON cs.user_id=e.user_id AND cs.offering_id=?
                    LEFT JOIN jol.solution s ON s.solution_id=cs.submission_id
                    WHERE e.offering_id=? AND e.role='student' AND e.status='active'

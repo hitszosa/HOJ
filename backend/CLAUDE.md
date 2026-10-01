@@ -29,6 +29,7 @@ legacy/                    旧 Python 版，迁移期对照用，切换完成后
 - **错误**：`AppError::not_found("中文提示")` 等构造函数；提示直接展示给用户，要具体。数据库错误用 `?` 自动转成 503，细节只进日志。
 - **JSON 字段一律 snake_case**（请求与响应都是）。时间字段用 `#[serde(with = "crate::dt")]` + `#[ts(type = "string")]`，格式 `YYYY-MM-DD HH:MM:SS`。`i64`/`u64` 字段加 `#[ts(type = "number")]`。
 - **SQL**：优先 `sqlx::query!` / `query_as!`（编译期对照真实库校验）。LEFT JOIN 出来的列加 `AS "col?"`，聚合列加 `AS "n!: i64"` 覆盖可空性。只有动态拼条件时才用 `QueryBuilder`，值一律 `push_bind`。
+- **跨库字符串比较必须显式 `COLLATE`**：教学域表固定 `utf8mb4_general_ci`，jol 跟随服务器默认，两边列直接 `=` 会报 1267。写成 `u.user_id=e.user_id COLLATE utf8mb4_general_ci`（见 `offerings::student_stats`）。和绑定参数比较不受影响。
 - **时间比较交给数据库**：`open_at > NOW()` 这类判断写进 SQL（见 `access::load_batch`），不要用进程时钟。
 - **两个连接池**：`s.db`（codemind 账号：教学域全权、jol 只读 + 提交链路写权限）；`s.ops`（codemind_ops：写 jol.problem / jol.users / custominput）。按最小权限选。
 - **jol 是 MyISAM，没有事务**：写 jol 的多步操作要能安全重试（见 `hustoj::insert_submission` 的两阶段写入、`authoring::publish` 的顺序）。需要跨进程互斥时用 `authoring::with_lock`（MySQL 命名锁）。
@@ -46,7 +47,7 @@ cargo run                       # 读取 backend/.env
 ```
 
 编译期 SQL 校验需要一个带 `jol` 与 `codemind_course` 两个库的 MariaDB（`DATABASE_URL` 写在 `backend/.env`）。
-库结构：`jol` 用 HUSTOJ 的 `install/db.sql`，教学域用 `schema/001–004`；两边排序规则都必须是 `utf8mb4_general_ci`。
+库结构：`jol` 用 HUSTOJ 的 `install/db.sql`，教学域用 `schema/001–004`。jol 表不指定排序规则，跟随服务器默认（MariaDB 11 是 `uca1400_ai_ci`，MySQL 8 是 `0900_ai_ci`），开发库保持这个默认，不要改成 `general_ci`，否则下面的跨库比较问题在本地测不出来。
 
 ## 运行配置（环境变量）
 

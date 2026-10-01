@@ -172,7 +172,7 @@ async fn student_stats(s: &AppState, oid: u32) -> AppResult<Vec<StudentStat>> {
                   COUNT(DISTINCT CASE WHEN s.result=4 THEN s.problem_id END) AS "passed!: i64",
                   COUNT(s.solution_id) AS "attempts!: i64", MAX(s.in_date) AS "last_active?: NaiveDateTime"
            FROM cm_enrollment e
-           LEFT JOIN jol.users u ON u.user_id=e.user_id
+           LEFT JOIN jol.users u ON u.user_id=e.user_id COLLATE utf8mb4_general_ci
            LEFT JOIN cm_submission cs ON cs.offering_id=e.offering_id AND cs.user_id=e.user_id
            LEFT JOIN jol.solution s ON s.solution_id=cs.submission_id
            WHERE e.offering_id=? AND e.role='student' AND e.status='active'
@@ -329,7 +329,7 @@ async fn students(State(s): State<AppState>, who: Identity, Path(oid): Path<u32>
                   COUNT(DISTINCT CASE WHEN s.result=4 THEN s.problem_id END) AS "passed!: i64",
                   COUNT(s.solution_id) AS "attempts!: i64", MAX(s.in_date) AS "last_active?: NaiveDateTime"
            FROM cm_enrollment e
-           LEFT JOIN jol.users u ON u.user_id=e.user_id
+           LEFT JOIN jol.users u ON u.user_id=e.user_id COLLATE utf8mb4_general_ci
            LEFT JOIN cm_submission cs ON cs.offering_id=e.offering_id AND cs.user_id=e.user_id
            LEFT JOIN jol.solution s ON s.solution_id=cs.submission_id
            WHERE e.offering_id=?
