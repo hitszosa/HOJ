@@ -76,7 +76,7 @@
 - 数据库连接：挂载 hustoj 容器的 `/run/mysqld` 到宿主机 `/run/hoj-mysql`，经 unix socket 连接，**授权不变**、不暴露 3306。
 - 判题数据：直接写共享目录 `/home/judge/data`（`COURSE_JUDGE_DATA_DIR`），不再 `docker exec tee`。
 - 构建：`SQLX_OFFLINE=true cargo build --release --locked`，构建机不需要数据库。
-- **已有 hustoj 容器没有 `/run/mysqld` 挂载，且其数据库未挂卷**，重建会丢数据。`deploy_rh2288.sh` 检测到这种情况会停下并给出两种处理方式（备份后重建容器 / 改走 TCP 并追加授权），需要人工决定。
+- 目前没有生产环境，部署按全新安装进行：`deploy_rh2288.sh` 创建 hustoj 容器时即挂载 `/run/mysqld`。若在旧的、没有该挂载的容器上重跑，脚本会停下提示，不会自动重建。
 - **排序规则**：HUSTOJ 的 `db.sql` 不指定排序规则，jol 跟随服务器默认（MariaDB 11 为 `uca1400_ai_ci`，MySQL 8 为 `0900_ai_ci`），教学域表固定 `utf8mb4_general_ci`。跨库字符串连接已显式加 `COLLATE`，不需要改库。
 - `hoj-infra/services/hoj/compose.yaml` 的 api 服务仍是 Python 命令，需要同步改为 Rust 镜像，并给 hustoj 与 api 共享 `/run/mysqld`。
 
@@ -90,4 +90,4 @@
   - 真实判题：作业题 Python AC / WA、C++ AC、C 编译错误（含编译信息）、自测输出、公开题首访写入测试点并完成判题。
   - HUSTOJ 原生会话：注册并登录 HUSTOJ 后 `/api/me` 识别为 `hustoj` 来源；伪造或格式非法的会话 401；未配置 SSO 时忽略 `X-Remote-User`；HUSTOJ 登出后在缓存期内仍有效，过期后 401。
   - AI 调用链路（OpenAI 兼容的假模型）：出题生成草稿、学习建议走模型且带 Bearer、外发内容不含隐藏测试、已通过的提交不调模型；模型故障时出题 502、学习建议降级为规则。
-- 未验证：真实模型的输出质量、生产机（rh2288）的 socket 挂载（需先决定 hustoj 容器的处理方式，见第 4 节）。
+- 未验证：真实模型的输出质量（没有可用的模型服务）。
