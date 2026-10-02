@@ -1,0 +1,164 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT batch_id, offering_id, seq, title, description, open_at, due_at,\n                  allow_late AS \"allow_late: bool\", ai_enabled AS \"ai_enabled: bool\", status, source_ref,\n                  read_only AS \"read_only: bool\", allowed_languages,\n                  (due_at IS NOT NULL AND due_at < NOW()) AS \"past_due!: bool\",\n                  (open_at IS NOT NULL AND open_at > NOW()) AS \"not_open_yet!: bool\"\n           FROM cm_batch\n           WHERE offering_id=? AND (? = 0 OR (status!='draft' AND (open_at IS NULL OR open_at<=NOW())))\n           ORDER BY seq",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "batch_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "offering_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | MULTIPLE_KEY | UNSIGNED | NO_DEFAULT_VALUE",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "seq",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | UNSIGNED | NO_DEFAULT_VALUE",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "max_size": 512
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "description",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 262140
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "open_at",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "BINARY",
+          "max_size": 19
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "due_at",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "BINARY",
+          "max_size": 19
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "allow_late: bool",
+        "type_info": {
+          "type": "Tiny",
+          "flags": "NOT_NULL",
+          "max_size": 1
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "ai_enabled: bool",
+        "type_info": {
+          "type": "Tiny",
+          "flags": "NOT_NULL",
+          "max_size": 1
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "status",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | MULTIPLE_KEY | ENUM",
+          "max_size": 36
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "source_ref",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 1020
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "read_only: bool",
+        "type_info": {
+          "type": "Tiny",
+          "flags": "NOT_NULL",
+          "max_size": 1
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "allowed_languages",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 256
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "past_due!: bool",
+        "type_info": {
+          "type": "Long",
+          "flags": "BINARY",
+          "max_size": 1
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "not_open_yet!: bool",
+        "type_info": {
+          "type": "Long",
+          "flags": "BINARY",
+          "max_size": 1
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "9bd1336c6dfc07354e9735eb7a3361b6cb4bccaf7e71abdcb74a806dbbc7b115"
+}

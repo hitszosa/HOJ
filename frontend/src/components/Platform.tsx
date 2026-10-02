@@ -16,14 +16,32 @@ import { CategoryTreeView } from "@/components/CategoryTreeView";
 import { MarkdownView } from "@/components/MarkdownView";
 import { JudgeDetailView } from "@/components/JudgeDetailView";
 import { TeacherLibraryView } from "@/components/TeacherLibraryView";
+import { api } from "@/lib/api";
+import type { Health } from "@/api/generated/Health";
+import type { DemoUsers } from "@/api/generated/DemoUsers";
+import type { Me } from "@/api/generated/Me";
+import type { CourseOffering } from "@/api/generated/CourseOffering";
+import type { OfferingDetail } from "@/api/generated/OfferingDetail";
+import type { BatchDetail } from "@/api/generated/BatchDetail";
+import type { ProblemDetail } from "@/api/generated/ProblemDetail";
+import type { DraftSummary } from "@/api/generated/DraftSummary";
+import type { Draft } from "@/api/generated/Draft";
+import type { InsightsResponse } from "@/api/generated/InsightsResponse";
+import type { StudentsResponse } from "@/api/generated/StudentsResponse";
+import type { SubmissionResult } from "@/api/generated/SubmissionResult";
+import type { OfferingSets } from "@/api/generated/OfferingSets";
+import type { DraftCreated } from "@/api/generated/DraftCreated";
+import type { Analysis } from "@/api/generated/Analysis";
+import type { AddStudentsRequest } from "@/api/generated/AddStudentsRequest";
+import type { AddStudentsResponse } from "@/api/generated/AddStudentsResponse";
+import type { CreateOfferingRequest } from "@/api/generated/CreateOfferingRequest";
+import type { LoginRequest } from "@/api/generated/LoginRequest";
+import type { Document } from "@/api/generated/Document";
+import type { Problem } from "@/api/generated/Problem";
+import type { PublishResponse } from "@/api/generated/PublishResponse";
+import type { SubmitResponse } from "@/api/generated/SubmitResponse";
+import type { ExportResponse } from "@/api/generated/ExportResponse";
 
-type Row = Record<string, any>;
-async function api(path:string, method="GET", body?:unknown) {
-  const response=await fetch(`/api${path}`,{method,headers:body?{"Content-Type":"application/json"}:{},body:body?JSON.stringify(body):undefined});
-  const data=await response.json().catch(()=>({detail:"服务暂时不可达"}));
-  if(!response.ok) throw new Error(`${response.status}|${typeof data.detail==='string'?data.detail:'请求格式不正确'}`);
-  return data;
-}
 const field="w-full rounded-control border border-line bg-surface px-3 py-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-brand";
 const action="inline-flex rounded-control bg-brand px-4 py-2 text-meta font-medium text-brand-fg hover:opacity-90";
 function date(value:string|null) { return value?value.replace('T',' ').slice(0,16):'未设置'; }
@@ -48,15 +66,15 @@ function broadcastPortal(portal:string|null) {
 function Login({onLogin}:{onLogin:()=>void}) {
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
- const [health,setHealth]=useState<Row|null>(null);
- const [demoData,setDemoData]=useState<Row|null>(null);
+ const [health,setHealth]=useState<Health|null>(null);
+ const [demoData,setDemoData]=useState<DemoUsers|null>(null);
  const [customUser,setCustomUser]=useState('');
  const [activeTab,setActiveTab]=useState<'teachers'|'students'|'sso'>('teachers');
 
  useEffect(()=>{
   let active=true;
-  api('/health').then(h=>{if(active)setHealth(h);}).catch(()=>{});
-  api('/demo/users').then(d=>{if(active)setDemoData(d);}).catch(()=>{});
+  api<Health>('/health').then(h=>{if(active)setHealth(h);}).catch(()=>{});
+  api<DemoUsers>('/demo/users').then(d=>{if(active)setDemoData(d);}).catch(()=>{});
   return()=>{active=false;};
  },[]);
 
@@ -64,7 +82,7 @@ function Login({onLogin}:{onLogin:()=>void}) {
   setBusy(true);
   setError('');
   try {
-   await api('/session', 'POST', { userId });
+   await api('/session', 'POST', { user_id: userId } satisfies LoginRequest);
    onLogin();
   } catch (e) {
    setError(String(e).split('|').pop() || '登录失败');
@@ -73,7 +91,7 @@ function Login({onLogin}:{onLogin:()=>void}) {
   }
  };
 
- const loginUrl=(health&&health.loginUrl)||'/oj/loginpage.php';
+ const loginUrl=(health&&health.login_url)||'/oj/loginpage.php';
 
  return (
   <div className="mx-auto max-w-2xl py-12">
@@ -88,7 +106,7 @@ function Login({onLogin}:{onLogin:()=>void}) {
      正式环境通过学校 SSO 或统一认证自动识别身份，按任课与选课权限进入对应端。
     </p>
 
-    {health && health.devLogin && (
+    {health && health.dev_login && (
      <div className="mt-6 border-t border-line pt-6">
       <div className="mb-4 flex items-center justify-between">
        <span className="text-title font-semibold">演示与测试环境快捷登录</span>
@@ -124,18 +142,18 @@ function Login({onLogin}:{onLogin:()=>void}) {
         <p className="text-meta text-fg-muted">点击任课教师账号进入教学工作台，系统将依据排课数据库动态隔离该账号所授课程：</p>
         <div className="grid gap-2 sm:grid-cols-2">
          {(demoData?.teachers || [
-          { userId: 'cm_pilot_teacher', desc: '当前授课: 示例教学班' },
-          { userId: 'admin', desc: '系统管理员（全校课程统览）' },
-         ]).map((t: Row) => (
+          { user_id: 'cm_pilot_teacher', desc: '当前授课: 示例教学班' },
+          { user_id: 'admin', desc: '系统管理员（全校课程统览）' },
+         ]).map((t) => (
           <button
            type="button"
            disabled={busy}
-           key={t.userId}
+           key={t.user_id}
            className="flex flex-col items-start rounded-control border border-line p-3 text-left hover:border-brand hover:bg-surface-muted transition-colors"
-           onClick={() => handleLogin(t.userId)}
+           onClick={() => handleLogin(t.user_id)}
           >
            <div className="flex w-full items-center justify-between">
-            <span className="font-semibold text-fg font-mono">{t.userId}</span>
+            <span className="font-semibold text-fg font-mono">{t.user_id}</span>
             <Badge tone="brand">教师账号</Badge>
            </div>
            <p className="mt-1 text-meta text-fg-muted line-clamp-1">{t.desc}</p>
@@ -150,22 +168,22 @@ function Login({onLogin}:{onLogin:()=>void}) {
         <p className="text-meta text-fg-muted">选择学生测试账号，进入对应学生工作台查看当前选修课程与真实作业进度：</p>
         <div className="grid gap-2 sm:grid-cols-2">
          {(demoData?.students || [
-          { userId: 'student_cs01', studentNo: '2401001', desc: '当前选修: COMP1011, COMP2001' },
-          { userId: 'student_cs02', studentNo: '2301002', desc: '当前选修: COMP2052, COMP3011, COMP3001' },
-          { userId: 'student_auto01', studentNo: '2302003', desc: '当前选修: COMP2014, COMP2050' },
-          { userId: 'cm_pilot_student', studentNo: '2026001', desc: '体验学生' },
-          { userId: 'cm_pilot_ta', studentNo: '2024TA01', desc: '助教视角' },
-         ]).map((s: Row) => (
+          { user_id: 'student_cs01', student_no: '2401001', desc: '当前选修: COMP1011, COMP2001' },
+          { user_id: 'student_cs02', student_no: '2301002', desc: '当前选修: COMP2052, COMP3011, COMP3001' },
+          { user_id: 'student_auto01', student_no: '2302003', desc: '当前选修: COMP2014, COMP2050' },
+          { user_id: 'cm_pilot_student', student_no: '2026001', desc: '体验学生' },
+          { user_id: 'cm_pilot_ta', student_no: '2024TA01', desc: '助教视角' },
+         ]).map((s) => (
           <button
            type="button"
            disabled={busy}
-           key={s.userId}
+           key={s.user_id}
            className="flex flex-col items-start rounded-control border border-line p-3 text-left hover:border-brand hover:bg-surface-muted transition-colors"
-           onClick={() => handleLogin(s.userId)}
+           onClick={() => handleLogin(s.user_id)}
           >
            <div className="flex w-full items-center justify-between">
-            <span className="font-semibold text-fg font-mono">{s.userId}</span>
-            <span className="text-meta text-fg-muted font-mono">{s.studentNo || s.userId}</span>
+            <span className="font-semibold text-fg font-mono">{s.user_id}</span>
+            <span className="text-meta text-fg-muted font-mono">{s.student_no || s.user_id}</span>
            </div>
            <p className="mt-1 text-meta text-fg-muted line-clamp-1">{s.desc}</p>
           </button>
@@ -221,7 +239,7 @@ function Login({onLogin}:{onLogin:()=>void}) {
 
 function Heading({tag,title,description,children}:{tag:string;title:string;description?:string;children?:React.ReactNode}) {return <header className="flex flex-wrap items-end justify-between gap-4"><div><p className="eyebrow">{tag}</p><h1 className="text-3xl font-semibold tracking-tight">{title}</h1>{description&&<p className="mt-2 text-fg-muted">{description}</p>}</div>{children}</header>;}
 
-function CourseList({rows,history=false,teacher=false,prefix,reload}:{rows:Row[];history?:boolean;teacher?:boolean;prefix:string;reload?:()=>void}) {
+function CourseList({rows,history=false,teacher=false,prefix,reload}:{rows:CourseOffering[];history?:boolean;teacher?:boolean;prefix:string;reload?:()=>void}) {
  const [showNewOffering, setShowNewOffering] = useState(false);
  const [newCourseId, setNewCourseId] = useState('');
  const [newTerm, setNewTerm] = useState('2026-春');
@@ -231,7 +249,7 @@ function CourseList({rows,history=false,teacher=false,prefix,reload}:{rows:Row[]
  const [msg, setMsg] = useState('');
  const [err, setErr] = useState('');
 
- const filtered=rows.filter(r=>teacher?['teacher','ta'].includes(r.role):history?r.status==='archived':r.status!=='archived');
+ const filtered=rows.filter(r=>teacher?(r.role==='teacher'||r.role==='ta'):history?r.status==='archived':r.status!=='archived');
  const distinctCourses = Array.from(new Map(rows.map(r => [r.course_id, { course_id: r.course_id, code: r.code, name: r.name }])).values());
 
  const handleCreateOffering = async () => {
@@ -243,7 +261,7 @@ function CourseList({rows,history=false,teacher=false,prefix,reload}:{rows:Row[]
     term: newTerm,
     section: newSection.trim(),
     title: newTitle.trim() || undefined,
-   });
+   } satisfies CreateOfferingRequest);
    setNewSection(''); setNewTitle(''); setShowNewOffering(false);
    setMsg('新教学班开设成功！');
    if (reload) reload();
@@ -360,7 +378,7 @@ function CourseList({rows,history=false,teacher=false,prefix,reload}:{rows:Row[]
  );
 }
 
-function Course({data,prefix,user}:{data:Row;prefix:string;user?:string}) {
+function Course({data,prefix,user}:{data:OfferingDetail;prefix:string;user?:string}) {
  const o=data.offering; const student=o.role==='student'; 
  const [tab, setTab] = useState<'batches' | 'insights' | 'ranklist'>(() => {
   if (typeof window !== 'undefined') {
@@ -384,7 +402,7 @@ function Course({data,prefix,user}:{data:Row;prefix:string;user?:string}) {
    <Heading
     tag="COURSE OVERVIEW"
     title={o.title||'课程详情'}
-    description={`${o.code ? o.code + ' · ' : ''}${o.term} · ${o.section} 班 · ${o.status==='archived'?'历史归档 · 只读':'当前教学班'}`}
+    description={`${o.course_code} · ${o.term} · ${o.section} 班 · ${o.status==='archived'?'历史归档 · 只读':'当前教学班'}`}
    >
      {!student && (
       <div className="flex flex-wrap items-center gap-2">
@@ -466,7 +484,7 @@ function Course({data,prefix,user}:{data:Row;prefix:string;user?:string}) {
         <Empty title="还没有开放的题单" hint="教师发布后，你会在这里看到本周作业。"/>
        ):(
         <Card>
-         <CardTitle title="本教学班尚未发布作业批次" meta={`当前课程: ${o.code || ''} · ${o.title || ''}`}/>
+         <CardTitle title="本教学班尚未发布作业批次" meta={`当前课程: ${o.course_code} · ${o.title || ''}`}/>
          <p className="mt-3 text-fg-muted leading-relaxed">
           平台为您提供三种出题与布置作业途径，发布前均可在工作台反复预览测试、修改题面与配置用例：
          </p>
@@ -495,7 +513,7 @@ function Course({data,prefix,user}:{data:Row;prefix:string;user?:string}) {
          </div>
         </Card>
        )
-      ):data.batches.map((b:Row)=>(
+      ):data.batches.map((b)=>(
       <Card key={b.batch_id}>
        <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -503,17 +521,17 @@ function Course({data,prefix,user}:{data:Row;prefix:string;user?:string}) {
          <h2 className="mt-2 text-xl font-semibold">{b.title}</h2>
          <div className="mt-2 flex flex-wrap items-center gap-2">
           {b.source_ref&&<Badge tone="brand">{formatSourceRef(b.source_ref)}</Badge>}
-          {b.read_only==='1'&&<Badge tone="warn">只读来源 · 不可公开导出</Badge>}
+          {b.read_only&&<Badge tone="warn">只读来源 · 不可公开导出</Badge>}
           <span className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg">
            共 {b.problem_count} 道题
           </span>
-          {!student && b.student_count > 0 && (
+          {b.staff && b.student_count > 0 && (
            <>
-            <Badge tone={b.completion_rate >= 80 ? 'ok' : b.completion_rate >= 50 ? 'brand' : 'neutral'}>
-             达标全通: {b.completed_count || 0} / {b.student_count} 人 ({b.completion_rate}%)
+            <Badge tone={b.staff.completion_rate >= 80 ? 'ok' : b.staff.completion_rate >= 50 ? 'brand' : 'neutral'}>
+             达标全通: {b.staff.completed_count} / {b.student_count} 人 ({b.staff.completion_rate}%)
             </Badge>
             <span className="text-xs text-fg-muted">
-             提交活跃: {b.submitted_count || 0} 人 ({b.submission_rate}%)
+             提交活跃: {b.staff.submitted_count} 人 ({b.staff.submission_rate}%)
             </span>
            </>
           )}
@@ -529,10 +547,10 @@ function Course({data,prefix,user}:{data:Row;prefix:string;user?:string}) {
          <Progress value={Number(b.done)} max={Number(b.problem_count)} label={`${b.title}完成进度`}/>
         </div>
        )}
-       {!student && b.student_count > 0 && (
+       {b.staff && b.student_count > 0 && (
         <div className="mt-4 pt-3 border-t border-line flex items-center justify-between text-xs text-fg-muted">
          <span>全班完成推进度</span>
-         <span className="font-mono font-medium text-fg">{b.completed_count || 0} / {b.student_count} 人 ({b.completion_rate}%)</span>
+         <span className="font-mono font-medium text-fg">{b.staff.completed_count} / {b.student_count} 人 ({b.staff.completion_rate}%)</span>
         </div>
        )}
       </Card>
@@ -545,7 +563,7 @@ function Course({data,prefix,user}:{data:Row;prefix:string;user?:string}) {
     <div className="space-y-6">
      {/* Stats Cards */}
      <div className="grid gap-stack sm:grid-cols-4">
-      <Stat label="班级在册人数" value={data.totalStudents || o.student_count || (data.insights?.students?.length ?? 0)} unit="人" />
+      <Stat label="班级在册人数" value={data.total_students} unit="人" />
       <Stat
        label="活跃提交人数"
        value={data.insights?.students?.filter((s:any)=>Number(s.attempts)>0).length ?? 0}
@@ -675,6 +693,17 @@ type BasketItem = {
  statement?: string;
 };
 
+/** ProblemSetCard 可展示的题单：题库分类、独立题单或教师草稿。 */
+type SetLike = {
+ id: string;
+ title: string;
+ count: number;
+ category_name?: string | null;
+ difficulty_count?: Partial<Record<string, number>>;
+ matched?: boolean;
+ problems: { slug: string; title: string; difficulty: string; knowledge: string[]; statement: string; provenance?: string }[];
+};
+
 function ProblemSetCard({
  item,
  expanded,
@@ -686,17 +715,17 @@ function ProblemSetCard({
  busy,
  readonly,
 }: {
- item: Row;
+ item: SetLike;
  expanded: boolean;
  onToggleExpand: () => void;
  basketSlugs: string[];
- onToggleBasketItem: (problem: Row) => void;
+ onToggleBasketItem: (problem: SetLike['problems'][number]) => void;
  onToggleBasketAll: () => void;
  onQuickImport: () => void;
  busy: boolean;
  readonly: boolean;
 }) {
- const problems: Row[] = item.problems || [];
+ const problems = item.problems;
  const allSlugs = problems.map(p => p.slug);
  const isAllInBasket = allSlugs.length > 0 && allSlugs.every(s => basketSlugs.includes(s));
 
@@ -713,13 +742,13 @@ function ProblemSetCard({
         <Badge tone="ok">已选 {basketSlugs.length} 题入篮 🛒</Badge>
        )}
       </div>
-      {item.categoryName && item.categoryName !== item.title && (
-       <p className="text-meta text-fg-muted">分类类别: {item.categoryName}</p>
+      {item.category_name && item.category_name !== item.title && (
+       <p className="text-meta text-fg-muted">分类类别: {item.category_name}</p>
       )}
-      {item.difficultyCount && Object.keys(item.difficultyCount).length > 0 && (
+      {item.difficulty_count && Object.keys(item.difficulty_count).length > 0 && (
        <div className="flex flex-wrap items-center gap-1.5 text-xs text-fg-muted pt-1">
         <span>难度分布:</span>
-        {Object.entries(item.difficultyCount).map(([lvl, cnt]) => (
+        {Object.entries(item.difficulty_count).map(([lvl, cnt]) => (
          <span key={lvl} className="inline-block rounded bg-surface-muted border border-line px-1.5 py-0.5 font-mono">
           {lvl}: {Number(cnt)}
          </span>
@@ -824,7 +853,7 @@ function ProblemSetCard({
 }
 
 const EXAMPLE={title:'第一周 · 输入与计算',problems:[{slug:'sum-two',title:'两个整数的和',statement:'输入两个整数 a 和 b，输出它们的和。\n数据范围：-1000000 ≤ a,b ≤ 1000000。',knowledge:['输入输出','整数运算'],samples:[{input:'1 2\n',output:'3\n'}],tests:[{input:'-2 5\n',output:'3\n'},{input:'0 0\n',output:'0\n'},{input:'1000000 1000000\n',output:'2000000\n'}]}]};
-function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;ta:boolean}) {
+function Studio({data,oid,archived,ta}:{data:DraftSummary[];oid:string;archived:boolean;ta:boolean}) {
  const router=useRouter();
  const [content,setContent]=useState(JSON.stringify(EXAMPLE,null,2));
  const [topic,setTopic]=useState('');
@@ -863,7 +892,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
   }
  };
 
- const [setsData, setSetsData] = useState<Row|null>(null);
+ const [setsData, setSetsData] = useState<OfferingSets|null>(null);
  const [loadingSets, setLoadingSets] = useState(true);
  const [expandedId, setExpandedId] = useState<string|null>(null);
  const [importingId, setImportingId] = useState<string|null>(null);
@@ -876,7 +905,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
 
  useEffect(() => {
   let active = true;
-  api(`/offerings/${oid}/problem-sets`).then(res => {
+  api<OfferingSets>(`/offerings/${oid}/problem-sets`).then(res => {
    if (active) {
     setSetsData(res);
     setLoadingSets(false);
@@ -890,7 +919,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
  const run=async(gen=false)=>{
   setBusy(true);setError('');
   try{
-   const r=await api(`/offerings/${oid}/${gen?'generate':'drafts'}`,'POST',gen?{topic}:{content});
+   const r=await api<DraftCreated>(`/offerings/${oid}/${gen?'generate':'drafts'}`,'POST',gen?{topic}:{content});
    router.push(`/teacher/drafts/${r.id}`);
   }catch(e){
    setError(String(e).split('|').pop()||'保存失败');
@@ -899,7 +928,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
   }
  };
 
- const handleToggleBasketItem = (item: Row, problem: Row) => {
+ const handleToggleBasketItem = (item: SetLike, problem: SetLike['problems'][number]) => {
   const exists = basket.some(b => b.setId === item.id && b.slug === problem.slug);
   if (exists) {
    setBasket(basket.filter(b => !(b.setId === item.id && b.slug === problem.slug)));
@@ -920,8 +949,8 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
   }
  };
 
- const handleToggleBasketAll = (item: Row) => {
-  const problems: Row[] = item.problems || [];
+ const handleToggleBasketAll = (item: SetLike) => {
+  const problems = item.problems;
   const allIn = problems.length > 0 && problems.every(p => basket.some(b => b.setId === item.id && b.slug === p.slug));
   if (allIn) {
    setBasket(basket.filter(b => b.setId !== item.id));
@@ -954,11 +983,11 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
   setError('');
   try {
    const defaultTitle = setsData
-    ? `${setsData.courseName || setsData.courseCode} · 综合练习作业 (${basket.length} 题)`
+    ? `${setsData.course_name || setsData.course_code} · 综合练习作业 (${basket.length} 题)`
     : `综合练习作业 (${basket.length} 题)`;
-   const res = await api(`/offerings/${oid}/import-set`, 'POST', {
+   const res = await api<DraftCreated>(`/offerings/${oid}/import-set`, 'POST', {
     title: basketTitle.trim() || defaultTitle,
-    items: basket.map(b => ({ setId: b.setId, slug: b.slug })),
+    items: basket.map(b => ({ set_id: b.setId, slug: b.slug })),
    });
    router.push(`/teacher/drafts/${res.id}`);
   } catch (e) {
@@ -968,14 +997,14 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
   }
  };
 
- const handleQuickImport = async (item: Row) => {
+ const handleQuickImport = async (item: SetLike) => {
   setImportingId(item.id);
   setError('');
   try {
    const setBasketSlugs = basket.filter(b => b.setId === item.id).map(b => b.slug);
-   const res = await api(`/offerings/${oid}/import-set`, 'POST', {
-    setId: item.id,
-    selectedSlugs: setBasketSlugs.length > 0 ? setBasketSlugs : undefined,
+   const res = await api<DraftCreated>(`/offerings/${oid}/import-set`, 'POST', {
+    set_id: item.id,
+    selected_slugs: setBasketSlugs.length > 0 ? setBasketSlugs : undefined,
    });
    router.push(`/teacher/drafts/${res.id}`);
   } catch (e) {
@@ -988,18 +1017,18 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
  const readonly=archived||ta;
  const readonlyHint=archived?'历史教学班为只读：不能新建草稿、导入题单或生成 AI 草稿；历史内容仅供查看与导出。':'助教身份为只读：可以查看与导出，不能新建或修改题单。';
 
- const recommendedItems = setsData ? [...(setsData.courseSets || []), ...(setsData.recommendedCategories || [])] : [];
- const categoryItems = setsData?.allCategories ? (
+ const recommendedItems: SetLike[] = setsData ? [...setsData.course_sets, ...setsData.categories.filter((c) => c.matched)] : [];
+ const categoryItems = setsData ? (
   searchFilter.trim()
-   ? setsData.allCategories.filter((c: Row) =>
+   ? setsData.categories.filter((c) =>
       c.title.toLowerCase().includes(searchFilter.toLowerCase()) ||
-       c.categoryName.toLowerCase().includes(searchFilter.toLowerCase()) ||
-       (c.tags || c.courses || []).some((k: string) => k.toLowerCase().includes(searchFilter.toLowerCase()))
+       (c.category_name ?? '').toLowerCase().includes(searchFilter.toLowerCase()) ||
+       c.tags.some((k) => k.toLowerCase().includes(searchFilter.toLowerCase()))
       )
-   : setsData.allCategories
+   : setsData.categories
  ) : [];
- const contestItems = setsData?.contestSets || [];
- const myProblemSetItems = setsData?.myProblemSets || [];
+ const contestItems = setsData?.contest_sets || [];
+ const myProblemSetItems = setsData?.my_problem_sets || [];
 
  const distinctSets = Array.from(new Set(basket.map(b => b.setName)));
  const basketDiffCounts: Record<string, number> = {};
@@ -1013,7 +1042,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
    <Heading
     tag="AUTHORING STUDIO"
     title="把教学目标，变成一次好练习。"
-    description={setsData ? `当前课程: ${setsData.courseCode} · ${setsData.courseName} (${setsData.offeringTitle})` : "自编题、选择课程题单或让 AI 辅助起草，统一经过审核发布。"}
+    description={setsData ? `当前课程: ${setsData.course_code} · ${setsData.course_name} (${setsData.offering_title})` : "自编题、选择课程题单或让 AI 辅助起草，统一经过审核发布。"}
    >
     <div className="flex flex-wrap gap-2">
      <Link className="px-4 py-2 border border-line rounded-control text-meta hover:bg-surface-muted" href={`/teacher/courses/${oid}`}>查看已发布作业</Link>
@@ -1114,7 +1143,7 @@ function Studio({data,oid,archived,ta}:{data:Row[];oid:string;archived:boolean;t
        </div>
        <div className="text-right">
         <span className="inline-block rounded-control bg-surface-muted px-2.5 py-1 text-xs text-fg-muted font-mono">
-         教学班: {setsData ? `${setsData.courseCode} · ${setsData.courseName}` : ''}
+         教学班: {setsData ? `${setsData.course_code} · ${setsData.course_name}` : ''}
         </span>
        </div>
       </div>
@@ -1305,7 +1334,7 @@ problems:
       <div>
        <h2 className="font-semibold text-fg">课程专属教学题单库</h2>
        <p className="mt-1 text-meta text-fg-muted">
-        系统已自动匹配【{setsData?.courseCode} · {setsData?.courseName}】教学大纲涵盖的知识模块。支持跨集合勾选多道试题统一组卷。
+        系统已自动匹配【{setsData?.course_code} · {setsData?.course_name}】教学大纲涵盖的知识模块。支持跨集合勾选多道试题统一组卷。
        </p>
       </div>
       <Badge tone="brand">共 {recommendedItems.length} 份匹配题单</Badge>
@@ -1315,7 +1344,7 @@ problems:
       <Empty title="暂无推荐题单" hint="可切换至「全学科 24 知识库」或「竞赛题单」进行选择。"/>
      ) : (
       <div className="grid gap-3">
-       {recommendedItems.map((item: Row) => (
+       {recommendedItems.map((item) => (
         <ProblemSetCard
          key={item.id}
          item={item}
@@ -1353,7 +1382,7 @@ problems:
       <Empty title="您的题单库暂无题单" hint="可通过上方「AI 智能辅助出题」生成新题单，或进入「我的题库」统一导入与管理。"/>
      ) : (
       <div className="grid gap-3">
-       {myProblemSetItems.map((item: Row) => (
+       {myProblemSetItems.map((item) => (
         <ProblemSetCard
          key={item.id}
          item={item}
@@ -1390,7 +1419,7 @@ problems:
      </div>
 
      <div className="grid gap-3">
-      {categoryItems.map((item: Row) => (
+      {categoryItems.map((item) => (
        <ProblemSetCard
         key={item.id}
         item={item}
@@ -1417,7 +1446,7 @@ problems:
      </div>
 
      <div className="grid gap-3">
-      {contestItems.map((item: Row) => (
+      {contestItems.map((item) => (
        <ProblemSetCard
         key={item.id}
         item={item}
@@ -1444,7 +1473,7 @@ problems:
      <Link className="flex items-center justify-between border-t border-line py-4 hover:bg-surface-muted/30 px-2 rounded transition-colors" key={r.draft_id} href={`/teacher/drafts/${r.draft_id}`}>
       <span>
        {r.title}
-       <span className="ml-2 text-meta text-fg-muted">{r.origin==='ai'?'AI 草稿':(r.origin==='hoa'||r.origin==='bank')?'题库引入':'教师编写'}</span>
+       <span className="ml-2 text-meta text-fg-muted">{r.origin==='ai'?'AI 草稿':'教师编写'}</span>
       </span>
       <Badge tone={r.status==='published'?'ok':'neutral'}>{r.status==='published'?'已发布':'待审核'}</Badge>
      </Link>
@@ -1538,7 +1567,7 @@ problems:
        <input
         type="text"
         className="w-64 md:w-80 rounded-control border border-line bg-surface px-3 py-2 text-sm text-fg focus:border-brand focus:outline-none"
-        placeholder={setsData ? `${setsData.courseName || setsData.courseCode} · 综合练习作业` : '作业草稿标题（选填）'}
+        placeholder={setsData ? `${setsData.course_name || setsData.course_code} · 综合练习作业` : '作业草稿标题（选填）'}
         value={basketTitle}
         onChange={e => setBasketTitle(e.target.value)}
        />
@@ -1558,22 +1587,20 @@ problems:
  );
 }
 
-function Batch({data,reload,prefix}:{data:Row;reload:()=>void;prefix:string}) {
+function Batch({data,reload,prefix}:{data:BatchDetail;reload:()=>void;prefix:string}) {
  const [selected,setSelected]=useState<number[]>([]); const [message,setMessage]=useState(''); const router=useRouter();const b=data.batch;const teacher=data.offering.role==='teacher';const student=data.offering.role==='student';
  const langLabels: Record<string, string> = { c: 'C', cpp: 'C++', java: 'Java', python: 'Python 3' };
- const batchAllowed = b.allowed_languages ? b.allowed_languages.split(',').map((x: string) => langLabels[x.trim()] || x.trim()).join(' / ') : '全部语言';
+ const batchAllowed = b.allowed_languages.map((x) => langLabels[x] || x).join(' / ');
  const run=async(fn:()=>Promise<any>)=>{try{setMessage('');await fn();}catch(e){setMessage(String(e).split('|').pop()||'操作失败');}};
- return <div className="space-y-6"><Heading tag="ASSIGNMENT" title={b.title} description={`${data.offering.term} · 截止 ${date(b.due_at)}`}><div className="flex flex-wrap items-center gap-2"><Badge tone={b.ai_enabled==='1'?'brand':'neutral'}>AI 辅助{b.ai_enabled==='1'?'已开启':'已关闭'}</Badge><Badge tone="brand">允许语言: {batchAllowed}</Badge>{b.source_ref&&<Badge tone="brand">{formatSourceRef(b.source_ref)}</Badge>}{b.read_only==='1'&&<Badge tone="warn">只读来源 · 不可公开导出</Badge>}</div></Heading><div className="grid gap-stack sm:grid-cols-3">{student&&<Stat label="已通过" value={data.problems.filter((p:Row)=>p.passed==='1').length} unit="题"/>}<Stat label="题目总数" value={data.problems.length} unit="题"/>{student&&<Stat label="提交次数" value={data.problems.reduce((n:number,p:Row)=>n+Number(p.attempts),0)} unit="次"/>}</div><Card><CardTitle title="本批次题目" meta="按教学顺序推进，每道题都有自己的节奏。"/>{data.problems.length===0?<Empty title="暂无可见题目"/>:data.problems.map((p:Row)=><div className="flex flex-wrap items-center justify-between gap-3 border-t border-line py-5" key={p.problem_id}><div className="flex items-start gap-3">{teacher&&<input aria-label={`选择导出 ${p.title}`} type="checkbox" checked={selected.includes(Number(p.problem_id))} onChange={e=>setSelected(e.target.checked?[...selected,Number(p.problem_id)]:selected.filter(x=>x!==Number(p.problem_id)))}/>}<span className="text-fg-subtle">{String(p.seq).padStart(2,'0')}</span><div><h3 className="font-semibold">{p.title}</h3><p className="mt-1 text-meta text-fg-muted">{p.hint||'编程练习'}{student&&` · 提交 ${p.attempts} 次`}</p></div></div><div className="flex items-center gap-3">{student&&<Badge tone={p.passed==='1'?'ok':p.hasPreviousAc?'brand':p.attempts!=='0'?'warn':'neutral'}>{p.passed==='1'?'已通过':p.hasPreviousAc?'题库已AC · 未提交':p.attempts!=='0'?'继续尝试':'未提交'}</Badge>}<Link className={action} href={`${prefix}/batches/${b.batch_id}/problems/${p.problem_id}`}>{student?'进入练习':'预览题目'}</Link></div></div>)}</Card>{teacher&&<Card><CardTitle title="教师操作" meta={data.offering.status==='archived'?'历史教学班为只读：设置与复制不可用；非只读来源的已发布题单仍可导出。':b.read_only==='1'?'本批次来自只读来源（如 HOA 导入），按红线不可公开导出。':'公开导出只包含已勾选题目的题面与样例，不包含隐藏测试或学生代码。'}/><div className="flex flex-wrap gap-3"><Button disabled={data.offering.status==='archived'} onClick={()=>run(async()=>{await api(`/batches/${b.batch_id}`,'PATCH',{aiEnabled:b.ai_enabled!=='1'});reload();})}>{b.ai_enabled==='1'?'关闭':'开启'} AI 辅助</Button><Button disabled={data.offering.status==='archived'} onClick={()=>run(async()=>{const d=await api(`/batches/${b.batch_id}/copy`,'POST');router.push(`/teacher/drafts/${d.id}`);})}>复制为新草稿</Button><Button disabled={b.read_only==='1'} onClick={()=>run(async()=>{const d=await api(`/batches/${b.batch_id}/export`,'POST',{selected});download(d.filename,d.content);setMessage('已下载公开题单，尚未上传到 HOA。');})}>{b.read_only==='1'?'只读来源不可导出':'导出勾选题目'}（{selected.length}）</Button></div></Card>}{message&&<p role="status" className="text-brand">{message}</p>}</div>;
+ return <div className="space-y-6"><Heading tag="ASSIGNMENT" title={b.title} description={`${data.offering.term} · 截止 ${date(b.due_at)}`}><div className="flex flex-wrap items-center gap-2"><Badge tone={b.ai_enabled?'brand':'neutral'}>AI 辅助{b.ai_enabled?'已开启':'已关闭'}</Badge><Badge tone="brand">允许语言: {batchAllowed}</Badge>{b.source_ref&&<Badge tone="brand">{formatSourceRef(b.source_ref)}</Badge>}{b.read_only&&<Badge tone="warn">只读来源 · 不可公开导出</Badge>}</div></Heading><div className="grid gap-stack sm:grid-cols-3">{student&&<Stat label="已通过" value={data.problems.filter((p)=>p.passed).length} unit="题"/>}<Stat label="题目总数" value={data.problems.length} unit="题"/>{student&&<Stat label="提交次数" value={data.problems.reduce((n,p)=>n+p.attempts,0)} unit="次"/>}</div><Card><CardTitle title="本批次题目" meta="按教学顺序推进，每道题都有自己的节奏。"/>{data.problems.length===0?<Empty title="暂无可见题目"/>:data.problems.map((p)=><div className="flex flex-wrap items-center justify-between gap-3 border-t border-line py-5" key={p.problem_id}><div className="flex items-start gap-3">{teacher&&<input aria-label={`选择导出 ${p.title}`} type="checkbox" checked={selected.includes(Number(p.problem_id))} onChange={e=>setSelected(e.target.checked?[...selected,Number(p.problem_id)]:selected.filter(x=>x!==Number(p.problem_id)))}/>}<span className="text-fg-subtle">{String(p.seq).padStart(2,'0')}</span><div><h3 className="font-semibold">{p.title}</h3><p className="mt-1 text-meta text-fg-muted">{p.hint||'编程练习'}{student&&` · 提交 ${p.attempts} 次`}</p></div></div><div className="flex items-center gap-3">{student&&<Badge tone={p.passed?'ok':p.has_previous_ac?'brand':p.attempts>0?'warn':'neutral'}>{p.passed?'已通过':p.has_previous_ac?'题库已AC · 未提交':p.attempts>0?'继续尝试':'未提交'}</Badge>}<Link className={action} href={`${prefix}/batches/${b.batch_id}/problems/${p.problem_id}`}>{student?'进入练习':'预览题目'}</Link></div></div>)}</Card>{teacher&&<Card><CardTitle title="教师操作" meta={data.offering.status==='archived'?'历史教学班为只读：设置与复制不可用；非只读来源的已发布题单仍可导出。':b.read_only?'本批次来自只读来源（如 HOA 导入），按红线不可公开导出。':'公开导出只包含已勾选题目的题面与样例，不包含隐藏测试或学生代码。'}/><div className="flex flex-wrap gap-3"><Button disabled={data.offering.status==='archived'} onClick={()=>run(async()=>{await api(`/batches/${b.batch_id}`,'PATCH',{ai_enabled:!b.ai_enabled});reload();})}>{b.ai_enabled?'关闭':'开启'} AI 辅助</Button><Button disabled={data.offering.status==='archived'} onClick={()=>run(async()=>{const d=await api<DraftCreated>(`/batches/${b.batch_id}/copy`,'POST');router.push(`/teacher/drafts/${d.id}`);})}>复制为新草稿</Button><Button disabled={b.read_only} onClick={()=>run(async()=>{const d=await api<ExportResponse>(`/batches/${b.batch_id}/export`,'POST',{selected});download(d.filename,d.content);setMessage('已下载公开题单，尚未上传到 HOA。');})}>{b.read_only?'只读来源不可导出':'导出勾选题目'}（{selected.length}）</Button></div></Card>}{message&&<p role="status" className="text-brand">{message}</p>}</div>;
 }
 
-function Workspace({data,bid,pid,user}:{data:Row;bid:string;pid:string;user:string}) {
+function Workspace({data,bid,pid,user}:{data:ProblemDetail;bid:string;pid:string;user:string}) {
  const p=data.problem;
  const b=data.batch;
+ const prev=data.previous_ac;
  const ALL_WORKSPACE_LANGS: [string, string][] = [['c','C'],['cpp','C++'],['java','Java'],['python','Python 3']];
- const allowedRaw = b?.allowed_languages || b?.allowedLanguages;
- const allowedList = allowedRaw
-  ? (Array.isArray(allowedRaw) ? allowedRaw : String(allowedRaw).split(',')).map((x: string) => x.trim().toLowerCase()).filter(Boolean)
-  : ['c', 'cpp', 'java', 'python'];
+ const allowedList = b.allowed_languages;
  const selectableLangs = ALL_WORKSPACE_LANGS.filter(([v]) => allowedList.includes(v));
  const finalLangs = selectableLangs.length > 0 ? selectableLangs : ALL_WORKSPACE_LANGS;
 
@@ -1581,39 +1608,39 @@ function Workspace({data,bid,pid,user}:{data:Row;bid:string;pid:string;user:stri
  const [lang,setLang]=useState<string>(() => {
   return finalLangs.some(([v]) => v === 'python') ? 'python' : finalLangs[0][0];
  });
- const [result,setResult]=useState<Row|null>(null);
+ const [result,setResult]=useState<SubmissionResult|null>(null);
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
- const [analysis,setAnalysis]=useState<Row|null>(null);
+ const [analysis,setAnalysis]=useState<Analysis|null>(null);
  const [sid,setSid]=useState<number|null>(null);
 
  useEffect(() => {
   if (!finalLangs.some(([v]) => v === lang)) {
    setLang(finalLangs[0][0]);
   }
- }, [allowedRaw]);
+ }, [b.allowed_languages.join(',')]);
  useEffect(()=>{setCode(readDraft(user,bid,pid));setSid(null);setResult(null);setAnalysis(null);},[user,bid,pid]);
- useEffect(()=>{if(!sid)return;let active=true;let timer:ReturnType<typeof setTimeout>;let attempts=0;const poll=async()=>{try{const r=await api(`/submissions/${sid}`);if(!active)return;setResult(r);if([0,1,2,3,14].includes(Number(r.result))&&attempts++<60){timer=setTimeout(poll,1500);}else{setBusy(false);if(attempts>=60)setError('判题仍在队列中，请稍后刷新结果。');}}catch(e){if(active){setError(String(e));setBusy(false);}}};poll();return()=>{active=false;clearTimeout(timer);};},[sid]);
+ useEffect(()=>{if(!sid)return;let active=true;let timer:ReturnType<typeof setTimeout>;let attempts=0;const poll=async()=>{try{const r=await api<SubmissionResult>(`/submissions/${sid}`);if(!active)return;setResult(r);if([0,1,2,3,14].includes(Number(r.result))&&attempts++<60){timer=setTimeout(poll,1500);}else{setBusy(false);if(attempts>=60)setError('判题仍在队列中，请稍后刷新结果。');}}catch(e){if(active){setError(String(e));setBusy(false);}}};poll();return()=>{active=false;clearTimeout(timer);};},[sid]);
  const readOnly=data.role!=='student';
  if(readOnly)return <div className="space-y-6"><Heading tag={`PROBLEM ${pid}`} title={p.title} description={`${p.time_limit} 秒 · ${p.memory_limit} MB · ${data.archived?'历史课程只读':'题目预览（只读）'}`}/><Card><CardTitle title="题目要求" meta={data.role!=='student'?'教师预览：不包含学生代码与反馈区域。':undefined}/><MarkdownView content={p.description} placeholder="暂无题目要求描述"/>{p.input&&<><h3 className="mt-6 font-semibold">输入</h3><p className="whitespace-pre-wrap">{p.input}</p></>}{p.output&&<><h3 className="mt-6 font-semibold">输出</h3><p>{p.output}</p></>}<h3 className="mt-6 font-semibold">样例输入</h3><pre className="sample">{p.sample_input}</pre><h3 className="mt-4 font-semibold">样例输出</h3><pre className="sample">{p.sample_output}</pre></Card></div>;
- return <div className="space-y-6"><Heading tag={`PROBLEM ${pid}`} title={p.title} description={`${p.time_limit} 秒 · ${p.memory_limit} MB · ${data.archived?'历史课程只读':'编程练习'}`}/><div className="grid grid-cols-1 lg:grid-cols-2 gap-stack items-stretch"><Card className="flex flex-col h-full lg:max-h-[820px] overflow-hidden"><CardTitle title="题目要求"/><div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-2"><MarkdownView content={p.description} placeholder="暂无题目要求描述"/>{p.input&&<><h3 className="mt-6 font-semibold">输入</h3><p className="whitespace-pre-wrap">{p.input}</p></>}{p.output&&<><h3 className="mt-6 font-semibold">输出</h3><p>{p.output}</p></>}<h3 className="mt-6 font-semibold">样例输入</h3><pre className="sample">{p.sample_input}</pre><h3 className="mt-4 font-semibold">样例输出</h3><pre className="sample">{p.sample_output}</pre></div></Card><Card className="flex flex-col h-full lg:max-h-[820px] overflow-hidden"><CardTitle title="我的代码" meta="草稿按身份与题目隔离保存在当前浏览器，判题结果来自 HOJ。"/><div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2">{data.previousAc&&<div className="mb-3 rounded-control border border-ok/30 bg-ok-soft/70 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="text-base">💡</span><div><p className="font-semibold text-ok">检测到您此前已在题库通过本题 (AC)</p><p className="mt-0.5 text-fg-muted">提交语言: <strong className="text-fg">{data.previousAc.languageName}</strong> · 耗时: {data.previousAc.time} ms · 提交时间: {data.previousAc.inDate}</p></div></div><button type="button" className="inline-flex items-center gap-1 rounded-control bg-ok px-3 py-1.5 font-medium text-white shadow-sm hover:opacity-90 active:scale-95 transition cursor-pointer" onClick={()=>{setCode(data.previousAc.code);if(data.previousAc.isLanguageAllowed){setLang(data.previousAc.language);}writeDraft(user,bid,pid,data.previousAc.code);}}>📥 一键载入上次通过代码</button></div>{!data.previousAc.isLanguageAllowed&&<p className="mt-2 text-warn border-t border-ok/20 pt-1.5">⚠️ 原提交语言 ({data.previousAc.languageName}) 不在当前作业允许列表中，载入后请按作业要求调整语言实现。</p>}</div>}<label className="block text-meta shrink-0">编程语言{finalLangs.length < 4 ? ` (本作业允许: ${finalLangs.map(([,l])=>l).join('/')})` : ''}<select className={`${field} my-2`} value={lang} onChange={e=>setLang(e.target.value)}>{finalLangs.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><CodeEditor className="flex-1 min-h-[320px]" value={code} language={lang} readOnly={data.archived} onChange={next=>{setCode(next);writeDraft(user,bid,pid,next);}}/><div className="shrink-0 pt-3"><button className={`${action} disabled:opacity-40`} disabled={busy||data.archived} onClick={async()=>{setBusy(true);setError('');setAnalysis(null);try{const r=await api(`/batches/${bid}/problems/${pid}/submissions`,'POST',{code,language:lang});setSid(r.submissionId);}catch(e){setError(String(e).split('|').pop()||'提交失败');setBusy(false);}}}>{busy?'正在判题…':'正式提交作业'}</button>{error&&<p role="alert" className="mt-2 text-meta text-danger">{error}</p>}{result&&<div className="mt-3 border-t border-line pt-3"><div className="flex items-center justify-between"><Badge tone={result.result==='4'?'ok':'warn'}>#{sid} · {result.label}</Badge><span className="text-meta text-fg-muted">{result.time} ms · {result.memory} KB</span></div>{result.error&&<div className="mt-3"><JudgeDetailView error={result.error} /></div>}</div>}</div></div></Card><TrialPanel className="lg:min-h-[460px] lg:max-h-[600px]" bid={bid} pid={pid} code={code} language={lang} sampleInput={p.sample_input||''} sampleOutput={p.sample_output||''} disabled={data.archived}/><Card className="flex flex-col h-full lg:min-h-[460px] lg:max-h-[600px] overflow-hidden"><CardTitle title="学习反馈" meta="F 为判题事实，A 为待验证的学习建议。"/><div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-2">{data.batch.ai_enabled!=='1'?<Empty title="本批次已关闭 AI 辅助"/>:!sid||!result||[0,1,2,3,14].includes(Number(result.result))?<p className="text-fg-muted">完成一次判题后，可以逐级查看反馈。</p>:<div><div className="flex flex-wrap gap-2">{[1,2,3].map(level=><Button key={level} onClick={async()=>{try{setAnalysis(await api(`/submissions/${sid}/analysis?level=${level}`));}catch(e){setError(String(e));}}}>{level} 级提示</Button>)}</div>{analysis&&<div className="mt-4 space-y-3">{analysis.mode&&<Badge tone={analysis.mode==='model'?'brand':'neutral'}>{analysis.mode==='model'?'模型生成':'规则建议'}</Badge>}<p className="text-meta text-fg-muted">{analysis.label}</p>{analysis.evidence.map((e:Row)=><div key={e.id} className="rounded-control border border-line bg-surface-muted/50 p-3"><Badge tone={e.kind==='F'?'neutral':'brand'}>{e.id} · {e.kind==='F'?'判题事实':'解释与建议'}</Badge><p className="mt-2 text-meta text-fg leading-relaxed">{e.text}</p></div>)}</div>}</div>}</div></Card></div></div>;
+ return <div className="space-y-6"><Heading tag={`PROBLEM ${pid}`} title={p.title} description={`${p.time_limit} 秒 · ${p.memory_limit} MB · ${data.archived?'历史课程只读':'编程练习'}`}/><div className="grid grid-cols-1 lg:grid-cols-2 gap-stack items-stretch"><Card className="flex flex-col h-full lg:max-h-[820px] overflow-hidden"><CardTitle title="题目要求"/><div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-2"><MarkdownView content={p.description} placeholder="暂无题目要求描述"/>{p.input&&<><h3 className="mt-6 font-semibold">输入</h3><p className="whitespace-pre-wrap">{p.input}</p></>}{p.output&&<><h3 className="mt-6 font-semibold">输出</h3><p>{p.output}</p></>}<h3 className="mt-6 font-semibold">样例输入</h3><pre className="sample">{p.sample_input}</pre><h3 className="mt-4 font-semibold">样例输出</h3><pre className="sample">{p.sample_output}</pre></div></Card><Card className="flex flex-col h-full lg:max-h-[820px] overflow-hidden"><CardTitle title="我的代码" meta="草稿按身份与题目隔离保存在当前浏览器，判题结果来自 HOJ。"/><div className="flex-1 flex flex-col min-h-0 overflow-y-auto pr-2">{prev&&<div className="mb-3 rounded-control border border-ok/30 bg-ok-soft/70 p-3 text-xs"><div className="flex flex-wrap items-center justify-between gap-2"><div className="flex items-center gap-2"><span className="text-base">💡</span><div><p className="font-semibold text-ok">检测到您此前已在题库通过本题 (AC)</p><p className="mt-0.5 text-fg-muted">提交语言: <strong className="text-fg">{prev.language_name}</strong> · 耗时: {prev.time} ms · 提交时间: {prev.in_date}</p></div></div><button type="button" className="inline-flex items-center gap-1 rounded-control bg-ok px-3 py-1.5 font-medium text-white shadow-sm hover:opacity-90 active:scale-95 transition cursor-pointer" onClick={()=>{setCode(prev.code);if(prev.is_language_allowed){setLang(prev.language);}writeDraft(user,bid,pid,prev.code);}}>📥 一键载入上次通过代码</button></div>{!prev.is_language_allowed&&<p className="mt-2 text-warn border-t border-ok/20 pt-1.5">⚠️ 原提交语言 ({prev.language_name}) 不在当前作业允许列表中，载入后请按作业要求调整语言实现。</p>}</div>}<label className="block text-meta shrink-0">编程语言{finalLangs.length < 4 ? ` (本作业允许: ${finalLangs.map(([,l])=>l).join('/')})` : ''}<select className={`${field} my-2`} value={lang} onChange={e=>setLang(e.target.value)}>{finalLangs.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label><CodeEditor className="flex-1 min-h-[320px]" value={code} language={lang} readOnly={data.archived} onChange={next=>{setCode(next);writeDraft(user,bid,pid,next);}}/><div className="shrink-0 pt-3"><button className={`${action} disabled:opacity-40`} disabled={busy||data.archived} onClick={async()=>{setBusy(true);setError('');setAnalysis(null);try{const r=await api<SubmitResponse>(`/batches/${bid}/problems/${pid}/submissions`,'POST',{code,language:lang});setSid(r.submission_id);}catch(e){setError(String(e).split('|').pop()||'提交失败');setBusy(false);}}}>{busy?'正在判题…':'正式提交作业'}</button>{error&&<p role="alert" className="mt-2 text-meta text-danger">{error}</p>}{result&&<div className="mt-3 border-t border-line pt-3"><div className="flex items-center justify-between"><Badge tone={result.result===4?'ok':'warn'}>#{sid} · {result.label}</Badge><span className="text-meta text-fg-muted">{result.time} ms · {result.memory} KB</span></div>{result.error&&<div className="mt-3"><JudgeDetailView error={result.error} /></div>}</div>}</div></div></Card><TrialPanel className="lg:min-h-[460px] lg:max-h-[600px]" bid={bid} pid={pid} code={code} language={lang} sampleInput={p.sample_input||''} sampleOutput={p.sample_output||''} disabled={data.archived}/><Card className="flex flex-col h-full lg:min-h-[460px] lg:max-h-[600px] overflow-hidden"><CardTitle title="学习反馈" meta="F 为判题事实，A 为待验证的学习建议。"/><div className="flex-1 overflow-y-auto min-h-0 space-y-4 pr-2">{!data.batch.ai_enabled?<Empty title="本批次已关闭 AI 辅助"/>:!sid||!result||[0,1,2,3,14].includes(Number(result.result))?<p className="text-fg-muted">完成一次判题后，可以逐级查看反馈。</p>:<div><div className="flex flex-wrap gap-2">{[1,2,3].map(level=><Button key={level} onClick={async()=>{try{setAnalysis(await api<Analysis>(`/submissions/${sid}/analysis?level=${level}`));}catch(e){setError(String(e));}}}>{level} 级提示</Button>)}</div>{analysis&&<div className="mt-4 space-y-3">{analysis.mode&&<Badge tone={analysis.mode==='model'?'brand':'neutral'}>{analysis.mode==='model'?'模型生成':'规则建议'}</Badge>}<p className="text-meta text-fg-muted">{analysis.label}</p>{analysis.evidence.map((e)=><div key={e.id} className="rounded-control border border-line bg-surface-muted/50 p-3"><Badge tone={e.kind==='F'?'neutral':'brand'}>{e.id} · {e.kind==='F'?'判题事实':'解释与建议'}</Badge><p className="mt-2 text-meta text-fg leading-relaxed">{e.text}</p></div>)}</div>}</div>}</div></Card></div></div>;
 }
 
-function DraftEditor({data,reload,archived,ta}:{data:Row;reload:()=>void;archived:boolean;ta:boolean}) {
- const router=useRouter();const [doc,setDoc]=useState<Row>(data.document);const [reviewed,setReviewed]=useState(false);const [due,setDue]=useState('');const [ai,setAI]=useState(true);
+function DraftEditor({data,reload,archived,ta}:{data:Draft;reload:()=>void;archived:boolean;ta:boolean}) {
+ const router=useRouter();const [doc,setDoc]=useState<Document>(data.document);const [reviewed,setReviewed]=useState(false);const [due,setDue]=useState('');const [ai,setAI]=useState(true);
  const [allowedLangs,setAllowedLangs]=useState<string[]>(()=>{
-  const raw = data.document?.allowed_languages;
-  return raw ? String(raw).split(',').map((x:string)=>x.trim().toLowerCase()).filter(Boolean) : ['c','cpp','java','python'];
+  const raw = data.document.allowed_languages;
+  return raw ? raw.split(',').map((x)=>x.trim().toLowerCase()).filter(Boolean) : ['c','cpp','java','python'];
  });
  const [message,setMessage]=useState('');const [busy,setBusy]=useState(false);const published=data.status==='published';const readOnly=published||archived||ta;
- const patchProblem=(i:number,k:string,v:unknown)=>setDoc({...doc,problems:doc.problems.map((p:Row,n:number)=>n===i?{...p,[k]:v}:p)});
+ const patchProblem=<K extends keyof Problem>(i:number,k:K,v:Problem[K])=>setDoc({...doc,problems:doc.problems.map((p,n)=>n===i?{...p,[k]:v}:p)});
  const run=async(publish=false)=>{
   setBusy(true);setMessage('');
   try{
    await api(`/drafts/${data.draft_id}`,'PUT',{document:{...doc,allowed_languages:allowedLangs.join(',')}});
    if(publish){
-    const r=await api(`/drafts/${data.draft_id}/publish`,'POST',{reviewed,dueAt:due,aiEnabled:ai,allowedLanguages:allowedLangs.join(',')});
-    router.push(`/teacher/batches/${r.batchId}`);
+    const r=await api<PublishResponse>(`/drafts/${data.draft_id}/publish`,'POST',{reviewed,due_at:due,ai_enabled:ai,allowed_languages:allowedLangs.join(',')});
+    router.push(`/teacher/batches/${r.batch_id}`);
    }else{
     setMessage('草稿已保存');reload();
    }
@@ -1623,14 +1650,14 @@ function DraftEditor({data,reload,archived,ta}:{data:Row;reload:()=>void;archive
    setBusy(false);
   }
  };
- return <div className="space-y-6"><Heading tag="REVIEW & PUBLISH" title={published?'已发布的题单':'审核题单'} description={archived&&!published?'历史教学班为只读，本草稿仅可查看。':ta&&!published?'助教身份为只读，本草稿仅可查看。':'题面、样例和隐藏测试都确认后，再交给学生。'}/><Card><label>题单标题<input disabled={readOnly} className={`${field} mt-2`} value={doc.title} onChange={e=>setDoc({...doc,title:e.target.value})}/></label></Card>{doc.problems.map((p:Row,i:number)=><Card key={i}><CardTitle title={`题目 ${i+1} · ${p.title}`}/><fieldset disabled={readOnly} className="space-y-4"><label className="block">标题<input className={field} value={p.title} onChange={e=>patchProblem(i,'title',e.target.value)}/></label><label className="block">题面<textarea className={`${field} min-h-40`} value={p.statement} onChange={e=>patchProblem(i,'statement',e.target.value)}/></label>{(['samples','tests'] as const).map(kind=><div key={kind}><h3 className="mb-2 font-semibold">{kind==='samples'?'公开样例':'隐藏测试（不会公开导出）'}</h3>{(p[kind]||[]).map((sample:Row,n:number)=><div key={n} className="mb-3 grid gap-3 sm:grid-cols-2">{['input','output'].map(k=><label key={k} className="text-meta">{k==='input'?'输入':'预期输出'} #{n+1}<textarea className={`${field} font-mono`} value={sample[k]} onChange={e=>patchProblem(i,kind,p[kind].map((s:Row,j:number)=>j===n?{...s,[k]:e.target.value}:s))}/></label>)}</div>)}<Button disabled={readOnly} onClick={()=>patchProblem(i,kind,[...(p[kind]||[]),{input:'',output:''}])}>添加{kind==='samples'?'样例':'测试'}</Button></div>)}</fieldset></Card>)}{published?<Link className={action} href={`/teacher/batches/${data.batch_id}`}>查看已发布题单 →</Link>:archived?<Empty title="历史教学班为只读" hint="草稿不可修改或发布；如需复用请先在当前教学班复制。"/>:ta?<Empty title="助教身份为只读" hint="可以查看题单内容；修改与发布由任课教师完成。"/>:<Card><CardTitle title="发布设置"/><div className="space-y-4"><label className="block">截止时间<input type="datetime-local" className={`${field} mt-2`} value={due} onChange={e=>setDue(e.target.value)}/></label><label className="flex gap-2"><input type="checkbox" checked={ai} onChange={e=>setAI(e.target.checked)}/>允许本批次使用学习反馈</label><label className="block text-meta">允许编程语言<div className="mt-2 flex flex-wrap gap-3">{[{id:'c',label:'C'},{id:'cpp',label:'C++'},{id:'java',label:'Java'},{id:'python',label:'Python 3'}].map(lang=><label key={lang.id} className="flex items-center gap-1.5 text-xs cursor-pointer"><input type="checkbox" disabled={readOnly} checked={allowedLangs.includes(lang.id)} onChange={e=>{if(e.target.checked)setAllowedLangs([...allowedLangs,lang.id]);else{if(allowedLangs.length<=1){alert('至少保留一种允许的语言');return;}setAllowedLangs(allowedLangs.filter(l=>l!==lang.id));}}}/>{lang.label}</label>)}</div></label><label className="flex gap-2"><input type="checkbox" checked={reviewed} onChange={e=>setReviewed(e.target.checked)}/>我已核对题面与测试输出，并确认隐藏测试覆盖样例之外的输入</label><div className="flex gap-3"><button disabled={busy} className={action} onClick={()=>run(false)}>保存草稿</button><button disabled={!reviewed||busy} className={`${action} disabled:opacity-40`} onClick={()=>run(true)}>{busy?'正在处理…':'审核并发布'}</button></div></div></Card>}{message&&<p role="status" className="text-brand">{message}</p>}</div>;
+ return <div className="space-y-6"><Heading tag="REVIEW & PUBLISH" title={published?'已发布的题单':'审核题单'} description={archived&&!published?'历史教学班为只读，本草稿仅可查看。':ta&&!published?'助教身份为只读，本草稿仅可查看。':'题面、样例和隐藏测试都确认后，再交给学生。'}/><Card><label>题单标题<input disabled={readOnly} className={`${field} mt-2`} value={doc.title} onChange={e=>setDoc({...doc,title:e.target.value})}/></label></Card>{doc.problems.map((p,i)=><Card key={i}><CardTitle title={`题目 ${i+1} · ${p.title}`}/><fieldset disabled={readOnly} className="space-y-4"><label className="block">标题<input className={field} value={p.title} onChange={e=>patchProblem(i,'title',e.target.value)}/></label><label className="block">题面<textarea className={`${field} min-h-40`} value={p.statement} onChange={e=>patchProblem(i,'statement',e.target.value)}/></label>{(['samples','tests'] as const).map(kind=><div key={kind}><h3 className="mb-2 font-semibold">{kind==='samples'?'公开样例':'隐藏测试（不会公开导出）'}</h3>{(p[kind]||[]).map((sample,n)=><div key={n} className="mb-3 grid gap-3 sm:grid-cols-2">{(['input','output'] as const).map(k=><label key={k} className="text-meta">{k==='input'?'输入':'预期输出'} #{n+1}<textarea className={`${field} font-mono`} value={sample[k]} onChange={e=>patchProblem(i,kind,p[kind].map((s,j)=>j===n?{...s,[k]:e.target.value}:s))}/></label>)}</div>)}<Button disabled={readOnly} onClick={()=>patchProblem(i,kind,[...(p[kind]||[]),{input:'',output:''}])}>添加{kind==='samples'?'样例':'测试'}</Button></div>)}</fieldset></Card>)}{published?<Link className={action} href={`/teacher/batches/${data.batch_id}`}>查看已发布题单 →</Link>:archived?<Empty title="历史教学班为只读" hint="草稿不可修改或发布；如需复用请先在当前教学班复制。"/>:ta?<Empty title="助教身份为只读" hint="可以查看题单内容；修改与发布由任课教师完成。"/>:<Card><CardTitle title="发布设置"/><div className="space-y-4"><label className="block">截止时间<input type="datetime-local" className={`${field} mt-2`} value={due} onChange={e=>setDue(e.target.value)}/></label><label className="flex gap-2"><input type="checkbox" checked={ai} onChange={e=>setAI(e.target.checked)}/>允许本批次使用学习反馈</label><label className="block text-meta">允许编程语言<div className="mt-2 flex flex-wrap gap-3">{[{id:'c',label:'C'},{id:'cpp',label:'C++'},{id:'java',label:'Java'},{id:'python',label:'Python 3'}].map(lang=><label key={lang.id} className="flex items-center gap-1.5 text-xs cursor-pointer"><input type="checkbox" disabled={readOnly} checked={allowedLangs.includes(lang.id)} onChange={e=>{if(e.target.checked)setAllowedLangs([...allowedLangs,lang.id]);else{if(allowedLangs.length<=1){alert('至少保留一种允许的语言');return;}setAllowedLangs(allowedLangs.filter(l=>l!==lang.id));}}}/>{lang.label}</label>)}</div></label><label className="flex gap-2"><input type="checkbox" checked={reviewed} onChange={e=>setReviewed(e.target.checked)}/>我已核对题面与测试输出，并确认隐藏测试覆盖样例之外的输入</label><div className="flex gap-3"><button disabled={busy} className={action} onClick={()=>run(false)}>保存草稿</button><button disabled={!reviewed||busy} className={`${action} disabled:opacity-40`} onClick={()=>run(true)}>{busy?'正在处理…':'审核并发布'}</button></div></div></Card>}{message&&<p role="status" className="text-brand">{message}</p>}</div>;
 }
 
-function Insights({data}:{data:Row}) {return <div className="space-y-6"><Heading tag="CLASS INSIGHTS" title="看见每位同学的进步" description={data.offering.title}/><div className="grid gap-stack sm:grid-cols-3"><Stat label="选课人数" value={data.students.length}/><Stat label="累计提交" value={data.students.reduce((n:number,s:Row)=>n+Number(s.attempts),0)}/><Stat label="已开始练习" value={data.students.filter((s:Row)=>Number(s.attempts)>0).length}/></div><div className="grid gap-stack lg:grid-cols-2"><Card><CardTitle title="判题结果分布" meta={data.source}/>{data.results.length?data.results.map((r:Row)=><div className="my-4" key={r.result}><div className="mb-2 flex justify-between"><span>{r.label}</span><span>{r.count} 次</span></div><Progress label={r.label} value={Number(r.count)} max={data.results.reduce((n:number,x:Row)=>n+Number(x.count),0)}/></div>):<Empty title="尚无提交数据"/>}</Card><Card><CardTitle title="需要关注的学习进展" meta="按学生列出实际进度，不进行排名。"/><div className="overflow-auto"><table className="w-full text-left zebra"><thead><tr><th>学生</th><th>通过题数</th><th>提交次数</th></tr></thead><tbody>{data.students.map((s:Row)=><tr key={s.user_id}><td className="py-4">{s.user_id}</td><td>{s.passed}</td><td>{s.attempts}</td></tr>)}</tbody></table></div></Card></div></div>;}
+function Insights({data}:{data:InsightsResponse}) {return <div className="space-y-6"><Heading tag="CLASS INSIGHTS" title="看见每位同学的进步" description={data.offering.title ?? undefined}/><div className="grid gap-stack sm:grid-cols-3"><Stat label="选课人数" value={data.students.length}/><Stat label="累计提交" value={data.students.reduce((n,s)=>n+s.attempts,0)}/><Stat label="已开始练习" value={data.students.filter((s)=>Number(s.attempts)>0).length}/></div><div className="grid gap-stack lg:grid-cols-2"><Card><CardTitle title="判题结果分布" meta={data.source}/>{data.results.length?data.results.map((r)=><div className="my-4" key={r.result}><div className="mb-2 flex justify-between"><span>{r.label}</span><span>{r.count} 次</span></div><Progress label={r.label} value={Number(r.count)} max={data.results.reduce((n,x)=>n+x.count,0)}/></div>):<Empty title="尚无提交数据"/>}</Card><Card><CardTitle title="需要关注的学习进展" meta="按学生列出实际进度，不进行排名。"/><div className="overflow-auto"><table className="w-full text-left zebra"><thead><tr><th>学生</th><th>通过题数</th><th>提交次数</th></tr></thead><tbody>{data.students.map((s)=><tr key={s.user_id}><td className="py-4">{s.user_id}</td><td>{s.passed}</td><td>{s.attempts}</td></tr>)}</tbody></table></div></Card></div></div>;}
 
-function ClassManagement({data, reload, archived, ta}:{data:Row; reload:()=>void; archived:boolean; ta:boolean}) {
+function ClassManagement({data, reload, archived, ta}:{data:StudentsResponse; reload:()=>void; archived:boolean; ta:boolean}) {
  const off = data.offering;
- const students: Row[] = data.students || [];
+ const students = data.students;
  const [message, setMessage] = useState('');
  const [error, setError] = useState('');
  const [busy, setBusy] = useState(false);
@@ -1660,11 +1687,8 @@ function ClassManagement({data, reload, archived, ta}:{data:Row; reload:()=>void
    if (!singleId.trim()) { setError('请填写学生学号或账号'); return; }
    await run(async () => {
     await api(`/offerings/${off.offering_id}/students`, 'POST', {
-     userId: singleId.trim(),
-     studentNo: singleNo.trim() || singleId.trim(),
-     name: singleName.trim() || singleId.trim(),
-     role: 'student',
-    });
+     students: [{ user_id: singleId.trim(), student_no: singleNo.trim() || singleId.trim(), nick: singleName.trim() || singleId.trim(), role: 'student' }],
+    } satisfies AddStudentsRequest);
     setSingleId(''); setSingleNo(''); setSingleName('');
     setShowAdd(false);
     setMessage('学生添加成功');
@@ -1672,13 +1696,12 @@ function ClassManagement({data, reload, archived, ta}:{data:Row; reload:()=>void
   } else {
    if (!batchText.trim()) { setError('请粘贴名单内容'); return; }
    await run(async () => {
-    const res = await api(`/offerings/${off.offering_id}/students`, 'POST', {
-     rawText: batchText.trim(),
-     role: 'student',
-    });
+    const res = await api<AddStudentsResponse>(`/offerings/${off.offering_id}/students`, 'POST', {
+     students: [{ raw_text: batchText.trim(), role: 'student' }],
+    } satisfies AddStudentsRequest);
     setBatchText('');
     setShowAdd(false);
-    setMessage(`批量录入成功，已处理 ${res.count || 0} 位学生`);
+    setMessage(`批量录入成功，已处理 ${res.count} 位学生`);
    });
   }
  };
@@ -1703,8 +1726,8 @@ function ClassManagement({data, reload, archived, ta}:{data:Row; reload:()=>void
   <div className="space-y-6">
    <Heading
     tag="CLASS & ROSTER MANAGEMENT"
-    title={off.name ? `${off.name} · 班级管理` : (off.title || '教学班管理')}
-    description={`${off.code || ''} · ${off.term} · ${off.section} 班 · 任课教师: ${off.teacher_id}`}
+    title={`${off.course_name} · 班级管理`}
+    description={`${off.course_code} · ${off.term} · ${off.section} 班 · 任课教师: ${off.teacher_id}`}
    >
     <div className="flex gap-2">
      <Link className={action} href={`/teacher/offerings/${off.offering_id}`}>出题工作台 →</Link>
@@ -1851,8 +1874,8 @@ export function Platform() {
 function PlatformPage() {
  const path=usePathname();const router=useRouter();const route=matchRoute(path);const parts=path.split('/').filter(Boolean);const reload=()=>setRevision(n=>n+1);
  // 1) 先确认身份：未认证只渲染登录壳；me 变化广播给 Shell，让导航同源同步。
- const [me,setMe]=useState<Row|null>(null);const [meError,setMeError]=useState('');const [revision,setRevision]=useState(0);
- useEffect(()=>{let active=true;setMe(null);setMeError('');api('/me').then(m=>{if(!active)return;setMe(m);broadcastPortal(m.portal||null);}).catch(e=>{if(!active)return;setMeError(e.message);broadcastPortal(null);});return()=>{active=false;};},[revision]);
+ const [me,setMe]=useState<Me|null>(null);const [meError,setMeError]=useState('');const [revision,setRevision]=useState(0);
+ useEffect(()=>{let active=true;setMe(null);setMeError('');api<Me>('/me').then(m=>{if(!active)return;setMe(m);broadcastPortal(m.portal||null);}).catch(e=>{if(!active)return;setMeError(e.message);broadcastPortal(null);});return()=>{active=false;};},[revision]);
  // 2) 身份与路由检查未通过时不发数据请求、不渲染内容；跳转目标在 effect 里统一执行。
  const home=me?(me.home||(me.portal==='teacher'?'/teacher':'/student')):'/';
  const prefix=me&&me.portal==='teacher'?'/teacher':'/student';
@@ -1907,9 +1930,9 @@ function PlatformPage() {
   if(route.name==='teacher-library')return <TeacherLibraryView portal={me.portal} user={me.user}/>;
  if(error)return <div className="space-y-4"><Empty title={error.split('|').pop()||'加载失败'} hint="请检查当前登录身份与课程权限。"/><Button onClick={reload}>重新加载</Button><Link className="ml-3 text-brand" href={home}>返回工作台</Link></div>;
  if(!data)return <p role="status" className="py-20 text-center text-fg-muted">正在读取课程数据…</p>;
- if(route.name==='student')return <CourseList rows={data.filter((r:Row)=>r.role==='student')} prefix={prefix}/>;
- if(route.name==='student-history')return <CourseList rows={data.filter((r:Row)=>r.role==='student')} history prefix={prefix}/>;
- if(route.name==='teacher')return <CourseList rows={data.filter((r:Row)=>['teacher','ta'].includes(r.role))} teacher prefix={prefix} reload={reload}/>;
+ if(route.name==='student')return <CourseList rows={(data as CourseOffering[]).filter((r)=>r.role==='student')} prefix={prefix}/>;
+ if(route.name==='student-history')return <CourseList rows={(data as CourseOffering[]).filter((r)=>r.role==='student')} history prefix={prefix}/>;
+ if(route.name==='teacher')return <CourseList rows={(data as CourseOffering[]).filter((r)=>r.role==='teacher'||r.role==='ta')} teacher prefix={prefix} reload={reload}/>;
  if(route.name==='student-course'||route.name==='teacher-course')return <Course data={data} prefix={prefix} user={me.user}/>;
  if(route.name==='student-workspace'||route.name==='teacher-workspace')return <Workspace key={path} user={me.user} data={data} bid={route.bid} pid={route.pid}/>;
  if(route.name==='student-batch'||route.name==='teacher-batch')return <Batch data={data} reload={reload} prefix={prefix}/>;

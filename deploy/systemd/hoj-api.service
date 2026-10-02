@@ -1,5 +1,5 @@
 [Unit]
-Description=HOJ Course Service API (FastAPI)
+Description=HOJ Course Service API (Rust / Axum)
 After=network.target docker.service
 
 [Service]
@@ -7,7 +7,14 @@ Type=simple
 User=root
 WorkingDirectory=/opt/oj/course-service/backend
 EnvironmentFile=/opt/oj/course-service/backend/.env
-ExecStart=/opt/oj/course-service/backend/.venv/bin/python -m uvicorn hoj.main:app --host 127.0.0.1 --port 8100 --workers 4
+Environment=COURSE_ROOT=/opt/oj/course-service/backend
+Environment=COURSE_BIND=127.0.0.1:8100
+# 通过挂载出来的 mysqld.sock 连接 HUSTOJ 的 MariaDB：来源视为 localhost，沿用现有授权，不暴露 3306。
+Environment=COURSE_DB_SOCKET=/run/hoj-mysql/mysqld.sock
+# 判题数据目录与 hustoj 容器共享（docker run -v /home/judge/data:/home/judge/data），直接写文件。
+Environment=COURSE_JUDGE_DATA_DIR=/home/judge/data
+Environment=RUST_LOG=hoj=info,tower_http=warn
+ExecStart=/opt/oj/course-service/backend/target/release/hoj
 Restart=always
 RestartSec=3
 LimitNOFILE=65535

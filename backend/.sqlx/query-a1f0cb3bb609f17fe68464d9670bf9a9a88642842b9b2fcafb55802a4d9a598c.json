@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT IGNORE INTO cm_batch(offering_id,seq,title,status,read_only,source_ref,authoring_key,created_at,updated_at)\n             SELECT ?,COALESCE(MAX(seq),0)+1,?,'draft',?,?,?,NOW(),NOW() FROM cm_batch WHERE offering_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "a1f0cb3bb609f17fe68464d9670bf9a9a88642842b9b2fcafb55802a4d9a598c"
+}

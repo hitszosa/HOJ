@@ -7,29 +7,12 @@ import { api } from "@/lib/api";
 import * as echarts from "echarts";
 import { MarkdownView } from "./MarkdownView";
 
-type TreeNode = {
-  id: string;
-  name: string;
-  icon?: string;
-  description?: string;
-  kind: "root" | "pillar" | "group" | "leaf";
-  count: number;
-  tags?: string[];
-  difficultyCount?: Record<string, number>;
-  problems?: ProblemItem[];
-  children?: TreeNode[];
-};
-
-type ProblemItem = {
-  slug: string;
-  title: string;
-  difficulty: string;
-  tags?: string[];
-  knowledge?: string[];
-  provenance?: string;
-  statement?: string;
-  samples?: { input: string; output: string }[];
-};
+import type { TreeNode } from "@/api/generated/TreeNode";
+import type { BankProblem as ProblemItem } from "@/api/generated/BankProblem";
+import type { TreeResponse } from "@/api/generated/TreeResponse";
+import type { SolvedStatus } from "@/api/generated/SolvedStatus";
+import type { CourseOffering } from "@/api/generated/CourseOffering";
+import type { PublishToOfferingsResponse } from "@/api/generated/PublishToOfferingsResponse";
 
 type BasketItem = {
   setId: string;
@@ -95,11 +78,11 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
   const [problemSearch, setProblemSearch] = useState("");
   const [selectedDiff, setSelectedDiff] = useState<string>("ALL");
   const [expandedProblemSlug, setExpandedProblemSlug] = useState<string | null>(null);
-  const [myStatus, setMyStatus] = useState<Record<string, string>>({});
+  const [myStatus, setMyStatus] = useState<Partial<Record<string, SolvedStatus>>>({});
 
   // Teacher Problem Basket & Multi-Class Publishing
   const [basket, setBasket] = useState<BasketItem[]>([]);
-  const [teacherOfferings, setTeacherOfferings] = useState<any[]>([]);
+  const [teacherOfferings, setTeacherOfferings] = useState<CourseOffering[]>([]);
   const [selectedOfferingIds, setSelectedOfferingIds] = useState<number[]>([]);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -107,7 +90,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
   const [publishDueDate, setPublishDueDate] = useState("");
   const [aiEnabled, setAiEnabled] = useState(true);
   const [allowedLanguages, setAllowedLanguages] = useState<string[]>(["c", "cpp", "java", "python"]);
-  const [publishResult, setPublishResult] = useState<any | null>(null);
+  const [publishResult, setPublishResult] = useState<PublishToOfferingsResponse | null>(null);
   const [showSelectedList, setShowSelectedList] = useState(false);
   const [previewBasketSlug, setPreviewBasketSlug] = useState<string | null>(null);
 
@@ -117,13 +100,13 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
 
   useEffect(() => {
     let active = true;
-    api("/problem-sets/tree")
+    api<TreeResponse>("/problem-sets/tree")
       .then((res) => {
         if (!active) return;
-        setTreeData(res.root);
-        setTotalProblems(res.totalProblems);
-        setTotalSets(res.totalSets);
-        if (res.myStatus) setMyStatus(res.myStatus);
+        setTreeData(res.tree.root);
+        setTotalProblems(res.tree.total_problems);
+        setTotalSets(res.tree.total_sets);
+        setMyStatus(res.my_status);
         setLoading(false);
       })
       .catch((e) => {
@@ -133,7 +116,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
       });
 
     if (portal === "student") {
-      api("/problem-sets/my-status")
+      api<Partial<Record<string, SolvedStatus>>>("/problem-sets/my-status")
         .then((st) => {
           if (active && st) setMyStatus((prev) => ({ ...prev, ...st }));
         })
@@ -141,10 +124,10 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
     }
 
     if (portal === "teacher") {
-      api("/courses")
+      api<CourseOffering[]>("/courses")
         .then((rows) => {
           if (!active) return;
-          const activeTeaching = rows.filter((r: any) => r.role === "teacher" && r.status === "active");
+          const activeTeaching = rows.filter((r) => r.role === "teacher" && r.status === "active");
           setTeacherOfferings(activeTeaching);
           if (activeTeaching.length > 0) {
             let presetOid: number | null = null;
@@ -153,10 +136,10 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
               const paramOid = urlParams.get("oid");
               if (paramOid) presetOid = Number(paramOid);
             }
-            if (presetOid && activeTeaching.some((o: any) => o.offering_id === presetOid)) {
+            if (presetOid && activeTeaching.some((o) => o.offering_id === presetOid)) {
               setSelectedOfferingIds([presetOid]);
             } else {
-              setSelectedOfferingIds(activeTeaching.map((o: any) => o.offering_id));
+              setSelectedOfferingIds(activeTeaching.map((o) => o.offering_id));
             }
           }
         })
@@ -422,7 +405,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
           slug: p.slug,
           title: p.title,
           difficulty: p.difficulty,
-          knowledge: p.tags || p.knowledge,
+          knowledge: p.tags.length ? p.tags : p.knowledge,
           statement: p.statement,
         },
       ]);
@@ -455,13 +438,13 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
     }
     setPublishing(true);
     try {
-      const res = await api("/problem-sets/publish-to-offerings", "POST", {
-        items: basket.map((b) => ({ setId: b.setId, slug: b.slug })),
-        offeringIds: selectedOfferingIds,
+      const res = await api<PublishToOfferingsResponse>("/problem-sets/publish-to-offerings", "POST", {
+        items: basket.map((b) => ({ set_id: b.setId, slug: b.slug })),
+        offering_ids: selectedOfferingIds,
         title: publishTitle.trim() || undefined,
-        dueAt: publishDueDate.trim() || undefined,
-        aiEnabled,
-        allowedLanguages,
+        due_at: publishDueDate.trim() || undefined,
+        ai_enabled: aiEnabled,
+        allowed_languages: allowedLanguages,
         action,
       });
       setPublishResult(res);
@@ -1130,7 +1113,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                     {publishResult.action === "publish" ? "作业已成功发布！" : "作业草稿已创建！"}
                   </h3>
                   <p className="text-sm text-fg-muted">
-                    已成功向 {publishResult.offeringCount} 个教学班分发了《{publishResult.title}》，共包含 {publishResult.problemCount} 道题目。
+                    已成功向 {publishResult.offering_count} 个教学班分发了《{publishResult.title}》，共包含 {publishResult.problem_count} 道题目。
                   </p>
                 </div>
 
@@ -1139,15 +1122,15 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                     发布班级明细
                   </h4>
                   <div className="divide-y divide-line">
-                    {publishResult.results.map((r: any) => {
-                      const off = teacherOfferings.find((o) => o.offering_id === r.offeringId);
+                    {publishResult.results.map((r) => {
+                      const off = teacherOfferings.find((o) => o.offering_id === r.offering_id);
                       return (
-                        <div key={r.offeringId} className="flex items-center justify-between py-2 text-sm">
+                        <div key={r.offering_id} className="flex items-center justify-between py-2 text-sm">
                           <div className="font-medium text-fg">
-                            {off ? `${off.code} · ${off.name} (${off.section}班)` : `教学班 #${r.offeringId}`}
+                            {off ? `${off.code} · ${off.name} (${off.section}班)` : `教学班 #${r.offering_id}`}
                           </div>
                           <Link
-                            href={r.batchId ? `/teacher/batches/${r.batchId}` : `/teacher/courses/${r.offeringId}`}
+                            href={r.batch_id ? `/teacher/batches/${r.batch_id}` : `/teacher/courses/${r.offering_id}`}
                             className="text-xs text-brand hover:underline font-medium"
                           >
                             前往班级查看 →

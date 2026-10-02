@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO jol.problem(title,description,input,output,sample_input,sample_output,hint,source,in_date,defunct,time_limit,memory_limit)\n             VALUES(?,?,'','',?,?,?,?,NOW(),'Y',1,128)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "2a9df203a38e52ed83d71e90447f077e8f584ee7d867883254d11288511927b0"
+}

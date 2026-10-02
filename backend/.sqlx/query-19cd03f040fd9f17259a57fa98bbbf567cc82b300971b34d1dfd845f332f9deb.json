@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT error FROM jol.runtimeinfo WHERE solution_id=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "error",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 262140
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "19cd03f040fd9f17259a57fa98bbbf567cc82b300971b34d1dfd845f332f9deb"
+}

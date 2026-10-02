@@ -1,0 +1,74 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT s.solution_id, s.language, s.time, s.memory, s.in_date, sc.source AS code\n           FROM jol.solution s\n           JOIN jol.source_code sc ON sc.solution_id=s.solution_id\n           JOIN jol.problem p ON p.problem_id=s.problem_id\n           WHERE s.user_id=? AND s.result=4\n             AND (p.problem_id=? OR (? IS NOT NULL AND (p.source=? OR p.source LIKE ?)) OR (?<>'' AND p.title=?))\n           ORDER BY s.solution_id DESC LIMIT 10",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "solution_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "language",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | UNSIGNED",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "time",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "memory",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "in_date",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "NOT_NULL | MULTIPLE_KEY | BINARY",
+          "max_size": 19
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "code",
+        "type_info": {
+          "type": "Blob",
+          "flags": "NOT_NULL | BLOB | NO_DEFAULT_VALUE",
+          "max_size": 262140
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "f9b9afb962927c5325e69f102acc84137a58268e9ca91c1664709eb2cb083513"
+}

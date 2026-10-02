@@ -1,0 +1,64 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT p.problem_id, p.title, p.description, p.sample_input, p.sample_output\n         FROM jol.problem p JOIN cm_batch_problem bp USING(problem_id) WHERE bp.batch_id=? ORDER BY bp.seq",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 800
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 67108860
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "sample_input",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 262140
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "sample_output",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 262140
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "02c9f8f73dda3f663381180c00fc983e0d51d87dfeb7c0c9ac6926ade144dead"
+}

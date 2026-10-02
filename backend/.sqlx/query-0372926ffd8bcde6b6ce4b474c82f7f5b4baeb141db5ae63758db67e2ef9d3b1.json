@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT batch_id FROM cm_batch WHERE authoring_key=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "batch_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 10
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0372926ffd8bcde6b6ce4b474c82f7f5b4baeb141db5ae63758db67e2ef9d3b1"
+}

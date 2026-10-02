@@ -1,0 +1,134 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT s.solution_id, s.user_id, s.problem_id, p.title AS \"problem_title?\", s.result, s.time, s.memory, s.language,\n                  s.code_length, s.in_date, COALESCE(NULLIF(u.nick,''), NULLIF(s.nick,''), s.user_id) AS \"nick!: String\",\n                  cs.offering_id AS \"offering_id?\"\n           FROM jol.solution s LEFT JOIN jol.problem p ON p.problem_id=s.problem_id\n           LEFT JOIN jol.users u ON u.user_id=s.user_id\n           LEFT JOIN cm_submission cs ON cs.submission_id=s.solution_id\n           WHERE s.solution_id=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "solution_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | MULTIPLE_KEY",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "problem_title?",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 800
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "result",
+        "type_info": {
+          "type": "Short",
+          "flags": "NOT_NULL | MULTIPLE_KEY",
+          "max_size": 6
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "time",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "memory",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "language",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | UNSIGNED",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "code_length",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "in_date",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "NOT_NULL | MULTIPLE_KEY | BINARY",
+          "max_size": 19
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "nick!: String",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "offering_id?",
+        "type_info": {
+          "type": "Long",
+          "flags": "MULTIPLE_KEY | UNSIGNED | NO_DEFAULT_VALUE",
+          "max_size": 10
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "0a61a2fe6bf638408713692a7b03305b46376cd16898e4494f64d1baf7bb7b41"
+}

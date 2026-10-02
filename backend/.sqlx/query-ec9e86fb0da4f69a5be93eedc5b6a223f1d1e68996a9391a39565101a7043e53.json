@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO jol.problem(title,description,input,output,sample_input,sample_output,hint,source,in_date,defunct,time_limit,memory_limit)\n         SELECT ?,?,'','',?,?,?,?,NOW(),'N',1,128 FROM DUAL WHERE NOT EXISTS (SELECT 1 FROM jol.problem WHERE source=?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 7
+    },
+    "nullable": []
+  },
+  "hash": "ec9e86fb0da4f69a5be93eedc5b6a223f1d1e68996a9391a39565101a7043e53"
+}

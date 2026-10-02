@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT 1 AS \"x!: i32\" FROM cm_enrollment e JOIN cm_offering o ON o.offering_id=e.offering_id\n               WHERE e.user_id=? AND o.teacher_id=? LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "x!: i32",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 1
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "7583d378eb4c93ce1267ebcf559d6d1e30af09b2908bc1680041c6f6e4f14121"
+}

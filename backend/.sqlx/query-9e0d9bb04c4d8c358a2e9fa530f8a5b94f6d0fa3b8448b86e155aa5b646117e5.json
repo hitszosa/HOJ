@@ -1,0 +1,44 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT result, time, memory FROM jol.solution WHERE solution_id=? AND user_id=? AND problem_id=0",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "result",
+        "type_info": {
+          "type": "Short",
+          "flags": "NOT_NULL | MULTIPLE_KEY",
+          "max_size": 6
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "time",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "memory",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 11
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "9e0d9bb04c4d8c358a2e9fa530f8a5b94f6d0fa3b8448b86e155aa5b646117e5"
+}

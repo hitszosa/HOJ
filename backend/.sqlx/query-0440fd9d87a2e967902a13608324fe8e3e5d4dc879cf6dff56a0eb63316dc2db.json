@@ -1,0 +1,144 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT d.draft_id, d.offering_id, d.title, d.payload, d.status, d.origin, d.batch_id, d.updated_at,\n                  o.term AS \"offering_term?\", o.section AS \"offering_section?\", o.title AS offering_title,\n                  c.name AS \"course_name?\", c.code AS \"course_code?\"\n           FROM cm_authoring_draft d\n           LEFT JOIN cm_offering o ON d.offering_id=o.offering_id\n           LEFT JOIN cm_course c ON o.course_id=c.course_id\n           WHERE d.owner_id=? ORDER BY d.updated_at DESC",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "draft_id",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | PRIMARY_KEY | NO_DEFAULT_VALUE",
+          "max_size": 128
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "offering_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | MULTIPLE_KEY | UNSIGNED | NO_DEFAULT_VALUE",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "max_size": 512
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "payload",
+        "type_info": {
+          "type": "Blob",
+          "flags": "NOT_NULL | BLOB | NO_DEFAULT_VALUE",
+          "max_size": 67108860
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "status",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | ENUM",
+          "max_size": 36
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "origin",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | ENUM",
+          "max_size": 28
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "batch_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "UNSIGNED",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "updated_at",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "NOT_NULL | BINARY | NO_DEFAULT_VALUE",
+          "max_size": 19
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "offering_term?",
+        "type_info": {
+          "type": "VarString",
+          "flags": "MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 64
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "offering_section?",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 128
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "offering_title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 512
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "course_name?",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NO_DEFAULT_VALUE",
+          "max_size": 512
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "course_code?",
+        "type_info": {
+          "type": "VarString",
+          "flags": "UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 128
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "0440fd9d87a2e967902a13608324fe8e3e5d4dc879cf6dff56a0eb63316dc2db"
+}

@@ -1,0 +1,84 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT p.problem_id, p.title, p.source, COALESCE(p.accepted,0) AS \"accepted!: i32\", COALESCE(p.submit,0) AS \"submit!: i32\",\n                  MAX(s.result=4) AS \"passed?: bool\", COUNT(s.solution_id) AS \"tries!: i64\"\n           FROM jol.problem p\n           LEFT JOIN jol.solution s ON s.problem_id=p.problem_id AND s.user_id=?\n           WHERE p.defunct='N' AND p.problem_id>0\n             AND (?='' OR p.problem_id=? OR p.title LIKE ? OR (? IS NULL AND p.source LIKE ?))\n           GROUP BY p.problem_id, p.title, p.source, p.accepted, p.submit\n           ORDER BY p.problem_id ASC LIMIT ? OFFSET ?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 800
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 400
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "accepted!: i32",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "submit!: i32",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "passed?: bool",
+        "type_info": {
+          "type": "Long",
+          "flags": "BINARY",
+          "max_size": 1
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "tries!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 8
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "5ed663af95f30f76253861c1b378fdc1ad7869e872ccf214147678f731fcea3e"
+}

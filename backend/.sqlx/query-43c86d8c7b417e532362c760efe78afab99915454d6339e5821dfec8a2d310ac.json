@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT 1 AS \"x!: i32\" FROM jol.privilege WHERE user_id=? AND rightstr IN ('teacher','administrator')\n           UNION SELECT 1 FROM cm_offering WHERE teacher_id=? LIMIT 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "x!: i32",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL",
+          "max_size": 2
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "43c86d8c7b417e532362c760efe78afab99915454d6339e5821dfec8a2d310ac"
+}

@@ -10,7 +10,9 @@ import { draftStorageKey } from "@/lib/routes";
 import { MarkdownView } from "@/components/MarkdownView";
 import { JudgeDetailView } from "@/components/JudgeDetailView";
 
-type Row = Record<string, any>;
+import type { PublicProblem } from "@/api/generated/PublicProblem";
+import type { SubmissionResult } from "@/api/generated/SubmissionResult";
+import type { SubmitResponse } from "@/api/generated/SubmitResponse";
 
 const fieldClass =
   "w-full rounded-control border border-line bg-surface px-3 py-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-brand";
@@ -59,7 +61,7 @@ export function PublicProblemListView() {
 }
 
 export function PublicProblemWorkspace({ pid, user }: { pid: string; user: string }) {
-  const [problem, setProblem] = useState<Row | null>(null);
+  const [problem, setProblem] = useState<PublicProblem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -68,7 +70,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [sid, setSid] = useState<number | null>(null);
-  const [result, setResult] = useState<Row | null>(null);
+  const [result, setResult] = useState<SubmissionResult | null>(null);
   const [copiedSample, setCopiedSample] = useState(false);
 
   // Load problem details and restore draft
@@ -83,7 +85,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
       if (saved) setCode(saved);
     }
 
-    api(`/public-problems/${pid}`)
+    api<PublicProblem>(`/public-problems/${pid}`)
       .then((data) => {
         if (active) setProblem(data);
       })
@@ -115,7 +117,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
 
     const poll = async () => {
       try {
-        const r = await api(`/submissions/${sid}`);
+        const r = await api<SubmissionResult>(`/submissions/${sid}`);
         if (!active) return;
         setResult(r);
         // Result codes: 0-等待, 1-等待重测, 2-编译中, 3-评测中, 14-队列中
@@ -150,11 +152,11 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
     setResult(null);
 
     try {
-      const res = await api(`/public-problems/${pid}/submissions`, "POST", {
+      const res = await api<SubmitResponse>(`/public-problems/${pid}/submissions`, "POST", {
         code,
         language: lang,
       });
-      setSid(res.submissionId);
+      setSid(res.submission_id);
     } catch (e) {
       setSubmitError(String(e).split("|").pop() || "提交失败");
       setSubmitting(false);
@@ -182,13 +184,12 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
     );
   }
 
-  const problemId = problem.slug || problem.problemId || problem.problem_id;
-  const timeLimit = problem.timeLimit ?? problem.time_limit;
-  const memoryLimit = problem.memoryLimit ?? problem.memory_limit;
-  const sampleInput = problem.sampleInput ?? problem.sample_input;
-  const sampleOutput = problem.sampleOutput ?? problem.sample_output;
-  const passRateVal = Number(problem.passRate ?? problem.pass_rate) || 0;
-  const passRatePct = passRateVal <= 1 ? Math.round(passRateVal * 100) : Math.round(passRateVal);
+  const problemId = problem.slug || problem.key;
+  const timeLimit = problem.time_limit;
+  const memoryLimit = problem.memory_limit;
+  const sampleInput = problem.samples[0]?.input ?? "";
+  const sampleOutput = problem.samples[0]?.output ?? "";
+  const passRatePct = problem.submit > 0 ? Math.round((problem.accepted / problem.submit) * 100) : 0;
 
   return (
     <div className="space-y-6">
@@ -211,10 +212,10 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
                 {problem.difficulty}
               </Badge>
             )}
-            {problem.solvedStatus === "passed" && (
+            {problem.solved_status === "passed" && (
               <Badge tone="ok">✓ 已完成</Badge>
             )}
-            {problem.solvedStatus === "tried" && (
+            {problem.solved_status === "tried" && (
               <Badge tone="warn">尝试中</Badge>
             )}
             <h1 className="text-2xl lg:text-3xl font-semibold tracking-tight text-fg">
@@ -222,9 +223,9 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
             </h1>
           </div>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-meta text-fg-muted">
-            {problem.categoryName && (
+            {problem.category_name && (
               <span className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg-muted">
-                {problem.categoryName}
+                {problem.category_name}
               </span>
             )}
             {problem.provenance && (
@@ -232,7 +233,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
                 来源: {problem.provenance}
               </span>
             )}
-            {(problem.tags || []).slice(0, 3).map((tag: string) => (
+            {problem.tags.slice(0, 3).map((tag) => (
               <span key={tag} className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg-muted">
                 #{tag}
               </span>
@@ -249,9 +250,9 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
           </div>
         </div>
         <div>
-          {problem.numericPid && (
+          {problem.numeric_pid && (
             <Link
-              href={`/student/status?problemId=${problem.numericPid}`}
+              href={`/student/status?problem_id=${problem.numeric_pid}`}
               className="text-meta text-brand hover:underline"
             >
               查看本题评测记录 ↗
@@ -370,7 +371,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
             {/* Verdict Result */}
             {result && (
               <div className="mt-4 border-t border-line pt-4 space-y-3">
-                {String(result.result) === "4" && (
+                {result.result === 4 && (
                   <div className="rounded-control bg-ok-soft p-4 border border-ok/30 flex items-center gap-3">
                     <span className="text-2xl">🎉</span>
                     <div>

@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT error FROM jol.compileinfo WHERE solution_id=?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "error",
+        "type_info": {
+          "type": "Blob",
+          "flags": "BLOB",
+          "max_size": 262140
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "2204f50578766ab899578162e0253a722c61e5c46cc9a6f918d8cbe3b150ba7d"
+}

@@ -1,0 +1,64 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT u.user_id, COALESCE(NULLIF(u.nick,''), u.user_id) AS \"nick!: String\",\n                          COUNT(DISTINCT CASE WHEN s.result=4 AND s.problem_id>0 THEN s.problem_id END) AS \"solved!: i64\",\n                          COUNT(CASE WHEN s.problem_id>0 THEN s.solution_id END) AS \"submit!: i64\",\n                          MAX(s.in_date) AS \"last_submit?: NaiveDateTime\"\n                   FROM jol.users u\n                   LEFT JOIN jol.solution s ON s.user_id=u.user_id\n                   WHERE u.defunct='N' AND u.user_id<>'admin'\n                     AND u.user_id NOT LIKE 'teacher\\_%' AND u.user_id NOT LIKE 'test\\_%'\n                     AND u.user_id NOT IN ('cm_pilot_teacher','cm_pilot_ta','cm_pilot_outsider')\n                     AND u.user_id NOT IN (SELECT user_id FROM jol.privilege WHERE rightstr IN ('administrator','teacher'))\n                   GROUP BY u.user_id, u.nick\n                   ORDER BY 3 DESC, 4 ASC, 5 DESC\n                   LIMIT ? OFFSET ?",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | PRIMARY_KEY",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "nick!: String",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "solved!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "submit!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "last_submit?: NaiveDateTime",
+        "type_info": {
+          "type": "Datetime",
+          "flags": "BINARY",
+          "max_size": 19
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "05fc037d3558f5950f5f6f39c4919789083fe83ac6b506ef3c2cd5da99501d0f"
+}

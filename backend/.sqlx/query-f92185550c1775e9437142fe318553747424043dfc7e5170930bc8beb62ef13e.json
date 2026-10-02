@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO jol.custominput(solution_id,input_text) VALUES(?,?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "f92185550c1775e9437142fe318553747424043dfc7e5170930bc8beb62ef13e"
+}

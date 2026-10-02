@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT 'teacher' AS \"role!: String\" FROM jol.privilege WHERE user_id=? AND rightstr IN ('teacher','administrator')\n           UNION SELECT 'teacher' FROM cm_offering WHERE teacher_id=?\n           UNION SELECT role FROM cm_enrollment WHERE user_id=? AND status='active'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "role!: String",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 28
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5e80ba70437d80a54344db9f361296e4cb0e2a45f3b3eb43e197ddb2cc56821d"
+}

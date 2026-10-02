@@ -3,6 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { api } from "@/lib/api";
+import type { Me } from "@/api/generated/Me";
 const STUDENT_NAV = [
   ['/student', '我的课程'],
   ['/student/categories', '算法题库'],
@@ -28,7 +30,7 @@ export function AppShell({children}:{children:ReactNode}) {
   const onPortal=(e:Event)=>{broadcastReceived=true;if(active)setPortal((e as CustomEvent<string|null>).detail||null);};
   window.addEventListener('hoj-portal',onPortal);
   window.addEventListener('hustoj-portal',onPortal);
-  fetch('/api/me').then(r=>r.ok?r.json():null).then(m=>{if(active&&!broadcastReceived)setPortal(m?.portal||null);}).catch(()=>{if(active&&!broadcastReceived)setPortal(null);});
+  api<Me>('/me').then(m=>{if(active&&!broadcastReceived)setPortal(m.portal);}).catch(()=>{if(active&&!broadcastReceived)setPortal(null);});
   return()=>{active=false;window.removeEventListener('hoj-portal',onPortal);window.removeEventListener('hustoj-portal',onPortal);};
  },[path]);
  const nav=portal==='teacher'?TEACHER_NAV:portal==='student'?STUDENT_NAV:[];

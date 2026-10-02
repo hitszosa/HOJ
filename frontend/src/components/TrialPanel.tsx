@@ -3,13 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 
 import { Card, CardTitle } from "@/components/ui";
+import { api, ApiError } from "@/lib/api";
+import type { TrialResult } from "@/api/generated/TrialResult";
+import type { TrialStarted } from "@/api/generated/TrialStarted";
 
-type Trial = { state: "running" | "finished"; label: string; result: number; time: number; memory: number; output: string; compileError: string; truncated: boolean };
-async function request(path: string, body?: unknown) {
-  const response = await fetch(`/api${path}`, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : undefined);
-  const data = await response.json().catch(() => ({ detail: "自测服务暂不可用" }));
-  if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "自测请求失败");
-  return data;
+type Trial = TrialResult;
+async function request<T>(path: string, body?: unknown): Promise<T> {
+  try {
+    return await api<T>(path, body === undefined ? "GET" : "POST", body);
+  } catch (e) {
+    throw new Error(e instanceof ApiError ? e.text : "自测服务暂不可用");
+  }
 }
 
 export function TrialPanel({ bid, pid, code, language, sampleInput, sampleOutput, disabled = false, className }: {
@@ -29,7 +33,7 @@ export function TrialPanel({ bid, pid, code, language, sampleInput, sampleOutput
 
   async function poll(id: string, attempt = 0) {
     try {
-      const next: Trial = await request(`/trials/${encodeURIComponent(id)}`);
+      const next = await request<Trial>(`/trials/${encodeURIComponent(id)}`);
       if (!active.current) return;
       setResult(next);
       if (next.state === "running" && attempt < 80) timer.current = setTimeout(() => { void poll(id, attempt + 1); }, 1000);
@@ -42,9 +46,9 @@ export function TrialPanel({ bid, pid, code, language, sampleInput, sampleOutput
     posting.current = true; setBusy(true); setError(""); setResult(null); setRunId(null); clearTimeout(timer.current);
     setRunSource({ code, language, input });
     try {
-      const data = await request(`/batches/${bid}/problems/${pid}/trials`, { code, language, input });
+      const data = await request<TrialStarted>(`/batches/${bid}/problems/${pid}/trials`, { code, language, input });
       if (!active.current) return;
-      setRunId(data.runId); void poll(data.runId);
+      setRunId(data.run_id); void poll(data.run_id);
     } catch (e) { if (active.current) { setError(e instanceof Error ? e.message : "自测失败"); setBusy(false); } }
     finally { posting.current = false; }
   }
@@ -62,7 +66,7 @@ export function TrialPanel({ bid, pid, code, language, sampleInput, sampleOutput
       {error && <div role="alert" className="text-sm text-danger">{error}{runId && !busy && <button type="button" className="ml-3 underline" onClick={() => { setError(""); setBusy(true); void poll(runId); }}>刷新自测结果</button>}</div>}
       {changed && result && <p className="text-meta text-warn">代码、语言或题目样例已修改，下面是上一次运行的结果。</p>}
       <div className="grid gap-4 sm:grid-cols-2">
-        <div><h4 className="mb-2 text-meta font-medium">运行输出 / 错误信息</h4><pre aria-label="自测运行输出" className="trial-output">{result?.compileError || result?.output || (busy ? "等待运行结果…" : result?.state === "finished" ? "（无输出）" : "运行后显示结果")}</pre></div>
+        <div><h4 className="mb-2 text-meta font-medium">运行输出 / 错误信息</h4><pre aria-label="自测运行输出" className="trial-output">{result?.compile_error || result?.output || (busy ? "等待运行结果…" : result?.state === "finished" ? "（无输出）" : "运行后显示结果")}</pre></div>
         <div><h4 className="mb-2 text-meta font-medium">题目样例输出（仅供对照）</h4><pre className="trial-output">{sampleOutput || "（未提供）"}</pre></div>
       </div>
       {result && <p role="status" className="text-meta text-fg-muted">{result.label} · {result.time} ms · {result.memory} KB{result.truncated ? " · 输出已截断" : ""}</p>}

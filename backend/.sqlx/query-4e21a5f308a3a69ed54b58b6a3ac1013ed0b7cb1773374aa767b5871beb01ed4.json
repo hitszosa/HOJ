@@ -1,0 +1,24 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT problem_id FROM jol.problem WHERE problem_id=? AND defunct='N'",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | AUTO_INCREMENT",
+          "max_size": 11
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4e21a5f308a3a69ed54b58b6a3ac1013ed0b7cb1773374aa767b5871beb01ed4"
+}

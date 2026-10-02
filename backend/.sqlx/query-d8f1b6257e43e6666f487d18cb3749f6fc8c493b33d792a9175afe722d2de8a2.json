@@ -1,0 +1,44 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT DISTINCT e.user_id, e.student_no, c.code FROM cm_enrollment e\n         JOIN cm_offering o USING(offering_id) JOIN cm_course c USING(course_id)\n         WHERE e.status='active' AND e.role='student' ORDER BY e.user_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "student_no",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 128
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "code",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 128
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "d8f1b6257e43e6666f487d18cb3749f6fc8c493b33d792a9175afe722d2de8a2"
+}

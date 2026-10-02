@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE cm_authoring_draft SET title=?,payload=?,updated_at=NOW() WHERE draft_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "9a6bcf4851aff29fcacdd5a0d0eaf022e2af38c4182f8adfd46f9e64920b8cda"
+}

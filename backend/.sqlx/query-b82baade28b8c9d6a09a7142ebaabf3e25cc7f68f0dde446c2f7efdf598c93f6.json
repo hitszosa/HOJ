@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE cm_enrollment SET status='dropped', updated_at=NOW() WHERE offering_id=? AND user_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "b82baade28b8c9d6a09a7142ebaabf3e25cc7f68f0dde446c2f7efdf598c93f6"
+}

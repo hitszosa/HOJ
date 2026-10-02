@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE jol.problem SET title=?,description=?,sample_input=?,sample_output=?,hint=? WHERE problem_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 6
+    },
+    "nullable": []
+  },
+  "hash": "02fa2d6a989782912cf1f8b15f8c3e493f5e2ca284ab58d2294a6203185fbcce"
+}

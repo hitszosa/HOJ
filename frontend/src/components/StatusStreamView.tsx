@@ -4,7 +4,10 @@ import { useEffect, useState, useCallback } from "react";
 import { Badge, Button, Card, CardTitle, Empty } from "@/components/ui";
 import { api } from "@/lib/api";
 
-type Row = Record<string, any>;
+import type { StatusItem } from "@/api/generated/StatusItem";
+import type { StatusPage } from "@/api/generated/StatusPage";
+import type { SubmissionCode } from "@/api/generated/SubmissionCode";
+import type { CourseOffering } from "@/api/generated/CourseOffering";
 
 const fieldClass =
   "w-full rounded-control border border-line bg-surface px-3 py-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-brand";
@@ -18,7 +21,7 @@ function getVerdictTone(result: number): "ok" | "warn" | "danger" | "brand" | "n
 }
 
 export function StatusStreamView({ portal, user }: { portal: string; user: string }) {
-  const [submissions, setSubmissions] = useState<Row[]>([]);
+  const [submissions, setSubmissions] = useState<StatusItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const limit = 20;
@@ -30,14 +33,14 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
   const [verdict, setVerdict] = useState("");
   const [onlyMine, setOnlyMine] = useState(false);
   const [offeringId, setOfferingId] = useState("");
-  const [offerings, setOfferings] = useState<Row[]>([]);
+  const [offerings, setOfferings] = useState<CourseOffering[]>([]);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Code inspection drawer/modal
   const [activeSid, setActiveSid] = useState<number | null>(null);
-  const [codeDetail, setCodeDetail] = useState<Row | null>(null);
+  const [codeDetail, setCodeDetail] = useState<SubmissionCode | null>(null);
   const [codeLoading, setCodeLoading] = useState(false);
   const [codeError, setCodeError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -45,9 +48,9 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
   // Load teacher offerings for class filter
   useEffect(() => {
     if (portal === "teacher") {
-      api("/courses")
-        .then((data: Row[]) => {
-          setOfferings(data.filter((r) => ["teacher", "ta"].includes(r.role)));
+      api<CourseOffering[]>("/courses")
+        .then((data) => {
+          setOfferings(data.filter((r) => r.role === "teacher" || r.role === "ta"));
         })
         .catch(() => {});
     }
@@ -59,18 +62,17 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
     try {
       const params = new URLSearchParams();
       params.set("page", String(page));
-      params.set("pageSize", String(limit));
-      params.set("limit", String(limit));
-      if (problemId.trim()) params.set("problemId", problemId.trim());
-      if (filterUser.trim()) params.set("userId", filterUser.trim());
+      params.set("page_size", String(limit));
+      if (problemId.trim()) params.set("problem_id", problemId.trim());
+      if (filterUser.trim()) params.set("user_id", filterUser.trim());
       if (language) params.set("language", language);
       if (verdict) params.set("result", verdict);
-      if (portal === "teacher" && offeringId) params.set("offeringId", offeringId);
-      if (portal === "student" && onlyMine) params.set("onlyMine", "true");
+      if (portal === "teacher" && offeringId) params.set("offering_id", offeringId);
+      if (portal === "student" && onlyMine) params.set("only_mine", "true");
 
-      const res = await api(`/status?${params.toString()}`);
-      setSubmissions(res.items || res.submissions || []);
-      setTotal(res.total || 0);
+      const res = await api<StatusPage>(`/status?${params.toString()}`);
+      setSubmissions(res.items);
+      setTotal(res.total);
     } catch (e) {
       setError(String(e).split("|").pop() || "加载提交队列失败");
     } finally {
@@ -98,7 +100,7 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
     setCodeLoading(true);
     setCopied(false);
     try {
-      const res = await api(`/submissions/${sid}/code`);
+      const res = await api<SubmissionCode>(`/submissions/${sid}/code`);
       setCodeDetail(res);
     } catch (e) {
       setCodeError(String(e).split("|").pop() || "读取源码失败或无查看权限");
@@ -293,33 +295,33 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
               </thead>
               <tbody>
                 {submissions.map((s) => (
-                  <tr key={s.solutionId} className="border-t border-line">
-                    <td className="py-3 font-mono text-meta text-fg-muted">#{s.solutionId}</td>
+                  <tr key={s.solution_id} className="border-t border-line">
+                    <td className="py-3 font-mono text-meta text-fg-muted">#{s.solution_id}</td>
                     <td>
-                      <div className="font-medium text-fg">{s.nick || s.userId}</div>
-                      {s.nick && s.nick !== s.userId && (
-                        <div className="text-meta text-fg-subtle font-mono">{s.userId}</div>
+                      <div className="font-medium text-fg">{s.nick || s.user_id}</div>
+                      {s.nick && s.nick !== s.user_id && (
+                        <div className="text-meta text-fg-subtle font-mono">{s.user_id}</div>
                       )}
                     </td>
                     <td>
-                      <div className="font-medium text-fg">#{s.problemId}</div>
-                      <div className="text-meta text-fg-muted line-clamp-1">{s.problemTitle}</div>
+                      <div className="font-medium text-fg">#{s.problem_id}</div>
+                      <div className="text-meta text-fg-muted line-clamp-1">{s.problem_title}</div>
                     </td>
                     <td>
-                      <Badge tone={getVerdictTone(Number(s.result))}>{s.resultLabel}</Badge>
+                      <Badge tone={getVerdictTone(Number(s.result))}>{s.result_label}</Badge>
                     </td>
                     <td className="font-mono text-meta">{s.time} ms</td>
                     <td className="font-mono text-meta">{s.memory} KB</td>
-                    <td className="text-meta">{s.languageName}</td>
-                    <td className="font-mono text-meta">{s.codeLength} B</td>
+                    <td className="text-meta">{s.language_name}</td>
+                    <td className="font-mono text-meta">{s.code_length} B</td>
                     <td className="text-meta text-fg-muted whitespace-nowrap">
-                      {s.inDate ? s.inDate.replace("T", " ").slice(0, 16) : "-"}
+                      {s.in_date.slice(0, 16)}
                     </td>
                     {portal === "teacher" && (
                       <td>
-                        {s.sim > 0 ? (
+                        {s.sim && s.sim > 0 ? (
                           <Badge tone="warn">
-                            相似 {s.sim}% (#{s.simSolutionId})
+                            相似 {s.sim}% (#{s.sim_solution_id})
                           </Badge>
                         ) : (
                           <span className="text-fg-subtle text-meta">-</span>
@@ -327,8 +329,8 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
                       </td>
                     )}
                     <td>
-                      {s.canViewCode ? (
-                        <Button variant="ghost" onClick={() => openCodeModal(s.solutionId)}>
+                      {s.can_view_code ? (
+                        <Button variant="ghost" onClick={() => openCodeModal(s.solution_id)}>
                           查看代码
                         </Button>
                       ) : (
@@ -380,8 +382,8 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
                 </h3>
                 {codeDetail && (
                   <p className="mt-1 text-meta text-fg-muted">
-                    题目: #{codeDetail.problemId} · {codeDetail.problemTitle} | 提交者:{" "}
-                    {codeDetail.nick} ({codeDetail.userId})
+                    题目: #{codeDetail.problem_id} · {codeDetail.problem_title} | 提交者:{" "}
+                    {codeDetail.nick} ({codeDetail.user_id})
                   </p>
                 )}
               </div>
@@ -401,41 +403,41 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
                   {/* Status Bar */}
                   <div className="flex flex-wrap items-center gap-3 rounded-control border border-line bg-surface-muted px-4 py-2 text-meta">
                     <Badge tone={getVerdictTone(Number(codeDetail.result))}>
-                      {codeDetail.resultLabel}
+                      {codeDetail.result_label}
                     </Badge>
-                    <span>语言: {codeDetail.languageName}</span>
+                    <span>语言: {codeDetail.language_name}</span>
                     <span>耗时: {codeDetail.time} ms</span>
                     <span>内存: {codeDetail.memory} KB</span>
-                    <span>长度: {codeDetail.codeLength} B</span>
+                    <span>长度: {codeDetail.code_length} B</span>
                     <span>
-                      提交时间: {codeDetail.inDate ? codeDetail.inDate.replace("T", " ").slice(0, 19) : "-"}
+                      提交时间: {codeDetail.in_date}
                     </span>
                   </div>
 
                   {/* Plagiarism Alert */}
-                  {codeDetail.sim > 0 && (
+                  {codeDetail.sim?.sim && codeDetail.sim.sim > 0 && (
                     <div className="rounded-control border border-line bg-warn-soft p-3 text-warn">
-                      <strong>查重警示：</strong>该提交与提交 #{codeDetail.simSolutionId} 文本相似度高达{" "}
-                      <strong>{codeDetail.sim}%</strong>。
+                      <strong>查重警示：</strong>该提交与提交 #{codeDetail.sim.sim_s_id === codeDetail.solution_id ? codeDetail.sim.s_id : codeDetail.sim.sim_s_id} 文本相似度高达{" "}
+                      <strong>{codeDetail.sim.sim}%</strong>。
                     </div>
                   )}
 
                   {/* Compile Error */}
-                  {codeDetail.compileError && (
+                  {codeDetail.compile_error && (
                     <div className="rounded-control border border-line bg-danger-soft p-3 text-danger">
                       <p className="font-semibold mb-1">编译报错详情 (Compiler Diagnostics):</p>
                       <pre className="max-h-48 overflow-auto font-mono text-meta whitespace-pre-wrap">
-                        {codeDetail.compileError}
+                        {codeDetail.compile_error}
                       </pre>
                     </div>
                   )}
 
                   {/* Runtime Error */}
-                  {codeDetail.runtimeError && (
+                  {codeDetail.runtime_error && (
                     <div className="rounded-control border border-line bg-danger-soft p-3 text-danger">
                       <p className="font-semibold mb-1">运行时异常详情 (Runtime Diagnostics):</p>
                       <pre className="max-h-48 overflow-auto font-mono text-meta whitespace-pre-wrap">
-                        {codeDetail.runtimeError}
+                        {codeDetail.runtime_error}
                       </pre>
                     </div>
                   )}

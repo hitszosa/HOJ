@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "INSERT INTO jol.source_code(solution_id,source) VALUES(?,?)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "329ec467ccc9b780329f3e0fa07e044743f8f46fa3c3741f607bc6f364fe0dcd"
+}

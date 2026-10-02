@@ -1,0 +1,44 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT s.problem_id, COUNT(*) AS \"attempts!: i64\", MAX(s.result=4) AS \"passed!: bool\"\n           FROM cm_submission cs JOIN jol.solution s ON s.solution_id=cs.submission_id\n           WHERE cs.batch_id=? AND cs.user_id=? GROUP BY s.problem_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "problem_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | MULTIPLE_KEY",
+          "max_size": 11
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "attempts!: i64",
+        "type_info": {
+          "type": "LongLong",
+          "flags": "NOT_NULL | BINARY",
+          "max_size": 21
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "passed!: bool",
+        "type_info": {
+          "type": "Long",
+          "flags": "BINARY",
+          "max_size": 1
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "4121ccd5706166f94d93b141696b993e039d60449384e35e43f29b849b44074f"
+}

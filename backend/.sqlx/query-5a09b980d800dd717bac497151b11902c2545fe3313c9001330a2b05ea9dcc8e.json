@@ -1,0 +1,44 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT DISTINCT o.teacher_id, c.code, c.name FROM cm_offering o JOIN cm_course c USING(course_id)\n         WHERE o.status='active' ORDER BY c.code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "teacher_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "code",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 128
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "max_size": 512
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "5a09b980d800dd717bac497151b11902c2545fe3313c9001330a2b05ea9dcc8e"
+}

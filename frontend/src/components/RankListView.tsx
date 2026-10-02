@@ -5,7 +5,9 @@ import Link from "next/link";
 import { Badge, Button, Card, CardTitle, Empty, Progress, Stat } from "@/components/ui";
 import { api } from "@/lib/api";
 
-type Row = Record<string, any>;
+import type { RankItem } from "@/api/generated/RankItem";
+import type { RankList } from "@/api/generated/RankList";
+import type { CourseOffering } from "@/api/generated/CourseOffering";
 
 const fieldClass =
   "w-full rounded-control border border-line bg-surface px-3 py-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-brand";
@@ -21,14 +23,14 @@ export function RankListView({
   offeringId?: string | number;
   embedded?: boolean;
 }) {
-  const [rankings, setRankings] = useState<Row[]>([]);
+  const [rankings, setRankings] = useState<RankItem[]>([]);
   const [total, setTotal] = useState(0);
   const [myRank, setMyRank] = useState<number | null>(null);
   const [page, setPage] = useState(1);
   const limit = 50;
 
   const [offeringId, setOfferingId] = useState(propOfferingId ? String(propOfferingId) : "");
-  const [offerings, setOfferings] = useState<Row[]>([]);
+  const [offerings, setOfferings] = useState<CourseOffering[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -42,9 +44,9 @@ export function RankListView({
   useEffect(() => {
     if (portal === "teacher") {
       setLoading(true);
-      api("/courses")
-        .then((data: Row[]) => {
-          const list = data.filter((r) => ["teacher", "ta"].includes(r.role));
+      api<CourseOffering[]>("/courses")
+        .then((data) => {
+          const list = data.filter((r) => r.role === "teacher" || r.role === "ta");
           setOfferings(list);
           if (!propOfferingId && typeof window !== "undefined") {
             const oid = new URLSearchParams(window.location.search).get("oid");
@@ -66,14 +68,13 @@ export function RankListView({
     try {
       const params = new URLSearchParams();
       params.set("page", String(page));
-      params.set("pageSize", String(limit));
-      params.set("limit", String(limit));
-      if (offeringId) params.set("offeringId", offeringId);
+      params.set("page_size", String(limit));
+      if (offeringId) params.set("offering_id", offeringId);
 
-      const res = await api(`/ranklist?${params.toString()}`);
-      setRankings(res.items || res.rankings || []);
-      setTotal(res.total || 0);
-      setMyRank(res.myRank || null);
+      const res = await api<RankList>(`/ranklist?${params.toString()}`);
+      setRankings(res.items);
+      setTotal(res.total);
+      setMyRank(res.my_rank);
     } catch (e) {
       setError(String(e).split("|").pop() || "加载排名榜失败");
     } finally {
@@ -263,10 +264,10 @@ export function RankListView({
               </thead>
               <tbody>
                 {rankings.map((r) => {
-                  const isMe = r.userId === user;
+                  const isMe = r.user_id === user;
                   return (
                     <tr
-                      key={r.userId}
+                      key={r.user_id}
                       className={`border-t border-line ${isMe ? "bg-brand-soft/30 font-medium" : ""}`}
                     >
                       <td className="py-3">
@@ -282,11 +283,11 @@ export function RankListView({
                       </td>
                       <td>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-fg">{r.nick || r.userId}</span>
+                          <span className="font-medium text-fg">{r.nick || r.user_id}</span>
                           {isMe && <Badge tone="brand">我</Badge>}
                         </div>
-                        {r.nick && r.nick !== r.userId && (
-                          <div className="text-meta text-fg-subtle font-mono">{r.userId}</div>
+                        {r.nick && r.nick !== r.user_id && (
+                          <div className="text-meta text-fg-subtle font-mono">{r.user_id}</div>
                         )}
                       </td>
                       <td>
@@ -299,7 +300,7 @@ export function RankListView({
                       </td>
                       <td>
                         {(() => {
-                          const passPct = r.passRate <= 1 ? Math.round(r.passRate * 100) : Math.round(r.passRate);
+                          const passPct = Math.round(r.pass_rate);
                           return (
                             <div className="space-y-1">
                               <div className="flex justify-between text-meta">
@@ -315,7 +316,7 @@ export function RankListView({
                         })()}
                       </td>
                       <td className="text-meta text-fg-muted whitespace-nowrap">
-                        {r.lastSubmit ? r.lastSubmit.replace("T", " ").slice(0, 16) : "-"}
+                        {r.last_submit ? r.last_submit.slice(0, 16) : "-"}
                       </td>
                       {portal === "teacher" && (
                         <td>

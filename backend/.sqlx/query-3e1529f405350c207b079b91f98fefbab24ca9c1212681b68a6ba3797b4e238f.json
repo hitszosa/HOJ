@@ -1,0 +1,12 @@
+{
+  "db_name": "MySQL",
+  "query": "UPDATE cm_batch SET ai_enabled=COALESCE(?,ai_enabled),\n                allowed_languages=IF(?, ?, allowed_languages), updated_at=NOW() WHERE batch_id=?",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "3e1529f405350c207b079b91f98fefbab24ca9c1212681b68a6ba3797b4e238f"
+}

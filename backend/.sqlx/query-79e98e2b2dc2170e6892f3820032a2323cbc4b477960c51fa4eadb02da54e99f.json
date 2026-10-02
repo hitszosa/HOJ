@@ -1,0 +1,134 @@
+{
+  "db_name": "MySQL",
+  "query": "SELECT c.course_id, c.code, c.name, CAST(c.credit AS DOUBLE) AS credit, c.hoa_repo,\n                  o.offering_id, o.term, o.section, o.title, o.status, o.teacher_id,\n                  CASE WHEN o.teacher_id=? OR ?='admin' THEN 'teacher' ELSE e.role END AS \"role?: String\"\n           FROM cm_course c JOIN cm_offering o ON o.course_id=c.course_id\n           LEFT JOIN cm_enrollment e ON e.offering_id=o.offering_id AND e.user_id=? AND e.status='active'\n           WHERE ?='admin' OR o.teacher_id=? OR e.user_id IS NOT NULL\n           ORDER BY o.term DESC, c.code",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "course_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "code",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | UNIQUE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 128
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | NO_DEFAULT_VALUE",
+          "max_size": 512
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "credit",
+        "type_info": {
+          "type": "Double",
+          "flags": "BINARY",
+          "max_size": 22
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "hoa_repo",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 256
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "offering_id",
+        "type_info": {
+          "type": "Long",
+          "flags": "NOT_NULL | PRIMARY_KEY | UNSIGNED | AUTO_INCREMENT",
+          "max_size": 10
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "term",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 64
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "section",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL",
+          "max_size": 128
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "title",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 512
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "status",
+        "type_info": {
+          "type": "String",
+          "flags": "NOT_NULL | ENUM",
+          "max_size": 32
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "teacher_id",
+        "type_info": {
+          "type": "VarString",
+          "flags": "NOT_NULL | MULTIPLE_KEY | NO_DEFAULT_VALUE",
+          "max_size": 192
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "role?: String",
+        "type_info": {
+          "type": "VarString",
+          "flags": "",
+          "max_size": 28
+        }
+      }
+    ],
+    "parameters": {
+      "Right": 5
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "79e98e2b2dc2170e6892f3820032a2323cbc4b477960c51fa4eadb02da54e99f"
+}
