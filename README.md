@@ -6,9 +6,16 @@
 [![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
 [![Rust](https://img.shields.io/badge/Rust-Axum%20%2B%20sqlx-orange.svg)](https://github.com/tokio-rs/axum)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38bdf8.svg)](https://tailwindcss.com/)
-[![Tests: 170 Passed](https://img.shields.io/badge/Tests-170%20Passed-brightgreen.svg)]()
 
 ---
+
+## 部署与版本管理
+
+统一入口包含教学管理、课程作业与题库。当前部署由七个服务组成：编程 API、教学管理 API、Next.js 页面、教师管理页面、判题器、MariaDB 和附件对象存储。
+
+服务器安装与操作见 [远程部署说明](deploy/remote/README.md)，Harbor 发布、版本清单和 dell0 迁移进度见 [发布记录](deploy/remote/harbor-releases.md)。镜像从已提交的 Git 源码构建，使用 commit 标签和发布 digest；`build.sh` 与 `start.sh` 共用这套清单。功能修改直接进入正式源码和六个 Dockerfile，不再新增按功能命名的补丁 Dockerfile。
+
+判题与账号适配源码快照及文件哈希保存在 `vendor/hustoj/`。私有 `.env`、数据库、隐藏测试、学生附件和部署备份不纳入 Git 或构建上下文。当前新增提交保存在本机及私有 Git 恢复归档中，尚未推送到 GitHub。
 
 ## 🏗️ 架构概览
 
@@ -31,6 +38,8 @@
 │   ├── src/api/generated/# 由后端 ts-rs 生成的接口类型（cargo test 时更新）
 │   ├── src/components/   # 核心组件库
 │   └── src/test/         # Vitest 测试集
+├── teacher-management/   # 教学管理 Rust API 与 Vue 前端
+├── vendor/hustoj/        # 已核对哈希的判题、账号适配源码快照
 ├── deploy/               # 生产部署脚本、systemd 与 Nginx 配置
 └── docs/                 # 集成契约、迁移记录（260930-rust-migration.md）
 ```
