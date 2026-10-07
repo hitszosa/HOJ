@@ -1,6 +1,7 @@
 FROM node:24-bookworm-slim AS build
 WORKDIR /src/teacher-management/frontend
 COPY teacher-management/frontend/package.json teacher-management/frontend/pnpm-lock.yaml ./
+COPY teacher-management/frontend/pnpm-workspace.yaml ./
 COPY teacher-management/frontend/vendor ./vendor
 RUN npm install --global pnpm@11.28.3 --no-audit --no-fund \
  && pnpm install --frozen-lockfile
