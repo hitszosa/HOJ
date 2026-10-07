@@ -1,7 +1,0 @@
-FROM hoj-management-builder:initial AS build
-RUN rm -rf /src/src
-COPY teacher-management/backend/src /src/src
-COPY teacher-management/backend/migrations /src/migrations
-RUN CARGO_BUILD_JOBS=4 cargo build --locked --offline --release --bin grader-backend
-FROM hoj-management-api:amd64
-COPY --from=build /src/target/release/grader-backend /usr/local/bin/grader-backend

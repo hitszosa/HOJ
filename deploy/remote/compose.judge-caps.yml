@@ -1,0 +1,8 @@
+# Apply only after repeating the isolated AC/WA checks on the destination host.
+# SYS_ADMIN is needed for the existing chroot compiler's bind mounts.
+services:
+  core:
+    privileged: false
+    cap_add: [SYS_ADMIN, SYS_PTRACE]
+    cap_drop: [NET_RAW]
+    security_opt: ["no-new-privileges:true"]

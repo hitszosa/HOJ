@@ -10,6 +10,10 @@ Harbor 项目 17 的名称为 `hoj`，公开项目，检查时为空；现用服
 
 原有功能源码基线为 Git commit `0c992f3`（上游基线 `d0ac7d7`）。本机私有目录 `.local/dell0-migration` 保存服务器源码归档、SHA-256 清单、运行镜像清单及 Git bundle。账号、课程、学生代码、判题测试和附件不会放入镜像仓库。
 
+已将 2026-10-07 18:35:38 的数据库、应用授权 SQL、私有配置、判题文件、题单数据及附件备份复制到本机私有目录，验证文件大小、SHA-256 和权限。三个数据库已在临时 MariaDB 中恢复，表数分别为 jol 23、grader 26、codemind_course 9，8 条平台数据库账号授权恢复成功。临时数据库使用 network-none，无端口映射，结束后已移除。该备份仍是迁移前在线备份；正式切换必须重新冻结写入后备份，包含这之后的改动。
+
+已用新构建的判题镜像，在隔离临时数据库中验证 `privileged=false`、额外 capability `SYS_ADMIN` / `SYS_PTRACE`、移除 `NET_RAW` 和 `no-new-privileges`。C、C++、Python 各一组正确解 AC 和错误解 WA，六次全部通过；原生账号适配器的未登录查询返回 401。候选 override 在 `compose.judge-caps.yml`。当前现网配置没有改动，该文件也不会自动改变 host networking；SYS_ADMIN 仍允许较广的操作，不能把此结果当作完整的主机隔离验收。迁移目标上需复验并结合其余服务决定网络隔离方案。
+
 ## 后续发布入口
 
 在干净、已提交的 Git checkout 中构建 Linux amd64 镜像：
@@ -22,6 +26,10 @@ python3 deploy/remote/release.py build
 
 源码身份由 Git 与归档哈希固定；基础镜像、apt 软件源仍会随时间更新，因此这不是逐字节可重复构建。发布后以 registry digest 固定实际运行镜像。
 
+`build.sh` 仅转调上述发布构建入口。`start.sh [release.json路径]` 先验证完整清单，构建版本还会核对本机七个镜像的 ID 与源码标签，发布版本先拉取固定 digest，再启动。省略清单参数时使用当前 Git commit 对应的清单；不会因文件时间新旧而猜选版本。原 `amd64` 标签留在基础 Compose 中用于旧部署兼容，新启动入口会对七个服务全部覆盖。
+
+功能补丁 Dockerfile 已合并到六个正式 Dockerfile，旧文件可在 Git 基线 `0c992f3` 中查阅。服务器当前运行镜像与旧回退镜像尚未删除，清理应在迁移验收后按明确的保留清单执行。
+
 使用已有项目 robot 凭据或 OIDC 用户的 CLI secret 登录 Docker。凭据放在私有文件中，通过 `docker login --password-stdin` 输入；不能把学校 SSO 网页密码当成 robot secret。项目 robot 仅需此项目的 pull 和 push 权限，不需要删除权限。
 
 ```bash
@@ -29,6 +37,8 @@ python3 deploy/remote/release.py publish releases/<commit>/release.json
 ```
 
 发布脚本先检查全部镜像的平台、ID 和源码标签，再逐个上传至 `harbor.osa.moe/hoj/<service>:git-<commit>`，按 digest 拉回验证 ID。全部成功后才生成 `compose.images.json`。后续启动使用原配置加此 override，七个服务都会按 Harbor digest 拉取：
+
+上传前还会检查远端同名 commit 标签。标签已存在且内容不同时停止发布，避免用同一源码版本的第二次构建覆盖已部署镜像；需要提交明确的版本更新后再构建。无法读取标签（权限或网络故障）时也会停止。若 Harbor 项目启用标签不可变策略，还可在仓库端防止其他客户端覆盖。
 
 ```bash
 docker compose --env-file .env -f deploy/remote/compose.yml \

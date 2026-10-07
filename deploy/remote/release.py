@@ -112,6 +112,17 @@ def publish(args):
             labels = image['Config'].get('Labels') or {}
             if labels.get('org.opencontainers.image.revision') != revision or labels.get('moe.osa.hoj.source-sha256') != manifest['source_sha256']:
                 raise SystemExit('Source labels mismatch: ' + service)
+    # Never replace a published commit tag with a different build of that commit.
+    for service, record in manifest['images'].items():
+        target = f'{prefix}/{service}:git-{revision}'
+        probe = subprocess.run(['docker', 'manifest', 'inspect', target],
+                               capture_output=True, text=True)
+        if probe.returncode == 0:
+            run('docker', 'pull', '--platform', 'linux/amd64', target)
+            if inspect(target)['Id'] != record['id']:
+                raise SystemExit('Published commit tag already has different content: ' + target)
+        elif not any(message in probe.stderr.lower() for message in ('no such manifest', 'manifest unknown', 'manifest_unknown')):
+            raise SystemExit('Cannot verify registry tag (check login/network): ' + target)
     for service, record in manifest['images'].items():
         target = f'{prefix}/{service}:git-{revision}'
         run('docker', 'tag', record['id'], target)
@@ -133,6 +144,32 @@ def publish(args):
     print('Published and pulled back all seven images. Digest override:', path.parent / 'compose.images.json')
 
 
+def config(args):
+    path = Path(args.manifest).resolve()
+    manifest = json.loads(path.read_text())
+    if manifest.get('status') not in ('built', 'published') or set(manifest.get('images', {})) != set(SERVICES):
+        raise SystemExit('A complete release is required before starting services')
+    images = {}
+    for service, record in manifest['images'].items():
+        if manifest['status'] == 'published':
+            image = record.get('published', '')
+            if not re.fullmatch(r'[a-z0-9.:-]+/[a-z0-9._/-]+@sha256:[0-9a-f]{64}', image):
+                raise SystemExit('Missing registry digest: ' + service)
+        else:
+            image = record['tag']
+            actual = inspect(image)
+            if actual['Id'] != record['id'] or actual['Architecture'] != 'amd64' or actual['Os'] != 'linux':
+                raise SystemExit('Built image was replaced or is unavailable: ' + service)
+            if service != 'db':
+                labels = actual['Config'].get('Labels') or {}
+                if labels.get('org.opencontainers.image.revision') != manifest['revision'] or labels.get('moe.osa.hoj.source-sha256') != manifest['source_sha256']:
+                    raise SystemExit('Source labels mismatch: ' + service)
+        images[service] = {'image': image}
+    output = path.parent / 'compose.start.json'
+    save(output, {'services': images})
+    print(output)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest='action', required=True)
@@ -146,6 +183,9 @@ def main():
     p.add_argument('manifest')
     p.add_argument('--repository', default='harbor.osa.moe/hoj')
     p.set_defaults(function=publish)
+    c = sub.add_parser('config', help='Validate a release and produce its startup override')
+    c.add_argument('manifest')
+    c.set_defaults(function=config)
     args = parser.parse_args()
     args.function(args)
 

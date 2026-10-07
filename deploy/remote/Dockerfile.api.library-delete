@@ -1,8 +1,0 @@
-FROM hoj-api-builder:qa-base AS build
-RUN rm -rf /src/src /src/tests /src/.sqlx
-COPY backend/src /src/src
-COPY backend/tests /src/tests
-COPY backend/.sqlx /src/.sqlx
-RUN SQLX_OFFLINE=true CARGO_BUILD_JOBS=4 cargo test --locked --offline --test http && SQLX_OFFLINE=true CARGO_BUILD_JOBS=4 cargo build --locked --offline --release --bin hoj
-FROM hoj-api:amd64
-COPY --from=build /src/target/release/hoj /usr/local/bin/hoj

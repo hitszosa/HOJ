@@ -14,6 +14,8 @@ __pycache__/
 # 本地环境、密钥与日志
 .env
 .env.local
+.env.*
+!.env.example
 *.log
 .DS_Store
 
@@ -39,3 +41,9 @@ teacher-management/backend/test/node_modules/
 ._*
 *.tsbuildinfo
 /releases/
+/data/
+/init/
+/backups/
+/qa-fixes/
+/load-test/
+**/admin-account.json
