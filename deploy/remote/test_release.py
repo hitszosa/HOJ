@@ -10,6 +10,31 @@ from unittest.mock import patch
 import release
 
 
+class DatabaseMirrorSafety(unittest.TestCase):
+    def setUp(self):
+        self.reference = 'mariadb@sha256:' + 'e' * 64
+        self.image = {'Id': 'sha256:' + 'f' * 64, 'Architecture': 'amd64', 'Os': 'linux'}
+
+    def test_cached_digest_does_not_depend_on_registry_connectivity(self):
+        with patch.object(release, 'inspect', return_value=self.image), patch.object(release, 'run') as run:
+            release.mirror_database(self.reference, 'hoj-db:release')
+        run.assert_called_once_with('docker', 'tag', self.image['Id'], 'hoj-db:release')
+
+    def test_missing_digest_must_be_pulled_before_it_is_tagged(self):
+        with patch.object(release, 'inspect', side_effect=[subprocess.CalledProcessError(1, []), self.image]), \
+             patch.object(release, 'run') as run:
+            release.mirror_database(self.reference, 'hoj-db:release')
+        self.assertEqual(run.call_args_list[0].args, ('docker', 'pull', '--platform', 'linux/amd64', self.reference))
+        self.assertEqual(run.call_args_list[1].args, ('docker', 'tag', self.image['Id'], 'hoj-db:release'))
+
+    def test_wrong_platform_is_rejected_without_tagging(self):
+        self.image['Architecture'] = 'arm64'
+        with patch.object(release, 'inspect', return_value=self.image), patch.object(release, 'run') as run:
+            with self.assertRaisesRegex(SystemExit, 'Wrong database platform'):
+                release.mirror_database(self.reference, 'hoj-db:release')
+        run.assert_not_called()
+
+
 class PublicationSafety(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()

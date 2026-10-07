@@ -47,3 +47,6 @@ teacher-management/backend/test/node_modules/
 /qa-fixes/
 /load-test/
 **/admin-account.json
+/build-logs/
+/*-deploy-stamp
+/hustoj-src/

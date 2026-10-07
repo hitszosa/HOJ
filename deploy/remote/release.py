@@ -31,6 +31,23 @@ def save(path, value):
     tmp.replace(path)
 
 
+def mirror_database(reference, tag):
+    # A digest or local image ID keeps migration on the exact running DB build.
+    immutable = bool(re.fullmatch(r'(?:.+@)?sha256:[0-9a-f]{64}', reference))
+    image = None
+    if immutable:
+        try:
+            image = inspect(reference)
+        except subprocess.CalledProcessError:
+            pass
+    if image is None:
+        run('docker', 'pull', '--platform', 'linux/amd64', reference)
+        image = inspect(reference)
+    if image['Architecture'] != 'amd64' or image['Os'] != 'linux':
+        raise SystemExit('Wrong database platform: ' + reference)
+    run('docker', 'tag', image['Id'], tag)
+
+
 def build(args):
     if run('git', 'status', '--porcelain', capture=True):
         raise SystemExit('Commit all source changes before building a release.')
@@ -62,8 +79,7 @@ def build(args):
             tag = f'hoj-{service}:git-{revision}'
             if service == 'db':
                 # Mirror the exact upstream database build, retaining its metadata.
-                run('docker', 'pull', '--platform', 'linux/amd64', args.db_image)
-                run('docker', 'tag', args.db_image, tag)
+                mirror_database(args.db_image, tag)
             else:
                 dockerfile = f'deploy/remote/Dockerfile.{service}'
                 command = ['docker', 'build', '--platform', 'linux/amd64', '--network', 'host',
@@ -86,6 +102,8 @@ def build(args):
                 raise SystemExit('Wrong platform: ' + tag)
             result['images'][service] = {'tag': tag, 'id': image['Id'],
                                          'upstream_digests': image.get('RepoDigests', [])}
+            if service == 'db':
+                result['images'][service]['source_reference'] = args.db_image
             save(out / 'release.json', result)
     result['status'] = 'built'
     save(out / 'release.json', result)
@@ -176,7 +194,8 @@ def main():
     b = sub.add_parser('build')
     b.add_argument('--output')
     b.add_argument('--pull', action='store_true', help='Refresh base images before building')
-    b.add_argument('--db-image', default='mariadb:11.8.9', help='Exact upstream database release')
+    b.add_argument('--db-image', default='mariadb:11.8',
+                   help='Database reference; use the running image digest or ID for migration')
     b.add_argument('--source-url', default='https://github.com/hitszosa/HOJ')
     b.set_defaults(function=build)
     p = sub.add_parser('publish')

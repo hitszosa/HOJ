@@ -22,7 +22,7 @@ Harbor 项目 17 的名称为 `hoj`，公开项目，检查时为空；现用服
 python3 deploy/remote/release.py build
 ```
 
-脚本从 `git archive HEAD` 构建六个应用镜像，同时镜像化固定版本 MariaDB 11.8.9。每个应用镜像附带 Git revision 和源码归档 SHA-256，使用完整 commit 标签 `git-<40位SHA>`；不覆盖当前运行的 `amd64` 标签。`releases/<commit>/release.json` 记录每个镜像的本地 ID。构建失败保持 `building` 状态，不能发布。
+脚本从 `git archive HEAD` 构建六个应用镜像，同时镜像化 MariaDB。迁移时必须通过 `--db-image <现网镜像digest或ID>` 沿用当前数据库构建；不可根据版本字符串猜测镜像标签。已缓存的不可变镜像可直接验证并使用；普通标签会重新拉取，实际 ID 和上游摘要写入清单。每个应用镜像附带 Git revision 和源码归档 SHA-256，使用完整 commit 标签 `git-<40位SHA>`；不覆盖当前运行的 `amd64` 标签。`releases/<commit>/release.json` 记录每个镜像的本地 ID。构建失败保持 `building` 状态，不能发布。
 
 源码身份由 Git 与归档哈希固定；基础镜像、apt 软件源仍会随时间更新，因此这不是逐字节可重复构建。发布后以 registry digest 固定实际运行镜像。
 
