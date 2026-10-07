@@ -4,7 +4,7 @@ RUN apt-get -o Acquire::Retries=3 update && apt-get -o Acquire::Retries=3 instal
     ca-certificates curl nginx php8.1-fpm php8.1-mysql php8.1-mbstring php8.1-xml php8.1-curl \
     gcc g++ make libmariadb-dev libmariadb-dev-compat mariadb-client python3 busybox-static \
     procps util-linux tzdata && rm -rf /var/lib/apt/lists/*
-COPY hustoj-src /home/judge/src
+COPY vendor/hustoj /home/judge/src
 COPY deploy/remote/patch-python-runtime.py /opt/patch-python-runtime.py
 RUN python3 /opt/patch-python-runtime.py
 RUN useradd -u 1536 -m -d /home/judge -s /usr/sbin/nologin judge \
@@ -13,9 +13,11 @@ RUN useradd -u 1536 -m -d /home/judge -s /usr/sbin/nologin judge \
  && cd /home/judge/src/core/judged && rm -f *.o judged judged.http judgehub && make \
  && install -m 755 judged /usr/bin/judged \
  && mkdir -p /home/judge/etc /home/judge/log /home/judge/data /run/php \
+ && chown www-data:www-data /var/lib/php/sessions && chmod 0700 /var/lib/php/sessions \
  && printf '\nenv[HOJ_ALLOWED_ORIGINS] = $HOJ_ALLOWED_ORIGINS\n' >> /etc/php/8.1/fpm/pool.d/www.conf
 COPY deploy/local/course.php deploy/local/platform-auth.php /home/judge/src/web/
 COPY deploy/remote/core-nginx.conf /etc/nginx/sites-available/default
 COPY deploy/remote/core-entrypoint.py /opt/core-entrypoint.py
 COPY deploy/remote/php-fpm-hoj.conf /etc/php/8.1/fpm/pool.d/zz-hoj.conf
+RUN php -l /home/judge/src/web/platform-auth.php && php -l /home/judge/src/web/course.php
 ENTRYPOINT ["python3", "/opt/core-entrypoint.py"]

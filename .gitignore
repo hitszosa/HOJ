@@ -38,3 +38,4 @@ teacher-management/backend/test/node_modules/
 # macOS resource forks and incremental compiler state
 ._*
 *.tsbuildinfo
+/releases/

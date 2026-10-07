@@ -31,7 +31,7 @@ values.update(SESSION_SECRET_KEY=secrets.token_hex(32),
 (ROOT/'.env').write_text(''.join(key+'='+value+'\n' for key,value in values.items()))
 (ROOT/'admin-account.json').write_text(json.dumps({'username':'admin',
     'password':'HOJ-'+secrets.token_urlsafe(18),'url':args.public_url.rstrip('/')+'/management/login'},indent=2))
-sql=(ROOT/'hustoj-src/install/db.sql').read_text()
+sql=(ROOT/'vendor/hustoj/install/db.sql').read_text()
 sql=sql.replace('create database if not exists jol ;',
     'CREATE DATABASE IF NOT EXISTS jol DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;')
 # Explicit table collations prevent MariaDB 11.8's uca1400 default from changing

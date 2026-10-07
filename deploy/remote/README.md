@@ -26,9 +26,9 @@
 
 ## 全新安装
 
-准备当前工作区源代码，以及本次已验证的 HUSTOJ 源码快照 `hustoj-src/`。快照来自本机原有 `hustoj-dev:latest` 镜像的 `/home/judge/src`；只复用源码，在 x86_64 上重新编译评测器，不能复制 ARM64 二进制。服务器保留源码和初始归档用于恢复。
+准备已提交的源代码。现用判题与账号适配源码快照已纳入 `vendor/hustoj/`，文件哈希和来源见其中的 `snapshot.json`；评测器在 x86_64 上重新编译。
 
-上传时排除 `.env`、`.env.local`、`.local`、`backend/data/local`、`node_modules`、`target`、`.next` 和 `.git`，避免携带本机密码、会话密钥和测试数据。保留 `backend/.sqlx` 与公共题库数据。教学管理前端需先执行 `corepack pnpm@11.28.3 build`，将生成的 `teacher-management/frontend/dist` 一并上传。教学界面已移除监控和存储控制台页面，后台对象存储继续用于作业附件。
+上传时排除 `.env`、`.env.local`、`.local`、`backend/data/local`、`node_modules`、`target`、`.next` 和 `.git`，避免携带本机密码、会话密钥和测试数据。保留 `backend/.sqlx` 与公共题库数据。教师页面现在由镜像中的 Node 构建阶段编译，无需上传本机 `dist`。根目录 `.dockerignore` 排除私有配置与运行数据。教学界面已移除监控和存储控制台页面，后台对象存储继续用于作业附件。
 
 安装 Docker、Compose 与 Buildx 后，在全新部署目录中执行：
 

@@ -11,4 +11,4 @@ for service in core api management-api web management-web; do
     docker build "${args[@]}" -f "deploy/remote/Dockerfile.$service" -t "hoj-$service:amd64" .
 done
 docker build "${args[@]}" --build-arg GOPROXY=https://proxy.golang.org,direct \
-    -f deploy/local/Dockerfile.storage -t hoj-storage:amd64 deploy/local
+    -f deploy/remote/Dockerfile.storage -t hoj-storage:amd64 .
