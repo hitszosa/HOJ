@@ -7,7 +7,7 @@ import { api } from "@/lib/api";
 import type { StatusItem } from "@/api/generated/StatusItem";
 import type { StatusPage } from "@/api/generated/StatusPage";
 import type { SubmissionCode } from "@/api/generated/SubmissionCode";
-import type { CourseOffering } from "@/api/generated/CourseOffering";
+
 
 const fieldClass =
   "w-full rounded-control border border-line bg-surface px-3 py-2 text-body text-fg focus:outline-none focus:ring-2 focus:ring-brand";
@@ -28,12 +28,8 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
 
   // Filters
   const [problemId, setProblemId] = useState("");
-  const [filterUser, setFilterUser] = useState("");
   const [language, setLanguage] = useState("");
   const [verdict, setVerdict] = useState("");
-  const [onlyMine, setOnlyMine] = useState(false);
-  const [offeringId, setOfferingId] = useState("");
-  const [offerings, setOfferings] = useState<CourseOffering[]>([]);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -45,17 +41,6 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
   const [codeError, setCodeError] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // Load teacher offerings for class filter
-  useEffect(() => {
-    if (portal === "teacher") {
-      api<CourseOffering[]>("/courses")
-        .then((data) => {
-          setOfferings(data.filter((r) => r.role === "teacher" || r.role === "ta"));
-        })
-        .catch(() => {});
-    }
-  }, [portal]);
-
   const loadStatus = useCallback(async () => {
     setLoading(true);
     setError("");
@@ -64,11 +49,9 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
       params.set("page", String(page));
       params.set("page_size", String(limit));
       if (problemId.trim()) params.set("problem_id", problemId.trim());
-      if (filterUser.trim()) params.set("user_id", filterUser.trim());
       if (language) params.set("language", language);
       if (verdict) params.set("result", verdict);
-      if (portal === "teacher" && offeringId) params.set("offering_id", offeringId);
-      if (portal === "student" && onlyMine) params.set("only_mine", "true");
+      params.set("only_mine", "true");
 
       const res = await api<StatusPage>(`/status?${params.toString()}`);
       setSubmissions(res.items);
@@ -78,7 +61,7 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
     } finally {
       setLoading(false);
     }
-  }, [page, limit, problemId, filterUser, language, verdict, offeringId, onlyMine, portal]);
+  }, [page, limit, problemId, language, verdict]);
 
   useEffect(() => {
     loadStatus();
@@ -128,14 +111,12 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">REAL-TIME JUDGE STREAM</p>
+          <p className="eyebrow">MY SUBMISSIONS</p>
           <h1 className="text-3xl font-semibold tracking-tight">
-            {portal === "teacher" ? "教学班评测流水与代码质检" : "实时评测状态"}
+            我的提交
           </h1>
           <p className="mt-2 text-fg-muted">
-            {portal === "teacher"
-              ? "实时监控学生代码提交、判题结果与查重相似度，支持直接调阅源码与报错诊断。"
-              : "全站实时提交流与个人判题队列，点击可查看自己的完整代码与编译诊断日志。"}
+            只显示自己的提交、判题结果和代码。
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -171,56 +152,6 @@ export function StatusStreamView({ portal, user }: { portal: string; user: strin
             />
           </div>
 
-          {portal === "teacher" ? (
-            <>
-              <div>
-                <label className="block text-meta text-fg-muted mb-1">授课班级</label>
-                <select
-                  className={fieldClass}
-                  value={offeringId}
-                  onChange={(e) => {
-                    setOfferingId(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="">全部授课班级</option>
-                  {offerings.map((o) => (
-                    <option key={o.offering_id} value={o.offering_id}>
-                      {o.title} ({o.term})
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-meta text-fg-muted mb-1">学生学号/用户名</label>
-                <input
-                  type="text"
-                  placeholder="检索学生账号"
-                  className={fieldClass}
-                  value={filterUser}
-                  onChange={(e) => {
-                    setFilterUser(e.target.value);
-                    setPage(1);
-                  }}
-                />
-              </div>
-            </>
-          ) : (
-            <div>
-              <label className="block text-meta text-fg-muted mb-1">筛选范围</label>
-              <label className="flex items-center gap-2 h-10 px-3 rounded-control border border-line bg-surface cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={onlyMine}
-                  onChange={(e) => {
-                    setOnlyMine(e.target.checked);
-                    setPage(1);
-                  }}
-                />
-                <span className="text-body text-fg">仅看我的提交</span>
-              </label>
-            </div>
-          )}
 
           <div>
             <label className="block text-meta text-fg-muted mb-1">编程语言</label>

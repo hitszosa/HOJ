@@ -29,15 +29,19 @@ describe("端内详情权限与加载顺序", () => {
     expect(request.mock.calls).toEqual([["/offerings/10"]]);
   });
 
-  it.each([
-    ["student", "teacher"], ["teacher", "student"], ["student", undefined],
-  ])("%s 端拒绝不匹配的课程角色 %s", async (portal, role) => {
-    await expect(loadPortalPage("/offerings/10", { name: "teacher-course", oid: "10" }, portal!,
-      async () => ({ offering: { role } }))).rejects.toThrow("此课程不属于当前端");
+  it.each([undefined, "admin", "outsider"])("未授权的课程角色 %s 被拒绝", async role => {
+    await expect(loadPortalPage("/batches/10", {name:"batch",bid:"10"}, "teacher",
+      async () => ({ offering:{role} }))).rejects.toThrow("没有此课程");
+  });
+
+  it("教师选修其他课程时按该课程学生身份打开作业", async () => {
+    const page=await loadPortalPage("/batches/10", {name:"batch",bid:"10"}, "teacher",
+      async () => ({ offering:{role:"student",status:"active"} }));
+    expect(page.data.offering.role).toBe("student");
   });
 
   it("助教可以在教学端预览已授权课程", async () => {
-    const page = await loadPortalPage("/offerings/10", { name: "teacher-course", oid: "10" }, "teacher",
+    const page = await loadPortalPage("/batches/10", { name: "batch", bid: "10" }, "teacher",
       async () => ({ offering: { role: "ta", status: "active" }, batches: [] }));
     expect(page.ta).toBe(true);
     expect(page.archived).toBe(false);

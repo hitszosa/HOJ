@@ -1,6 +1,6 @@
 //! 题单（批次）：学生做题、提交、自测；教师调整设置、复制为草稿、公开导出。
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use axum::{
     Router,
@@ -25,7 +25,8 @@ use crate::{
 
 pub fn router() -> Router<AppState> {
     Router::new()
-        .route("/api/batches/{bid}", get(batch).patch(settings))
+        .route("/api/batches/{bid}", get(batch).patch(settings).delete(remove_assignment))
+        .route("/api/batches/{bid}/document", get(assignment_document).put(update_assignment))
         .route("/api/batches/{bid}/problems/{pid}", get(problem))
         .route("/api/batches/{bid}/problems/{pid}/submissions", post(submit))
         .route("/api/batches/{bid}/problems/{pid}/trials", post(run_trial))
@@ -33,6 +34,10 @@ pub fn router() -> Router<AppState> {
         .route("/api/batches/{bid}/copy", post(copy))
         .route("/api/batches/{bid}/export", post(export))
 }
+
+async fn remove_assignment(State(s):State<AppState>,who:Identity,Path(bid):Path<u32>)->AppResult<ApiOk<Empty>>{crate::assignment_edit::remove(&s,&who,bid).await?;Ok(ok(Empty{}))}
+async fn assignment_document(State(s):State<AppState>,who:Identity,Path(bid):Path<u32>)->AppResult<ApiOk<document::Document>>{Ok(ok(crate::assignment_edit::document(&s,&who,bid).await?))}
+async fn update_assignment(State(s):State<AppState>,who:Identity,Path(bid):Path<u32>,Json(body):Json<super::drafts::UpdateDraftRequest>)->AppResult<ApiOk<Empty>>{crate::assignment_edit::update(&s,&who,bid,document::validate(body.document)?).await?;Ok(ok(Empty{}))}
 
 // ---------------------------------------------------------------- 历史通过记录
 
@@ -269,11 +274,15 @@ async fn submit(
     Path((bid, pid)): Path<(u32, i32)>,
     Json(body): Json<SubmitRequest>,
 ) -> AppResult<ApiOk<SubmitResponse>> {
+    let oid = sqlx::query_scalar::<_, u32>("SELECT offering_id FROM cm_batch WHERE batch_id=?")
+        .bind(bid).fetch_optional(&s.db).await?.ok_or_else(|| AppError::not_found("作业不存在"))?;
+    authoring::with_lock(&s.db, &format!("hoj:offering:{oid}"), async {
     let (_, batch, off) = load_problem(&s, &who, bid, pid).await?;
     if off.archived() {
         return Err(AppError::conflict("历史教学班为只读，不能修改、发布或提交"));
     }
     let lang = check_student_code(&batch, &off, &body.language, "提交")?;
+    hustoj::require_supported_language(&s, &body.language)?;
     if body.code.trim().is_empty() || body.code.len() > 65536 {
         return Err(AppError::validation("请选择支持的语言并填写 64KB 以内的代码"));
     }
@@ -284,6 +293,7 @@ async fn submit(
     let link = CourseLink { offering_id: off.offering_id, batch_id: bid, batch_problem_id: bp };
     let sid = hustoj::insert_submission(&s.db, pid, &who.user, lang, &code, Some(link)).await?;
     Ok(ok(SubmitResponse { submission_id: sid }))
+    }).await
 }
 
 #[derive(Deserialize, TS)]
@@ -314,6 +324,7 @@ async fn run_trial(
         return Err(AppError::conflict("历史教学班为只读，不能修改、发布或提交"));
     }
     let lang = check_student_code(&batch, &off, &body.language, "自测")?;
+    hustoj::require_supported_language(&s, &body.language)?;
     let stdin = body.input.unwrap_or_default();
     if body.code.trim().is_empty() || body.code.len() > 65536 || stdin.len() > 16384 || stdin.contains('\0') {
         return Err(AppError::validation("代码须为64KB以内的UTF-8文本，输入须为16KB以内且不含空字符的UTF-8文本"));
@@ -407,12 +418,19 @@ async fn trial_result(State(s): State<AppState>, who: Identity, Path(run_id): Pa
 pub struct BatchSettings {
     #[serde(default)]
     #[ts(optional)]
+    pub problem_weights: Option<Vec<ProblemWeight>>,
+    #[serde(default)]
+    #[ts(optional)]
     pub ai_enabled: Option<bool>,
     /// 语言限制：数组或逗号串；null / 空串 / 全部非法 表示不限制。缺省表示不修改。
     #[serde(default, deserialize_with = "some_or_null")]
     #[ts(optional, type = "string | Array<string> | null")]
     pub allowed_languages: Option<Option<document::LanguageList>>,
 }
+
+#[derive(Deserialize, TS)]
+#[ts(export)]
+pub struct ProblemWeight { pub problem_id: i32, pub score: f64 }
 
 /// 区分“字段缺省”（None）与“显式 null”（Some(None)）。
 fn some_or_null<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Option<document::LanguageList>>, D::Error> {
@@ -422,8 +440,28 @@ fn some_or_null<'de, D: serde::Deserializer<'de>>(d: D) -> Result<Option<Option<
 async fn settings(State(s): State<AppState>, who: Identity, Path(bid): Path<u32>, Json(body): Json<BatchSettings>) -> AppResult<ApiOk<Empty>> {
     batch_access(&s.db, &who, bid, Need::TEACH_WRITE).await?;
     let languages = body.allowed_languages.as_ref().map(|l| l.as_ref().and_then(document::LanguageList::normalize));
-    if body.ai_enabled.is_none() && languages.is_none() {
+    if body.ai_enabled.is_none() && languages.is_none() && body.problem_weights.is_none() {
         return Ok(ok(Empty {}));
+    }
+    let mut tx = s.db.begin().await?;
+    sqlx::query("SELECT batch_id FROM cm_batch WHERE batch_id=? FOR UPDATE").bind(bid).execute(&mut *tx).await?;
+    if let Some(weights) = &body.problem_weights {
+        let actual: Vec<(i32, bool)> = sqlx::query_as("SELECT problem_id,required FROM cm_batch_problem WHERE batch_id=? FOR UPDATE")
+            .bind(bid).fetch_all(&mut *tx).await?;
+        let ids: HashSet<i32> = weights.iter().map(|p| p.problem_id).collect();
+        if weights.len() != actual.len() || ids.len() != weights.len() || actual.iter().any(|(pid,_)| !ids.contains(pid)) {
+            return Err(AppError::unprocessable("请为本题单的每道题设置一次权重，不能包含其他题单的题目"));
+        }
+        if weights.iter().any(|p| !document::valid_score(p.score)) {
+            return Err(AppError::unprocessable("题目权重须为 0–999.99 的数字，最多两位小数"));
+        }
+        if !weights.iter().any(|p| p.score > 0.0 && actual.iter().any(|(pid,required)| *pid == p.problem_id && *required)) {
+            return Err(AppError::unprocessable("至少一道必做题的权重须大于 0"));
+        }
+        for weight in weights {
+            sqlx::query("UPDATE cm_batch_problem SET score=?,updated_at=NOW() WHERE batch_id=? AND problem_id=?")
+                .bind(weight.score).bind(bid).bind(weight.problem_id).execute(&mut *tx).await?;
+        }
     }
     sqlx::query!(
         "UPDATE cm_batch SET ai_enabled=COALESCE(?,ai_enabled),
@@ -433,44 +471,40 @@ async fn settings(State(s): State<AppState>, who: Identity, Path(bid): Path<u32>
         languages.flatten(),
         bid
     )
-    .execute(&s.db)
+    .execute(&mut *tx)
     .await?;
+    tx.commit().await?;
     Ok(ok(Empty {}))
 }
 
-async fn batch_problems_full(s: &AppState, bid: u32) -> AppResult<Vec<(i32, String, Option<String>, Option<String>, Option<String>)>> {
-    Ok(sqlx::query!(
-        "SELECT p.problem_id, p.title, p.description, p.sample_input, p.sample_output
-         FROM jol.problem p JOIN cm_batch_problem bp USING(problem_id) WHERE bp.batch_id=? ORDER BY bp.seq",
-        bid
-    )
-    .fetch_all(&s.db)
-    .await?
-    .into_iter()
-    .map(|r| (r.problem_id, r.title, r.description, r.sample_input, r.sample_output))
-    .collect())
+type FullProblem = (i32, String, Option<String>, Option<String>, Option<String>, f64);
+async fn batch_problems_full(s: &AppState, bid: u32) -> AppResult<Vec<FullProblem>> {
+    Ok(sqlx::query_as::<_, FullProblem>(
+        "SELECT p.problem_id, p.title, p.description, p.sample_input, p.sample_output, CAST(bp.score AS DOUBLE)
+         FROM jol.problem p JOIN cm_batch_problem bp USING(problem_id) WHERE bp.batch_id=? ORDER BY bp.seq"
+    ).bind(bid).fetch_all(&s.db).await?)
 }
 
-/// 复制为新草稿（不含隐藏测试，发布前需补齐）；只读来源与来源引用随之保留。
+/// 授权教师复制完整判题数据；只读来源与来源引用随之保留，公开导出仍不含隐藏测试。
 async fn copy(State(s): State<AppState>, who: Identity, Path(bid): Path<u32>) -> AppResult<ApiOk<DraftCreated>> {
-    let (batch, off) = batch_access(&s.db, &who, bid, Need::TEACH_WRITE).await?;
-    let problems: Vec<serde_json::Value> = batch_problems_full(&s, bid)
-        .await?
-        .into_iter()
-        .map(|(pid, title, desc, si, so)| {
-            serde_json::json!({
+    let (batch, _) = batch_access(&s.db, &who, bid, Need::TEACH_WRITE).await?;
+    let mut problems = Vec::new();
+    for (pid, title, desc, si, so, score) in batch_problems_full(&s, bid).await? {
+        let tests = hustoj::read_test_files(&s, pid).await?;
+        problems.push(serde_json::json!({
                 "slug": format!("problem-{pid}"), "title": title, "statement": desc.unwrap_or_default(),
-                "samples": [{"input": si.unwrap_or_default(), "output": so.unwrap_or_default()}], "tests": [],
-            })
-        })
-        .collect();
+                "samples": [{"input": si.unwrap_or_default(), "output": so.unwrap_or_default()}], "tests": tests,
+                "score": score,
+            }));
+    }
     let doc = document::validate(serde_json::json!({
         "title": format!("{}（副本）", batch.title),
         "read_only": batch.read_only,
-        "source_ref": batch.source_ref.filter(|r| !r.is_empty()),
+        "source_ref": batch.source_ref.filter(|r| !r.is_empty() && !r.starts_with("library:")),
+        "allowed_languages": batch.allowed_languages.join(","),
         "problems": problems,
     }))?;
-    Ok(ok(authoring::create_draft(&s.db, off.offering_id, &who.user, doc, Origin::Teacher).await?))
+    Ok(ok(authoring::create_library_draft(&s.db, &who.user, doc, Origin::Teacher).await?))
 }
 
 #[derive(Deserialize, TS)]
@@ -505,6 +539,7 @@ struct ExportProblem {
     statement: String,
     samples: Vec<ExportCase>,
     seq: usize,
+    score: f64,
 }
 
 /// 公开导出（HOA 仓库）的白名单文档：只含题面与样例，结构上不可能带出隐藏测试或代码。
@@ -544,12 +579,13 @@ async fn export(State(s): State<AppState>, who: Identity, Path(bid): Path<u32>, 
             .into_iter()
             .filter(|p| body.selected.contains(&p.0))
             .enumerate()
-            .map(|(i, (pid, title, desc, si, so))| ExportProblem {
+            .map(|(i, (pid, title, desc, si, so, score))| ExportProblem {
                 slug: format!("problem-{pid}"),
                 title,
                 statement: desc.unwrap_or_default(),
                 samples: vec![ExportCase { input: si.unwrap_or_default(), output: so.unwrap_or_default() }],
                 seq: i + 1,
+                score,
             })
             .collect(),
     };

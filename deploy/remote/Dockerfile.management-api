@@ -1,0 +1,14 @@
+ARG BUILDER_IMAGE=rust:1.99-bookworm
+FROM ${BUILDER_IMAGE} AS build
+RUN apt-get update && apt-get install -y --no-install-recommends libmariadb-dev pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+WORKDIR /src
+COPY teacher-management/backend /src
+ENV CARGO_BUILD_JOBS=4
+RUN cargo build --locked --release --bin grader-backend
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates libmariadb3 curl tzdata \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /src/target/release/grader-backend /usr/local/bin/grader-backend
+ENV TZ=Asia/Shanghai
+ENTRYPOINT ["grader-backend"]

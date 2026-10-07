@@ -77,7 +77,7 @@ pub async fn ensure_batch(db: &MySqlPool, oid: u32, title: &str, key: &str, opts
 }
 
 /// 题面/样例/hint 每次按草稿重写；新题先以 defunct='Y' 建出，统一放开。
-async fn sync_problem(state: &AppState, key: &str, p: &Problem) -> AppResult<i32> {
+pub(crate) async fn sync_problem(state: &AppState, key: &str, p: &Problem) -> AppResult<i32> {
     let source = format!("codemind:authoring/{key}/{}", p.slug);
     let knowledge = p.knowledge.join("、");
     let sample = &p.samples[0];
@@ -107,6 +107,15 @@ async fn sync_problem(state: &AppState, key: &str, p: &Problem) -> AppResult<i32
 }
 
 pub async fn publish(state: &AppState, oid: u32, key: &str, doc: &Document, opts: &PublishOptions) -> AppResult<u32> {
+    with_lock(&state.db, &format!("hoj:offering:{oid}"), async {
+        let status = sqlx::query_scalar::<_, String>("SELECT status FROM cm_offering WHERE offering_id=?")
+            .bind(oid).fetch_optional(&state.db).await?;
+        if status.as_deref() != Some("active") { return Err(AppError::conflict("教学班已删除或关闭，不能发布")); }
+        publish_locked(state,oid,key,doc,opts).await
+    }).await
+}
+
+async fn publish_locked(state: &AppState, oid: u32, key: &str, doc: &Document, opts: &PublishOptions) -> AppResult<u32> {
     let bid = ensure_batch(&state.db, oid, &doc.title, key, opts).await?;
     let mut pids = Vec::with_capacity(doc.problems.len());
     for p in &doc.problems {
@@ -123,10 +132,19 @@ pub async fn publish(state: &AppState, oid: u32, key: &str, doc: &Document, opts
 
     // 关联整体重建：(batch_id,seq) 与 (batch_id,problem_id) 均唯一，增量 upsert 在“换题不换序号”时会失败。
     let mut tx = state.db.begin().await?;
+    let status = sqlx::query_scalar::<_, String>("SELECT status FROM cm_offering WHERE offering_id=? FOR UPDATE")
+        .bind(oid).fetch_optional(&mut *tx).await?;
+    if status.as_deref() != Some("active") {
+        return Err(AppError::conflict("教学班已关闭，不能继续发布"));
+    }
+    if sqlx::query_scalar::<_, String>("SELECT draft_id FROM cm_authoring_draft WHERE draft_id=? FOR UPDATE")
+        .bind(key).fetch_optional(&mut *tx).await?.is_none() {
+        return Err(AppError::not_found("题单已删除，不能继续发布"));
+    }
     sqlx::query!("DELETE FROM cm_batch_problem WHERE batch_id=?", bid).execute(&mut *tx).await?;
     let mut insert = sqlx::QueryBuilder::new("INSERT INTO cm_batch_problem(batch_id,problem_id,seq,score,created_at,updated_at) ");
     insert.push_values(pids.iter().enumerate(), |mut b, (i, pid)| {
-        b.push_bind(bid).push_bind(pid).push_bind(i as u32 + 1).push("100,NOW(),NOW()");
+        b.push_bind(bid).push_bind(pid).push_bind(i as u32 + 1).push_bind(doc.problems[i].score).push("NOW()").push("NOW()");
     });
     insert.build().execute(&mut *tx).await?;
     sqlx::query!(
@@ -170,7 +188,7 @@ impl Origin {
 #[ts(export)]
 pub struct Draft {
     pub draft_id: String,
-    pub offering_id: u32,
+    pub offering_id: Option<u32>,
     pub owner_id: String,
     pub title: String,
     pub status: String,
@@ -200,15 +218,15 @@ pub async fn insert_draft(db: &MySqlPool, oid: u32, owner: &str, doc: &Document,
 
 /// 读草稿并校验：须为该草稿所属教学班的教师。
 pub async fn get_draft(db: &MySqlPool, who: &Identity, id: &str, write: bool) -> AppResult<Draft> {
-    let row = sqlx::query!(
-        "SELECT draft_id,offering_id,owner_id,title,payload,status,origin,batch_id,updated_at FROM cm_authoring_draft WHERE draft_id=?",
-        id
-    )
+    #[derive(sqlx::FromRow)]
+    struct Row { draft_id:String,offering_id:Option<u32>,owner_id:String,title:String,payload:String,status:String,origin:String,batch_id:Option<u32>,updated_at:NaiveDateTime }
+    let row = sqlx::query_as::<_,Row>("SELECT draft_id,offering_id,owner_id,title,payload,status,origin,batch_id,updated_at FROM cm_authoring_draft WHERE draft_id=?").bind(id)
     .fetch_optional(db)
     .await?
     .ok_or_else(|| AppError::not_found("草稿不存在"))?;
     let need = if write { crate::access::Need::TEACH_WRITE } else { crate::access::Need::TEACH };
-    crate::access::offering_access(db, who, row.offering_id, need).await?;
+    if let Some(oid) = row.offering_id { crate::access::offering_access(db, who, oid, need).await?; }
+    else { crate::access::require_teacher(db,who).await?; if row.owner_id != who.user && !who.is_admin() { return Err(AppError::forbidden("只能访问自己的个人题库")); } }
     let document = serde_json::from_str(&row.payload).map_err(|e| AppError::internal(format!("draft payload: {e}")))?;
     Ok(Draft {
         draft_id: row.draft_id,
@@ -237,14 +255,30 @@ pub async fn create_draft(db: &MySqlPool, oid: u32, owner: &str, doc: Document, 
     Ok(DraftCreated { id, status: "draft", document: doc })
 }
 
+pub async fn create_library_draft(db:&MySqlPool,owner:&str,doc:Document,origin:Origin)->AppResult<DraftCreated>{
+    let id=new_draft_id();let payload=serde_json::to_string(&doc).map_err(|e|AppError::internal(e.to_string()))?;
+    sqlx::query("INSERT INTO cm_authoring_draft(draft_id,offering_id,owner_id,title,payload,status,origin,updated_at) VALUES(?,NULL,?,?,?,'draft',?,NOW())")
+        .bind(&id).bind(owner).bind(&doc.title).bind(payload).bind(origin.as_str()).execute(db).await?;
+    Ok(DraftCreated{id,status:"draft",document:doc})
+}
+
 /// 以 MySQL 命名锁串行化一段逻辑（跨进程有效，替代旧版进程内 MUTEX）。
 /// 命名锁绑定会话：持锁连接在整个过程中独占，结束后显式释放。
 pub async fn with_lock<T>(db: &MySqlPool, name: &str, work: impl std::future::Future<Output = AppResult<T>>) -> AppResult<T> {
-    let mut conn = db.acquire().await?;
-    let got: Option<i32> = sqlx::query_scalar!("SELECT GET_LOCK(?, 30)", name).fetch_one(&mut *conn).await?;
-    if got != Some(1) {
-        return Err(AppError::conflict("操作正在进行中，请稍后重试"));
-    }
+    // Wait without occupying a pooled connection; submit bursts must not starve
+    // the holder's own queries while awaiting an offering or problem lock.
+    let deadline = tokio::time::Instant::now() + std::time::Duration::from_secs(30);
+    let mut conn = loop {
+        let mut attempt = db.acquire().await?;
+        let got = sqlx::query_scalar::<_, Option<i32>>("SELECT GET_LOCK(?,0)").bind(name).fetch_one(&mut *attempt).await?;
+        if got == Some(1) { break attempt; }
+        drop(attempt);
+        if tokio::time::Instant::now() >= deadline { return Err(AppError::conflict("操作正在进行，请稍后重试")); }
+        tokio::time::sleep(std::time::Duration::from_millis(30)).await;
+    };
+    // A cancelled request must close its MySQL session rather than return a
+    // connection still holding a named lock to the pool.
+    conn.close_on_drop();
     let result = work.await;
     if sqlx::query!("DO RELEASE_LOCK(?)", name).execute(&mut *conn).await.is_err() {
         // 释放失败时丢弃连接，避免把持锁会话还回连接池。

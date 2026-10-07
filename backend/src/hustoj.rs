@@ -60,6 +60,13 @@ pub fn language_name(id: u32) -> &'static str {
     NAMES.get(id as usize).copied().unwrap_or("其他")
 }
 
+pub fn require_supported_language(state: &AppState, language: &str) -> AppResult<()> {
+    if !state.cfg.supported_languages.iter().any(|key| key == language) {
+        return Err(AppError::validation("服务器尚未启用该编程语言，请选择已启用的语言"));
+    }
+    Ok(())
+}
+
 /// 逗号分隔的语言串 → 合法语言键列表（保序、去非法项）。
 pub fn parse_languages(raw: &str) -> Vec<String> {
     raw.split(',').map(|s| s.trim().to_lowercase()).filter(|s| language_id(s).is_some()).collect()
@@ -98,6 +105,10 @@ pub async fn insert_submission(
     code: &str,
     link: Option<CourseLink>,
 ) -> AppResult<u32> {
+    crate::authoring::with_lock(db, &format!("hoj:problem:{problem_id}"), async {
+        let valid = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM jol.problem WHERE problem_id=? AND defunct='N'")
+            .bind(problem_id).fetch_one(db).await?;
+        if valid == 0 { return Err(AppError::not_found("题目已删除或不可提交")); }
     let len = code.len() as i64;
     let sid = sqlx::query!(
         "INSERT INTO jol.solution(problem_id,user_id,language,in_date,result,code_length,ip) VALUES(?,?,?,NOW(),14,?,'127.0.0.1')",
@@ -126,6 +137,7 @@ pub async fn insert_submission(
             .await?;
     }
     Ok(sid)
+    }).await
 }
 
 /// 自测：HUSTOJ 约定 problem_id=0 为自定义输入运行，不进入 cm_submission，不影响任何统计。
@@ -192,6 +204,60 @@ pub async fn write_test_files(state: &AppState, pid: i32, tests: &[TestCase<'_>]
     }
 }
 
+/// Teacher-only callers read the deployed cases; public export never uses this helper.
+pub async fn read_test_files(state: &AppState, pid: i32) -> AppResult<Vec<crate::document::Case>> {
+    let failed = || AppError::unavailable("无法完整读取隐藏测试，未创建副本，请检查判题数据目录");
+    if let Some(root) = &state.cfg.judge_data_dir {
+        return read_local_cases(&root.join(pid.to_string())).await.map_err(|_| failed());
+    }
+    let script = r#"import json, pathlib, stat, sys
+d = pathlib.Path('/home/judge/data') / sys.argv[1]
+files = sorted(d.glob('*.in'), key=lambda p: (len(p.stem), p.stem))
+if len(files) > 100: raise ValueError('too many cases')
+cases = []
+for p in files:
+    q = p.with_suffix('.out')
+    for f in (p, q):
+        m = f.lstat()
+        if not stat.S_ISREG(m.st_mode) or m.st_size > 1048576: raise ValueError('invalid case file')
+    cases.append({'input':p.read_text(), 'output':q.read_text()})
+if not d.is_dir(): raise ValueError('missing judge directory')
+print(json.dumps(cases))"#;
+    let output = tokio::time::timeout(std::time::Duration::from_secs(10),
+        tokio::process::Command::new("docker")
+            .args(["exec", &state.cfg.hustoj_container, "python3", "-c", script, &pid.to_string()])
+            .output()).await.map_err(|_| failed())?.map_err(|_| failed())?;
+    if !output.status.success() { return Err(failed()); }
+    serde_json::from_slice(&output.stdout).map_err(|_| failed())
+}
+
+async fn read_local_cases(dir: &std::path::Path) -> std::io::Result<Vec<crate::document::Case>> {
+    let mut entries = tokio::fs::read_dir(dir).await?;
+    let mut names = Vec::new();
+    while let Some(entry) = entries.next_entry().await? {
+        let name = entry.file_name().to_string_lossy().into_owned();
+        if name.ends_with(".in") { names.push(name); }
+    }
+    names.sort_by(|a, b| a.len().cmp(&b.len()).then_with(|| a.cmp(b)));
+    if names.len() > 100 { return Err(std::io::Error::other("too many cases")); }
+    let mut cases = Vec::new();
+    for name in names {
+        let input = dir.join(&name);
+        let output = input.with_extension("out");
+        for path in [&input, &output] {
+            let meta = tokio::fs::symlink_metadata(path).await?;
+            if !meta.is_file() || meta.len() > 1_048_576 {
+                return Err(std::io::Error::other("invalid case file"));
+            }
+        }
+        cases.push(crate::document::Case {
+            input: tokio::fs::read_to_string(input).await?,
+            output: tokio::fs::read_to_string(output).await?,
+        });
+    }
+    Ok(cases)
+}
+
 fn is_numbered_case(name: &str) -> bool {
     let Some((stem, ext)) = name.rsplit_once('.') else { return false };
     !stem.is_empty() && stem.bytes().all(|b| b.is_ascii_digit()) && matches!(ext, "in" | "out")
@@ -252,6 +318,23 @@ mod tests {
     fn numbered_case_matcher() {
         assert!(is_numbered_case("1.in") && is_numbered_case("12.out"));
         assert!(!is_numbered_case("a.in") && !is_numbered_case(".in") && !is_numbered_case("1.ans"));
+    }
+
+    #[tokio::test]
+    async fn copy_reads_all_deployed_cases_and_rejects_missing_outputs() {
+        let dir = std::env::temp_dir().join(format!("hoj-copy-cases-{}", uuid::Uuid::new_v4()));
+        tokio::fs::create_dir(&dir).await.unwrap();
+        let tests = [TestCase { input: "-2 5\n", output: "3\n" },
+            TestCase { input: "0 0\n", output: "0\n" },
+            TestCase { input: "1000000 1000000\n", output: "2000000\n" }];
+        write_local(&dir, &tests).await.unwrap();
+        let cases = read_local_cases(&dir).await.unwrap();
+        assert_eq!(cases.len(), 3);
+        assert_eq!(cases[0].input, tests[0].input);
+        assert_eq!(cases[2].output, tests[2].output);
+        tokio::fs::remove_file(dir.join("2.out")).await.unwrap();
+        assert!(read_local_cases(&dir).await.is_err());
+        tokio::fs::remove_dir_all(dir).await.unwrap();
     }
 
     #[test]

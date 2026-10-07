@@ -1,0 +1,128 @@
+name: hoj
+x-common: &common
+  network_mode: host
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options: {max-size: "50m", max-file: "3"}
+services:
+  db:
+    <<: *common
+    image: mariadb:11.8
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      TZ: Asia/Shanghai
+    command: ["--port=13306", "--bind-address=127.0.0.1", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_general_ci", "--character-set-collations=utf8mb4=utf8mb4_general_ci", "--max-connections=300"]
+    volumes:
+      - ../../data/mysql:/var/lib/mysql
+      - ../../init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+  core:
+    <<: *common
+    image: hoj-core:amd64
+    privileged: true
+    environment:
+      JUDGE_DB_PASSWORD: ${JUDGE_DB_PASSWORD}
+      HOJ_ALLOWED_ORIGINS: ${HOJ_ORIGINS}
+      TZ: Asia/Shanghai
+    volumes:
+      - ../../data/judge:/home/judge/data
+      - ../../data/judge-log:/home/judge/log
+    depends_on:
+      db: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x judged && code=$$(curl -sS -o /dev/null -w '%{http_code}' 'http://127.0.0.1:8080/course.php?mode=session') && { [ \"$$code\" = 200 ] || [ \"$$code\" = 401 ]; }"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+  api:
+    <<: *common
+    image: hoj-api:amd64
+    ulimits:
+      nofile: {soft: 65536, hard: 65536}
+    environment:
+      COURSE_DATABASE_URL: mysql://codemind:${COURSE_DB_PASSWORD}@127.0.0.1:13306/codemind_course?timezone=%2B08:00
+      COURSE_OPS_DATABASE_URL: mysql://codemind_ops:${COURSE_OPS_PASSWORD}@127.0.0.1:13306/codemind_course?timezone=%2B08:00
+      COURSE_BIND: 127.0.0.1:8100
+      COURSE_ALLOWED_ORIGINS: ${HOJ_ORIGINS}
+      COURSE_DEV_LOGIN: "0"
+      COURSE_DB_MAX_CONNECTIONS: "32"
+      COURSE_JUDGE_DATA_DIR: /home/judge/data
+      COURSE_HUSTOJ_SESSION_URL: http://127.0.0.1:8080/course.php?mode=session
+      COURSE_AI_URL: ${COURSE_AI_URL:-}
+      COURSE_AI_MODEL: ${COURSE_AI_MODEL:-}
+      COURSE_AI_KEY: ${COURSE_AI_KEY:-}
+      COURSE_AI_TIMEOUT: ${COURSE_AI_TIMEOUT:-30}
+      COURSE_AI_PROXY: ${COURSE_AI_PROXY:-}
+      COURSE_SUPPORTED_LANGUAGES: c,cpp,python
+    volumes:
+      - ../../data/judge:/home/judge/data
+      - ../../data/course-local:/app/backend/data/local
+    depends_on:
+      core: {condition: service_started}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8100/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  storage:
+    <<: *common
+    image: hoj-storage:amd64
+    command: ["server", "/data", "--address", ":9002", "--console-address", "127.0.0.1:9003"]
+    environment:
+      MINIO_ROOT_USER: hoj-storage
+      MINIO_ROOT_PASSWORD: ${STORAGE_PASSWORD}
+    volumes:
+      - ../../data/objects:/data
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9002/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+  management-api:
+    <<: *common
+    image: hoj-management-api:amd64
+    ulimits:
+      nofile: {soft: 65536, hard: 65536}
+    environment:
+      DATABASE_URL: mysql://grader:${MANAGEMENT_DB_PASSWORD}@127.0.0.1:13306/grader
+      BIND: 127.0.0.1:8101
+      HOJ_API_URL: http://127.0.0.1:8100
+      SESSION_SECRET_KEY: ${SESSION_SECRET_KEY}
+      COOKIE_SECURE: "false"
+      DATABASE_MAX_CONNECTIONS: "32"
+      CORS_ORIGINS: ${HOJ_ORIGINS}
+      S3_PUBLIC_URL: ${PUBLIC_STORAGE_URL}
+      S3_INTERNAL_URL: http://127.0.0.1:9002
+      S3_BUCKET_NAME: grader-uploads
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: hoj-storage
+      AWS_SECRET_ACCESS_KEY: ${STORAGE_PASSWORD}
+    depends_on:
+      db: {condition: service_healthy}
+      storage: {condition: service_healthy}
+      api: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8101/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+  management-web:
+    <<: *common
+    image: hoj-management-web:amd64
+  web:
+    <<: *common
+    image: hoj-web:amd64
+    depends_on:
+      api: {condition: service_healthy}
+      management-web: {condition: service_started}
+      management-api: {condition: service_started}
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3100/management/login',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 20

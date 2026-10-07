@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import {useSearchParams} from "next/navigation";
+import {useLibraryBasket} from "./LibraryBasket";
 import { useEffect, useState } from "react";
 import { Badge, Button, Card, CardTitle, Empty, Stat } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -18,12 +20,17 @@ const AVAILABLE_LANGUAGES = [
   { id: "python", label: "Python 3" },
 ];
 
-export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "student" | null; user?: string }) {
+export function TeacherLibraryView({ portal, user, questionsOnly=false }: { portal: "teacher" | "student" | null; user?: string; questionsOnly?: boolean }) {
+  const params=useSearchParams();const selectedOid=Number(params.get('oid'));const basketState=useLibraryBasket();
+  const editorUrl=(id:string)=>`/programming/drafts/${id}?library=1${questionsOnly?'&return=questions':''}${selectedOid>0?`&oid=${selectedOid}`:''}`;
+  function addProblem(p:ProblemItem){if(!basketState)return;const setId=`draft:${p.draft_id}`;const exists=basketState.basket.some(x=>x.setId===setId&&x.slug===p.slug);if(!exists&&basketState.basket.length>=100){setError('选题篮最多 100 道题');return;}basketState.setBasket(xs=>exists?xs.filter(x=>x.setId!==setId||x.slug!==p.slug):[...xs,{setId,setName:p.draft_title,slug:p.slug,title:p.title,difficulty:p.difficulty,knowledge:p.knowledge,statement:p.statement}]);}
+  function addSet(item:SetItem){if(!basketState)return;const extra=item.problems.filter(p=>!basketState.basket.some(x=>x.setId===`draft:${p.draft_id}`&&x.slug===p.slug));if(basketState.basket.length+extra.length>100){setError('选题篮最多 100 道题');return;}basketState.setBasket(xs=>[...xs,...extra.map(p=>({setId:`draft:${p.draft_id}`,setName:p.draft_title,slug:p.slug,title:p.title,difficulty:p.difficulty,knowledge:p.knowledge,statement:p.statement}))]);}
   const [data, setData] = useState<Library | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const [activeTab, setActiveTab] = useState<"sets" | "problems" | "ai" | "import">("sets");
+  const [activeTab, setActiveTab] = useState<"sets" | "problems" | "import">(questionsOnly?"problems":"sets");
+  useEffect(()=>{const tab=params.get("tab");if(tab==="create"||tab==="ai"){setActiveTab(questionsOnly?"problems":"sets");setShowNewSetModal(true);}else if(tab==="import")setActiveTab("import");else setActiveTab(questionsOnly?"problems":"sets");},[params,questionsOnly]);
   const [searchFilter, setSearchFilter] = useState("");
   const [originFilter, setOriginFilter] = useState<"ALL" | "teacher" | "ai">("ALL");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "draft" | "published">("ALL");
@@ -40,14 +47,11 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
   const [deployDraft, setDeployDraft] = useState<SetItem | null>(null);
   const [selectedOfferingIds, setSelectedOfferingIds] = useState<number[]>([]);
   const [deployDueDate, setDeployDueDate] = useState("");
-  const [deployAiEnabled, setDeployAiEnabled] = useState(true);
+  const [deployAiEnabled, setDeployAiEnabled] = useState(false);
   const [deployAllowedLanguages, setDeployAllowedLanguages] = useState<string[]>(["c", "cpp", "java", "python"]);
+  const [reviewedDeploy,setReviewedDeploy]=useState(false);
   const [deploying, setDeploying] = useState(false);
   const [deployResult, setDeployResult] = useState<DeployResponse | null>(null);
-
-  // In-page AI Generator state
-  const [aiTopic, setAiTopic] = useState("");
-  const [aiBusy, setAiBusy] = useState(false);
 
   // In-page Import state
   const [importContent, setImportContent] = useState("");
@@ -83,29 +87,11 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
       setShowNewSetModal(false);
       setNewSetTitle("");
       loadLibrary();
-      window.location.href = `/teacher/drafts/${res.id}`;
+      window.location.href = editorUrl(res.id);
     } catch (e) {
       setError(String(e).split("|").pop() || "创建题单失败");
     } finally {
       setCreatingSet(false);
-    }
-  };
-
-  const handleCreateAiSet = async () => {
-    if (!aiTopic.trim()) return;
-    setAiBusy(true);
-    setError("");
-    try {
-      const res = await api<DraftCreated>("/teacher/library/sets", "POST", {
-        topic: aiTopic.trim(),
-      });
-      setAiTopic("");
-      loadLibrary();
-      window.location.href = `/teacher/drafts/${res.id}`;
-    } catch (e) {
-      setError(String(e).split("|").pop() || "AI 出题失败");
-    } finally {
-      setAiBusy(false);
     }
   };
 
@@ -119,7 +105,7 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
       });
       setImportContent("");
       loadLibrary();
-      window.location.href = `/teacher/drafts/${res.id}`;
+      window.location.href = editorUrl(res.id);
     } catch (e) {
       setError(String(e).split("|").pop() || "导入题单失败");
     } finally {
@@ -128,10 +114,11 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
   };
 
   const handleDeleteDraft = async (draftId: string, title: string) => {
-    if (!window.confirm(`确定要从个人题库中删除题单「${title}」吗？`)) return;
+    if (!window.confirm(`确定从个人题库中删除题单「${title}」吗？通过此题单发布的课程作业、学生提交和成绩也会实际删除，无法在页面中恢复。`)) return;
     try {
       await api(`/drafts/${draftId}`, "DELETE");
       setActionMsg(`已成功删除题单「${title}」`);
+      basketState?.setBasket(xs=>xs.filter(x=>x.setId!==`draft:${draftId}`));
       loadLibrary();
       setTimeout(() => setActionMsg(""), 3000);
     } catch (e) {
@@ -140,10 +127,11 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
   };
 
   const openDeployModal = (item: SetItem) => {
-    setDeployDraft(item);
+    setDeployDraft(item);setReviewedDeploy(false);
     setDeployResult(null);
     if (data?.offerings && data.offerings.length > 0) {
-      if (item.offering_id && data.offerings.some((o) => o.offering_id === item.offering_id)) {
+      if (selectedOid>0 && data.offerings.some(o=>o.offering_id===selectedOid)) {setSelectedOfferingIds([selectedOid]);}
+      else if (item.offering_id && data.offerings.some((o) => o.offering_id === item.offering_id)) {
         setSelectedOfferingIds([item.offering_id]);
       } else {
         setSelectedOfferingIds([data.offerings[0].offering_id]);
@@ -152,12 +140,13 @@ export function TeacherLibraryView({ portal, user }: { portal: "teacher" | "stud
   };
 
   const handleDeploy = async () => {
-    if (!deployDraft || selectedOfferingIds.length === 0) return;
+    if (!deployDraft || selectedOfferingIds.length === 0 || !reviewedDeploy) return;
     setDeploying(true);
     setError("");
     try {
       const res = await api<DeployResponse>("/teacher/library/deploy", "POST", {
         draft_id: deployDraft.draft_id,
+        reviewed: reviewedDeploy,
         offering_ids: selectedOfferingIds,
         due_at: deployDueDate || undefined,
         ai_enabled: deployAiEnabled,
@@ -210,7 +199,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
 
   const filteredSets = sets.filter((s) => {
     if (originFilter !== "ALL" && s.origin !== originFilter) return false;
-    if (statusFilter !== "ALL" && s.status !== statusFilter) return false;
+    if (statusFilter !== "ALL" && (s.assignment_count>0?"published":"draft") !== statusFilter) return false;
     if (searchFilter.trim()) {
       const q = searchFilter.toLowerCase();
       const inTitle = s.title.toLowerCase().includes(q);
@@ -236,48 +225,11 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
 
   return (
     <div className="space-y-6">
-      {/* Header Banner */}
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="rounded bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand">
-              TEACHER QUESTION BANK & PROBLEM SETS
-            </span>
-            <span className="text-meta text-fg-muted">教师个人沉淀 · 独立于学期 · 一键跨班分发</span>
-          </div>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-fg">我的题库与题单</h1>
-          <p className="mt-2 text-sm text-fg-muted leading-relaxed max-w-3xl">
-            教师专属的题目资产中心。无论是自编题目、AI 辅助出题还是外部导入的试题，均永久沉淀于此。支持随时在线修改测试点，并可一键批量布置到当前任课教学班。
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="primary" onClick={() => setShowNewSetModal(true)}>
-            ✏️ 新建题单
-          </Button>
-          <Button variant="secondary" onClick={() => setActiveTab("ai")}>
-            🤖 AI 出题
-          </Button>
-          <Button variant="secondary" onClick={() => setActiveTab("import")}>
-            📂 导入题单
-          </Button>
-          <Link
-            href="/teacher/categories"
-            className="rounded-control border border-line bg-surface px-3 py-1.5 text-meta font-medium text-fg hover:bg-surface-muted transition"
-          >
-            🌲 公共算法题库 →
-          </Link>
-        </div>
-      </header>
-
-      {/* Stats Cards */}
-      <div className="grid gap-stack grid-cols-2 lg:grid-cols-4">
-        <Stat label="我的题单总数" value={stats.total_sets} unit="份" tone="brand" />
-        <Stat label="自建/沉淀题目" value={stats.total_problems} unit="道" tone="ok" />
-        <Stat label="AI 辅助生成" value={stats.ai_sets} unit="份" tone="warn" />
-        <Stat label="已发布至班级" value={stats.published_sets} unit="份" tone="neutral" />
-      </div>
-
+      {!questionsOnly&&<header className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
+        <div><h1 className="text-3xl font-semibold">我的题单</h1>{selectedOid>0&&<a className="text-brand" href={`/courses/${selectedOid}`}>← 返回当前课程</a>}<p className="mt-2 text-sm text-fg-muted">查看和修改已经组好的题单，选择课程布置为作业。选题、出题和导入都在题库完成。</p></div>
+        <Link href={`/library?view=public&source=mine${selectedOid>0?`&oid=${selectedOid}`:''}`} className="rounded-control bg-brand px-4 py-2 text-brand-fg">去题库选题 / 出题 →</Link>
+      </header>}
+      {!questionsOnly&&<div className="grid gap-stack grid-cols-2"><Stat label="我的题单总数" value={stats.total_sets} unit="份" tone="brand"/><Stat label="已发布至班级" value={stats.published_sets} unit="份"/></div>}
       {actionMsg && (
         <div role="status" className="p-3 bg-brand/10 border border-brand/30 rounded-control text-brand text-sm">
           {actionMsg}
@@ -289,49 +241,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
         </div>
       )}
 
-      {/* Navigation Tabs */}
-      <div className="border-b border-line flex flex-wrap gap-1 text-meta">
-        <button
-          type="button"
-          className={`px-4 py-2.5 font-medium border-b-2 transition flex items-center gap-2 ${
-            activeTab === "sets" ? "border-brand text-brand font-semibold" : "border-transparent text-fg-muted hover:text-fg"
-          }`}
-          onClick={() => setActiveTab("sets")}
-        >
-          <span>📁 我的题单库</span>
-          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-mono">{sets.length}</span>
-        </button>
-        <button
-          type="button"
-          className={`px-4 py-2.5 font-medium border-b-2 transition flex items-center gap-2 ${
-            activeTab === "problems" ? "border-brand text-brand font-semibold" : "border-transparent text-fg-muted hover:text-fg"
-          }`}
-          onClick={() => setActiveTab("problems")}
-        >
-          <span>📝 我的题目总览</span>
-          <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs font-mono">{problems.length}</span>
-        </button>
-        <button
-          type="button"
-          className={`px-4 py-2.5 font-medium border-b-2 transition flex items-center gap-2 ${
-            activeTab === "ai" ? "border-brand text-brand font-semibold bg-brand/5" : "border-transparent text-fg-muted hover:text-fg"
-          }`}
-          onClick={() => setActiveTab("ai")}
-        >
-          <span>🤖 AI 智能辅助出题</span>
-          <span className="rounded-full bg-brand/10 text-brand px-1.5 py-0.2 text-[11px] font-semibold">DeepSeek</span>
-        </button>
-        <button
-          type="button"
-          className={`px-4 py-2.5 font-medium border-b-2 transition flex items-center gap-2 ${
-            activeTab === "import" ? "border-brand text-brand font-semibold" : "border-transparent text-fg-muted hover:text-fg"
-          }`}
-          onClick={() => setActiveTab("import")}
-        >
-          <span>📂 导入题单文件</span>
-        </button>
-      </div>
-
+      {questionsOnly&&activeTab==='import'&&<Button variant="secondary" onClick={()=>setActiveTab('problems')}>← 返回我出的题</Button>}
       {/* Tab 1: Sets List */}
       {activeTab === "sets" && (
         <div className="space-y-4">
@@ -371,7 +281,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                     }`}
                     onClick={() => setStatusFilter(st)}
                   >
-                    {st === "ALL" ? "全部" : st === "draft" ? "草稿" : "已发布"}
+                    {st === "ALL" ? "全部" : st === "draft" ? "未布置" : "已布置"}
                   </button>
                 ))}
               </div>
@@ -384,15 +294,11 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
             <Card>
               <Empty
                 title="还没有符合条件的题单"
-                hint="您可以使用 AI 辅助出题、导入外部 YAML/JSON/XML 文件，或点击上方「新建题单」开始创作。"
+                hint="到题库选择自己的题和公开题目，组合成题单。"
               />
               <div className="mt-4 flex justify-center gap-3">
-                <Button variant="primary" onClick={() => setActiveTab("ai")}>
-                  🤖 体验 AI 出题
-                </Button>
-                <Button variant="secondary" onClick={() => setActiveTab("import")}>
-                  📂 导入题单文件
-                </Button>
+                <Link className="text-brand" href={`/library?view=public&source=mine${selectedOid>0?`&oid=${selectedOid}`:''}`}>去题库选题 / 出题 →</Link>
+                <Link className="text-brand" href={`/library?view=public&source=mine&tab=import${selectedOid>0?`&oid=${selectedOid}`:''}`}>📂 导入题目</Link>
               </div>
             </Card>
           ) : (
@@ -408,8 +314,8 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                           <Badge tone={item.origin === "ai" ? "brand" : "neutral"}>
                             {item.origin === "ai" ? "🤖 AI 生成" : "✏️ 教师自编"}
                           </Badge>
-                          <Badge tone={item.status === "published" ? "ok" : "warn"}>
-                            {item.status === "published" ? "已发布到班级" : "未发布草稿"}
+                          <Badge tone={item.assignment_count > 0 ? "ok" : "warn"}>
+                            {item.assignment_count > 0 ? `已布置 ${item.assignment_count} 次` : "未布置"}
                           </Badge>
                           <span className="rounded-control bg-surface-muted px-2 py-0.5 text-xs text-fg font-mono">
                             {item.count} 道题目
@@ -423,8 +329,9 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                       </div>
 
                       <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="secondary" onClick={()=>addSet(item)}>全部加入选题篮</Button>
                         <Link
-                          href={`/teacher/drafts/${item.draft_id}`}
+                          href={editorUrl(item.draft_id)}
                           className="px-3 py-1.5 rounded-control border border-brand/40 bg-brand/5 text-xs font-semibold text-brand hover:bg-brand/10 transition"
                         >
                           📝 查看/修改试题
@@ -463,6 +370,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                               className="flex flex-wrap items-center justify-between gap-2 py-1.5 border-b border-line/40 last:border-0 text-xs"
                             >
                               <div className="flex items-center gap-2">
+                                <input aria-label={`加入选题篮 ${p.title}`} type="checkbox" checked={!!basketState?.basket.some(x=>x.setId===`draft:${p.draft_id}`&&x.slug===p.slug)} onChange={()=>addProblem(p)}/>
                                 <span className="font-mono text-fg-muted">#{idx + 1}</span>
                                 <span className="font-medium text-fg">{p.title}</span>
                                 <span className="font-mono text-fg-muted text-[11px]">({p.slug})</span>
@@ -493,10 +401,11 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
       {/* Tab 2: Individual Problems Repository */}
       {activeTab === "problems" && (
         <div className="space-y-4">
+          <h2 className="text-xl font-semibold">我出的题</h2>
           <div className="flex flex-wrap items-center justify-between gap-3 bg-surface p-3.5 rounded-control border border-line shadow-sm">
             <input
               type="text"
-              placeholder="🔍 检索题目名称、标识 (slug)、题面描述或知识点…"
+              aria-label="搜索我出的题" placeholder="搜索题目名称、题面或知识点…"
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
               className="rounded-control border border-line bg-surface px-3 py-1.5 text-sm text-fg w-80 focus:outline-none focus:ring-2 focus:ring-brand"
@@ -506,7 +415,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
 
           {filteredProblems.length === 0 ? (
             <Card>
-              <Empty title="暂未找到符合条件的题目" hint="在「我的题单」中新建或生成试题后，题目会自动汇聚在此处。" />
+              <Empty title="暂未找到符合条件的题目" hint="点击上方「去出题」自己编写或让 AI 搭框架；保存后会显示在这里，也可导入已有题目。" />
             </Card>
           ) : (
             <div className="grid gap-3">
@@ -519,7 +428,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <h3 className="text-base font-semibold text-fg">{prob.title}</h3>
-                          <span className="font-mono text-xs text-fg-muted">slug: {prob.slug}</span>
+                          
                           <Badge tone={prob.origin === "ai" ? "brand" : "neutral"}>
                             {prob.origin === "ai" ? "AI 题目" : "自编题目"}
                           </Badge>
@@ -531,7 +440,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                         </div>
                         <p className="text-xs text-fg-muted">
                           所属题单:{" "}
-                          <Link href={`/teacher/drafts/${prob.draft_id}`} className="text-brand hover:underline font-medium">
+                          <Link href={editorUrl(prob.draft_id)} className="text-brand hover:underline font-medium">
                             {prob.draft_title}
                           </Link>{" "}
                           · 公开样例 {prob.samples_count} 组 · 隐藏测试点 {prob.tests_count} 组
@@ -539,6 +448,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                       </div>
 
                       <div className="flex items-center gap-2">
+                        <Button onClick={()=>addProblem(prob)}>{basketState?.basket.some(x=>x.setId===`draft:${prob.draft_id}`&&x.slug===prob.slug)?"移出选题篮":"加入选题篮"}</Button>
                         <Button
                           variant="secondary"
                           onClick={() => setExpandedProblemKey(isExpanded ? null : pKey)}
@@ -546,7 +456,7 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
                           {isExpanded ? "▲ 收起题面" : "▼ 预览题面与样例"}
                         </Button>
                         <Link
-                          href={`/teacher/drafts/${prob.draft_id}`}
+                          href={editorUrl(prob.draft_id)}
                           className="px-3 py-1.5 rounded-control border border-line bg-surface hover:bg-surface-muted text-xs font-medium text-fg transition"
                         >
                           编辑题目 →
@@ -583,64 +493,6 @@ ${(p.samples || []).map((s) => `      - input: ${JSON.stringify(s.input)}\n     
             </div>
           )}
         </div>
-      )}
-
-      {/* Tab 3: AI Generator */}
-      {activeTab === "ai" && (
-        <Card className="border border-brand/30 shadow-sm space-y-4">
-          <div className="border-b border-line pb-3">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl font-semibold text-fg">🤖 AI 智能出题（直达个人题库）</h2>
-              <Badge tone="brand">DeepSeek 模型</Badge>
-            </div>
-            <p className="mt-1 text-sm text-fg-muted">
-              输入教学目标或生活应用题要求，AI 将自动构思题面、设计公开样例与隐藏边界评测点，并直接保存至您的「我的题单」中。
-            </p>
-          </div>
-
-          <div className="space-y-3">
-            <label className="block text-sm font-medium text-fg">
-              教学目标与题型要求 <span className="text-brand">*</span>
-              <textarea
-                className="mt-1.5 w-full rounded-control border border-line bg-surface p-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand min-h-36"
-                placeholder="例如：面向初学者，练习循环边界与条件分支，设计一道校园宿舍电费阶梯分摊题目，提供严谨边界测试。"
-                value={aiTopic}
-                onChange={(e) => setAiTopic(e.target.value)}
-                disabled={aiBusy}
-              />
-            </label>
-
-            <div>
-              <p className="text-xs text-fg-muted mb-2 font-medium">💡 点击快捷预设示例填入：</p>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  { label: "循环累加与统计", text: "面向初学者，练习循环边界与求和，结合校园生活场景，给出严谨边界。" },
-                  { label: "双指针回文串", text: "进阶字符串处理：双指针检测回文字符串并求最长回文子串，包含特殊字符测试。" },
-                  { label: "单向链表操作", text: "数据结构：单向链表的创建、插入、指定节点删除与就地反转，提供完整测试。" },
-                  { label: "校园阶梯计费", text: "应用题：根据阶梯电价计算总电费并按人头分摊，处理浮点精度四舍五入。" },
-                  { label: "二叉树深度遍历", text: "树结构：根据前序与中序序列还原二叉树，输出后序遍历与最大深度。" },
-                ].map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    className="text-xs px-2.5 py-1.5 rounded-control border border-line bg-surface hover:border-brand/40 hover:text-brand hover:bg-brand/5 text-fg-muted transition text-left"
-                    onClick={() => setAiTopic(preset.text)}
-                    disabled={aiBusy}
-                  >
-                    ✨ {preset.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-2 flex items-center gap-3">
-              <Button variant="primary" disabled={aiBusy || !aiTopic.trim()} onClick={handleCreateAiSet}>
-                {aiBusy ? "正在调用 DeepSeek 生成并存入题库（约 3~8 秒）…" : "🚀 生成并存入我的题库 →"}
-              </Button>
-              <span className="text-xs text-fg-muted">生成后将自动进入草稿编辑页面供您核对。</span>
-            </div>
-          </div>
-        </Card>
       )}
 
       {/* Tab 4: Import YAML / JSON / XML */}
@@ -727,7 +579,7 @@ problems:
       {showNewSetModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-fg/40 p-4 backdrop-blur-sm">
           <Card className="w-full max-w-md shadow-2xl">
-            <CardTitle title="✏️ 新建自编题单" meta="创建一份空白题单并保存在您的个人题库中" />
+            <CardTitle title="去出题" meta="先给题单起个名字，进入后可自己编写，也可让 AI 搭框架" />
             <div className="mt-4 space-y-4">
               <label className="block text-sm font-medium text-fg">
                 题单名称 *
@@ -745,7 +597,7 @@ problems:
                   取消
                 </Button>
                 <Button variant="primary" disabled={creatingSet || !newSetTitle.trim()} onClick={handleCreateBlankSet}>
-                  {creatingSet ? "创建中…" : "立即创建 →"}
+                  {creatingSet ? "创建中…" : "进入出题 →"}
                 </Button>
               </div>
             </div>
@@ -778,7 +630,7 @@ problems:
                         <span className="ml-2 text-fg-muted">BATCH ID: {r.batch_id}</span>
                       </div>
                       <Link
-                        href={`/teacher/batches/${r.batch_id}`}
+                        href={`/assignments/${r.batch_id}`}
                         className="text-brand font-semibold hover:underline"
                       >
                         查看班级作业 →
@@ -904,6 +756,7 @@ problems:
                   </div>
                 </div>
 
+                <label className="block text-sm"><input type="checkbox" checked={reviewedDeploy} onChange={e=>setReviewedDeploy(e.target.checked)}/> 我已核对题面、样例与隐藏测试</label>
                 <div className="flex justify-end gap-2 pt-3 border-t border-line">
                   <Button
                     variant="secondary"
@@ -916,7 +769,7 @@ problems:
                   </Button>
                   <Button
                     variant="primary"
-                    disabled={deploying || selectedOfferingIds.length === 0}
+                    disabled={deploying || selectedOfferingIds.length === 0 || !reviewedDeploy}
                     onClick={handleDeploy}
                   >
                     {deploying ? "正在发布到教学班…" : `确认布置到 ${selectedOfferingIds.length} 个班级 →`}

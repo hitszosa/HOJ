@@ -1,0 +1,14 @@
+FROM rust:1.99-bookworm AS build
+WORKDIR /src
+COPY backend /src
+ENV SQLX_OFFLINE=true CARGO_BUILD_JOBS=4
+RUN cargo build --locked --release --bin hoj
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates curl tzdata \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=build /src/target/release/hoj /usr/local/bin/hoj
+COPY backend/data/problem_sets /app/backend/data/problem_sets
+COPY backend/data/seed /app/backend/data/seed
+COPY backend/data/course_syllabus.json /app/backend/data/course_syllabus.json
+ENV COURSE_ROOT=/app/backend TZ=Asia/Shanghai
+ENTRYPOINT ["hoj"]

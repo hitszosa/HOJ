@@ -52,11 +52,15 @@ impl SessionCache {
     pub fn new(ttl: Duration) -> Self {
         Self(Cache::builder().max_capacity(10_000).time_to_live(ttl).build())
     }
+    pub fn invalidate(&self, sid: &str) { self.0.invalidate(sid); }
 }
 
 pub fn cookie<'a>(parts: &'a Parts, name: &str) -> Option<&'a str> {
-    parts
-        .headers
+    cookie_header(&parts.headers, name)
+}
+
+pub fn cookie_header<'a>(headers: &'a axum::http::HeaderMap, name: &str) -> Option<&'a str> {
+    headers
         .get_all(axum::http::header::COOKIE)
         .iter()
         .filter_map(|v| v.to_str().ok())
@@ -68,7 +72,7 @@ pub fn cookie<'a>(parts: &'a Parts, name: &str) -> Option<&'a str> {
 
 async fn native_session(state: &AppState, sid: &str) -> Result<String, AppError> {
     if !SESSION_ID.is_match(sid) {
-        return Err(AppError::unauthorized("HUSTOJ 登录已失效，请重新登录"));
+        return Err(AppError::unauthorized("登录已失效，请重新登录"));
     }
     if let Some(user) = state.sessions.0.get(sid) {
         return Ok(user);
@@ -79,7 +83,7 @@ async fn native_session(state: &AppState, sid: &str) -> Result<String, AppError>
         auth_source: String,
         user: String,
     }
-    let unavailable = || AppError::unavailable("HUSTOJ 身份服务暂时不可用");
+    let unavailable = || AppError::unavailable("账号服务暂时不可用");
     let response = state
         .http
         .get(&state.cfg.hustoj_session_url)
@@ -89,7 +93,7 @@ async fn native_session(state: &AppState, sid: &str) -> Result<String, AppError>
         .await
         .map_err(|_| unavailable())?;
     if response.status() == reqwest::StatusCode::UNAUTHORIZED {
-        return Err(AppError::unauthorized("请先登录 HUSTOJ"));
+        return Err(AppError::unauthorized("请先登录教学平台"));
     }
     if response.status() != reqwest::StatusCode::OK {
         return Err(unavailable());
@@ -134,7 +138,7 @@ async fn resolve(parts: &Parts, state: &AppState) -> Result<Identity, AppError> 
         return Ok(Identity { user, source: AuthSource::Hustoj });
     }
     if !state.cfg.dev_login {
-        return Err(AppError::unauthorized("请先登录 HUSTOJ"));
+        return Err(AppError::unauthorized("请先登录教学平台"));
     }
     cookie(parts, DEV_COOKIE)
         .and_then(|c| state.key.read_dev_cookie(c))

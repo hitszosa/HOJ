@@ -1,0 +1,4 @@
+[submodule "docs"]
+	path = src/pages/docs
+	url = git@git.cs-lab.top:grader/docs.git
+    branch = main

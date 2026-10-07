@@ -24,6 +24,7 @@ pub struct Config {
     /// 判题数据目录（与 HUSTOJ 共享的卷）。设置后直接写文件，否则回退到 docker exec。
     pub judge_data_dir: Option<PathBuf>,
     pub hustoj_container: String,
+    pub supported_languages: Vec<String>,
     pub ai: AiConfig,
 }
 
@@ -32,6 +33,7 @@ pub struct AiConfig {
     pub url: Option<String>,
     pub model: Option<String>,
     pub key: Option<String>,
+    pub proxy: Option<String>,
     /// 学习建议的超时（COURSE_AI_TIMEOUT，1–60 秒，默认 20）。出题固定 45 秒。
     pub hint_timeout: Duration,
 }
@@ -100,10 +102,12 @@ impl Config {
             session_cache_ttl: Duration::from_secs(var("COURSE_SESSION_CACHE_TTL").and_then(|v| v.parse().ok()).unwrap_or(30)),
             judge_data_dir: var("COURSE_JUDGE_DATA_DIR").map(PathBuf::from),
             hustoj_container: var_or("COURSE_CONTAINER", "hustoj"),
+            supported_languages: crate::hustoj::parse_languages(&var_or("COURSE_SUPPORTED_LANGUAGES", "c,cpp,java,python")),
             ai: AiConfig {
                 url: var("COURSE_AI_URL"),
                 model: var("COURSE_AI_MODEL"),
                 key: var("COURSE_AI_KEY"),
+                proxy: var("COURSE_AI_PROXY"),
                 hint_timeout: Duration::from_secs_f64(hint_timeout),
             },
             root,

@@ -15,12 +15,12 @@ use crate::{
     error::{AppError, AppResult},
     extract::{Json, Path, Query},
     hustoj,
+    pagination::limit_offset,
     problem_bank::ensure_bank_problem,
     response::{ApiOk, ok},
     routes::{
         batches::{SubmitRequest, SubmitResponse},
         problem_sets::SolvedStatus,
-        ranking::limit_offset,
     },
     state::AppState,
 };
@@ -245,6 +245,7 @@ async fn submit(State(s): State<AppState>, who: Identity, Path(key): Path<String
         Err(_) => ensure_bank_problem(&s, key).await?.ok_or_else(missing)?,
     };
     let lang = hustoj::language_id(&body.language).ok_or_else(|| AppError::validation("无效的编程语言，请在 python / cpp / c / java 中选择"))?;
+    hustoj::require_supported_language(&s, &body.language)?;
     if body.code.trim().is_empty() {
         return Err(AppError::validation("代码不能为空"));
     }

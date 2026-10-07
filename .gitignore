@@ -24,3 +24,17 @@ backend/data/local/
 
 # Rust
 backend/target/
+
+# 本地部署运行数据
+.local/
+
+# 教师管理服务构建产物
+teacher-management/backend/target/
+teacher-management/frontend/node_modules/
+teacher-management/frontend/dist/
+deploy/local/management.env
+teacher-management/backend/test/node_modules/
+
+# macOS resource forks and incremental compiler state
+._*
+*.tsbuildinfo

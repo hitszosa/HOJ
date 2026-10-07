@@ -1,0 +1,2 @@
+CREATE TABLE hoj_users (user_id BIGINT PRIMARY KEY, FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE);
+CREATE TABLE hoj_offerings (offering_id INT PRIMARY KEY, course_id BIGINT NOT NULL UNIQUE, FOREIGN KEY(course_id) REFERENCES courses(id) ON DELETE CASCADE);

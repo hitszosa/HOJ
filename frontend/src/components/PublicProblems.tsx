@@ -51,7 +51,7 @@ export function PublicProblemListView() {
           hint="平台现已全面升级为包含 5 大知识支柱、48 个算法专题与 2,148 道试题的标准算法题库。"
         />
         <div className="mt-6">
-          <Link href="/student/categories" className={actionClass}>
+          <Link href="/library" className={actionClass}>
             立即进入算法题库 →
           </Link>
         </div>
@@ -177,7 +177,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
     return (
       <div className="space-y-4">
         <Empty title={error || "题目不存在"} hint="请核对题目编号或返回算法题库浏览。" />
-        <Link href="/student/categories" className={actionClass}>
+        <Link href="/library" className={actionClass}>
           返回算法题库
         </Link>
       </div>
@@ -198,7 +198,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
         <div>
           <div className="flex items-center gap-2">
             <Link
-              href="/student/categories"
+              href="/library"
               className="text-meta text-brand hover:underline inline-flex items-center gap-1 font-medium"
             >
               ← 返回算法题库
@@ -249,16 +249,7 @@ export function PublicProblemWorkspace({ pid, user }: { pid: string; user: strin
             )}
           </div>
         </div>
-        <div>
-          {problem.numeric_pid && (
-            <Link
-              href={`/student/status?problem_id=${problem.numeric_pid}`}
-              className="text-meta text-brand hover:underline"
-            >
-              查看本题评测记录 ↗
-            </Link>
-          )}
-        </div>
+
       </header>
 
       {/* Main Two-Column Layout */}

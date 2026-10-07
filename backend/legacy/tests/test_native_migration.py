@@ -64,19 +64,10 @@ class NativeMigrationEndpointsTests(unittest.TestCase):
             admin_resp = self.client.get(f'/api/submissions/{other_sid}/code')
             self.assertEqual(admin_resp.status_code, 200)
 
-    def test_ranklist(self):
+    def test_removed_ranklist_is_not_found(self):
         self.client.post('/api/session', json={'userId': 'cm_pilot_student'})
         resp = self.client.get('/api/ranklist?pageSize=10')
-        self.assertEqual(resp.status_code, 200)
-        data = resp.json()
-        self.assertIn('items', data)
-        self.assertIn('total', data)
-        if data['items']:
-            first = data['items'][0]
-            self.assertIn('rank', first)
-            self.assertIn('userId', first)
-            self.assertIn('solved', first)
-            self.assertIn('passRate', first)
+        self.assertEqual(resp.status_code, 404)
 
     def test_public_problems_and_submit(self):
         self.client.post('/api/session', json={'userId': 'cm_pilot_student'})

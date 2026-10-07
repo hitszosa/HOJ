@@ -1,0 +1,9 @@
+ARG BASE_IMAGE=debian:bookworm-slim
+FROM ${BASE_IMAGE}
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates curl libgcc-s1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 10001 grader \
+    && useradd --uid 10001 --gid 10001 --create-home --no-log-init --shell /usr/sbin/nologin grader
+WORKDIR /app
+USER 10001:10001

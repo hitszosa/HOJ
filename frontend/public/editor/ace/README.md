@@ -1,0 +1,1 @@
+Ace editor assets copied from the deployed HUSTOJ image. Only the editor, C/C++/Java/Python modes, Xcode theme, and search extension are kept. The original LICENSE is included. These static assets are served by the teaching frontend; no native OJ pages are proxied.

@@ -23,6 +23,10 @@ pub struct Problem {
     pub slug: String,
     pub title: String,
     pub statement: String,
+    /// 题目计分权重；旧题单默认等权，0 表示不计分。
+    #[serde(default = "default_score")]
+    #[ts(as = "Option<f64>", optional)]
+    pub score: f64,
     pub samples: Vec<Case>,
     /// 隐藏测试：只进判题数据目录，永不外发。
     #[serde(default)]
@@ -79,6 +83,13 @@ fn knowledge_list<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<String>, D::Err
 
 static SLUG: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[a-zA-Z0-9_-]{1,64}$").unwrap());
 
+fn default_score() -> f64 { 100.0 }
+
+pub fn valid_score(score: f64) -> bool {
+    score.is_finite() && (0.0..=999.99).contains(&score)
+        && (score * 100.0 - (score * 100.0).round()).abs() < 0.000001
+}
+
 fn non_blank(v: Option<&Value>) -> bool {
     v.and_then(Value::as_str).is_some_and(|s| !s.trim().is_empty())
 }
@@ -106,11 +117,20 @@ pub fn validate(doc: Value) -> AppResult<Document> {
         return bad("每个题单需要 1–100 道题");
     };
     let mut slugs = HashSet::new();
+    let mut total_score = 0.0;
     for p in problems {
         let Some(p) = p.as_object().filter(|p| ["slug", "title", "statement"].iter().all(|k| non_blank(p.get(*k)))) else {
             return bad("每题须有 slug、标题和题面");
         };
         let slug = p["slug"].as_str().unwrap_or_default();
+        let score = match p.get("score") {
+            None => default_score(),
+            Some(value) => match value.as_f64().filter(|v| valid_score(*v)) {
+                Some(score) => score,
+                None => return bad("题目权重须为 0–999.99 的数字，最多两位小数"),
+            },
+        };
+        total_score += score;
         if !SLUG.is_match(slug) || !slugs.insert(slug.to_owned()) {
             return bad("题目 slug 不合法或重复");
         }
@@ -129,6 +149,7 @@ pub fn validate(doc: Value) -> AppResult<Document> {
             return bad("每题至少提供一个样例");
         }
     }
+    if total_score <= 0.0 { return bad("题单至少需要一道权重大于 0 的计分题"); }
     let mut value = doc;
     // null 与缺省等价，交给 serde 默认值处理。
     if let Some(obj) = value.as_object_mut() {
@@ -240,6 +261,23 @@ mod tests {
         let mut v = sample();
         v["read_only"] = json!("no");
         assert!(validate(v).is_err());
+    }
+
+    #[test]
+    fn validates_weights_and_keeps_legacy_equal_weight() {
+        assert_eq!(validate(sample()).unwrap().problems[0].score, 100.0);
+        for invalid in [json!(-1), json!(1000), json!(0.001), json!("30"), Value::Null] {
+            let mut v = sample(); v["problems"][0]["score"] = invalid;
+            assert!(validate(v).is_err());
+        }
+        let mut v = sample(); v["problems"][0]["score"] = json!(0);
+        assert!(validate(v.clone()).is_err());
+        let mut second = v["problems"][0].clone(); second["slug"] = json!("second"); second["score"] = json!(30);
+        v["problems"].as_array_mut().unwrap().push(second);
+        assert_eq!(validate(v).unwrap().problems.iter().map(|p|p.score).sum::<f64>(), 30.0);
+        assert!(!valid_score(f64::NAN));
+        assert!(!valid_score(f64::INFINITY));
+        assert!(valid_score(999.99));
     }
 
     #[test]

@@ -1,124 +1,53 @@
-/**
- * 路由表与草稿身份隔离的回归测试。
- *
- * 对应 web 节点的两条验收：
- *   1. hustoj-portals-3：/student 与 /teacher 两端分离，未知路由明确「页面未找到」，
- *      旧链接（/history、/themes）迁移到新端路由；
- *   2. 代码草稿按用户隔离，身份切换互不串号。
- */
-
-import {
-  draftStorageKey,
-  matchRoute,
-  readDraft,
-  routePortal,
-  writeDraft,
-} from "@/lib/routes";
+import { draftStorageKey, matchRoute, redirectPath, readDraft, routePortal, writeDraft } from "@/lib/routes";
 import { describe, expect, it } from "vitest";
 
-describe("matchRoute", () => {
-  it("识别全部合法路由", () => {
-    expect(matchRoute("/")).toEqual({ name: "home" });
-    expect(matchRoute("/student")).toEqual({ name: "student" });
-    expect(matchRoute("/student/history")).toEqual({ name: "student-history" });
-    expect(matchRoute("/student/courses/10")).toEqual({ name: "student-course", oid: "10" });
-    expect(matchRoute("/student/batches/10")).toEqual({ name: "student-batch", bid: "10" });
-    expect(matchRoute("/student/batches/10/problems/1025")).toEqual({
-      name: "student-workspace",
-      bid: "10",
-      pid: "1025",
-    });
-    expect(matchRoute("/teacher")).toEqual({ name: "teacher" });
-    expect(matchRoute("/teacher/courses/10")).toEqual({ name: "teacher-course", oid: "10" });
-    expect(matchRoute("/teacher/batches/10")).toEqual({ name: "teacher-batch", bid: "10" });
-    expect(matchRoute("/teacher/batches/10/problems/1025")).toEqual({
-      name: "teacher-workspace",
-      bid: "10",
-      pid: "1025",
-    });
-    expect(matchRoute("/teacher/offerings/10")).toEqual({ name: "studio", oid: "10" });
-    expect(matchRoute("/teacher/drafts/7")).toEqual({ name: "draft", did: "7" });
-    expect(matchRoute("/faq")).toEqual({ name: "faq" });
-    expect(matchRoute("/student/status")).toEqual({ name: "student-status" });
-    expect(matchRoute("/student/ranklist")).toEqual({ name: "student-ranklist" });
-    expect(matchRoute("/student/problems")).toEqual({ name: "redirect", to: "/student/categories" });
-    expect(matchRoute("/student/categories")).toEqual({ name: "student-categories" });
-    expect(matchRoute("/student/problems/1025")).toEqual({ name: "student-problem-detail", pid: "1025" });
-    expect(matchRoute("/student/categories/problems/01-basic-io-p01")).toEqual({ name: "student-problem-detail", pid: "01-basic-io-p01" });
-    expect(matchRoute("/teacher/categories")).toEqual({ name: "teacher-categories" });
-    expect(matchRoute("/teacher/status")).toEqual({ name: "teacher-status" });
-    expect(matchRoute("/teacher/ranklist")).toEqual({ name: "teacher-ranklist" });
-    expect(matchRoute("/teacher/insights/10")).toEqual({ name: "insights", oid: "10" });
-    expect(matchRoute("/teacher/classes/10")).toEqual({ name: "classes", oid: "10" });
-    expect(matchRoute("/teacher/library")).toEqual({ name: "teacher-library" });
-    expect(matchRoute("/teacher/problems")).toEqual({ name: "teacher-library" });
-    expect(matchRoute("/teacher/problem-sets")).toEqual({ name: "teacher-library" });
-  });
-
-  it("旧公共链接标记为 legacy，由 Platform 按 me.portal 迁移", () => {
-    expect(matchRoute("/courses/10")).toEqual({ name: "legacy-course", oid: "10" });
-    expect(matchRoute("/batches/10")).toEqual({ name: "legacy-batch", bid: "10" });
-    expect(matchRoute("/batches/10/problems/1025")).toEqual({
-      name: "legacy-workspace",
-      bid: "10",
-      pid: "1025",
-    });
-    expect(matchRoute("/category.php")).toEqual({ name: "legacy-categories" });
-  });
-
-  it("旧链接迁移到新端路由", () => {
-    expect(matchRoute("/history")).toEqual({ name: "redirect", to: "/student/history" });
-    expect(matchRoute("/themes")).toEqual({ name: "redirect", to: "/" });
-  });
-
-  it("未知与畸形路由一律返回 not-found", () => {
-    for (const p of ["/nope", "/courses", "/courses/10/edit", "/batches/10/xyz", "/batches/10/problems", "/teacher/drafts", "/teacher/unknown/1", "/student/nope", "/student/courses", "/api/leak"]) {
-      expect(matchRoute(p), p).toEqual({ name: "not-found" });
-    }
-  });
+describe('统一页面与旧链接迁移',()=>{
+ it('题库、评测和作业只有一个身份无关的地址',()=>{
+  expect(matchRoute('/library')).toEqual({name:'library'});
+  expect(matchRoute('/judging')).toEqual({name:'status'});
+  expect(matchRoute('/library/problems/p01')).toEqual({name:'problem',pid:'p01'});
+  expect(matchRoute('/assignments/3')).toEqual({name:'batch',bid:'3'});
+  expect(matchRoute('/assignments/3/problems/1003')).toEqual({name:'workspace',bid:'3',pid:'1003'});
+  for(const path of ['/library','/judging','/assignments/3','/assignments/3/problems/1003'])expect(routePortal(matchRoute(path))).toBeNull();
+ });
+ it('任课教师功能仍有角色检查',()=>{
+  expect(matchRoute('/programming/offerings/3')).toEqual({name:'studio',oid:'3'});
+  expect(matchRoute('/programming/drafts/a')).toEqual({name:'draft',did:'a'});
+  expect(matchRoute('/programming/grades/3')).toEqual({name:'insights',oid:'3'});
+  for(const path of ['/programming/offerings/3','/programming/drafts/a','/programming/grades/3'])expect(routePortal(matchRoute(path))).toBe('teacher');
+ });
+ it('旧模块地址跳回统一题库和评测',()=>{
+  for(const path of ['/teacher/categories','/student/categories','/student/problems','/category.php'])expect(matchRoute(path)).toEqual({name:'redirect',to:'/library?view=public'});
+  for(const path of ['/teacher/library','/teacher/problems','/teacher/problem-sets'])expect(matchRoute(path)).toEqual({name:'redirect',to:'/library?view=mine'});
+  for(const path of ['/teacher/status','/student/status'])expect(matchRoute(path)).toEqual({name:'redirect',to:'/judging'});
+ });
+ it('旧作业、题目和出题地址跳到统一功能',()=>{
+  for(const path of ['/teacher/batches/3','/student/batches/3','/batches/3'])expect(matchRoute(path)).toEqual({name:'redirect',to:'/assignments/3'});
+  for(const path of ['/teacher/batches/3/problems/1003','/student/batches/3/problems/1003','/batches/3/problems/1003'])expect(matchRoute(path)).toEqual({name:'redirect',to:'/assignments/3/problems/1003'});
+  expect(matchRoute('/student/categories/problems/p01')).toEqual({name:'redirect',to:'/library/problems/p01'});
+  expect(matchRoute('/teacher/offerings/3')).toEqual({name:'redirect',to:'/programming/offerings/3'});
+  expect(matchRoute('/teacher/drafts/a')).toEqual({name:'redirect',to:'/programming/drafts/a'});
+  expect(matchRoute('/teacher/insights/3')).toEqual({name:'redirect',to:'/programming/grades/3'});
+ });
+ it('课程入口依然只用教学管理，旧课程按授权映射',()=>{
+  for(const path of ['/teacher','/student','/student/history','/history'])expect(matchRoute(path)).toEqual({name:'redirect',to:'/management/courses'});
+  for(const path of ['/courses/3','/teacher/courses/3','/student/courses/3','/teacher/classes/3'])expect(matchRoute(path)).toEqual({name:'managed-course',oid:'3'});
+  expect(matchRoute('/faq')).toEqual({name:'redirect',to:'/management/docs'});
+ });
+ it('跳转保留班级预选、筛选和重复参数',()=>{
+  expect(redirectPath('/library?view=public',{oid:'3',tag:['a','b']})).toBe('/library?view=public&oid=3&tag=a&tag=b');
+  expect(redirectPath('/judging',{problem_id:'1003'})).toBe('/judging?problem_id=1003');
+ });
+ it('未知路径、排行榜与畸形路径保持404',()=>{
+  for(const path of ['/student/ranklist','/teacher/ranklist','/ranklist','/nope','/assignments/3/edit','/programming/drafts','/api/leak','/student/nope','/courses/3/edit'])expect(matchRoute(path),path).toEqual({name:'not-found'});
+ });
 });
-
-describe("routePortal", () => {
-  it("学生端命名空间归属 student，教师端命名空间归属 teacher", () => {
-    expect(routePortal(matchRoute("/student"))).toBe("student");
-    expect(routePortal(matchRoute("/student/history"))).toBe("student");
-    expect(routePortal(matchRoute("/student/status"))).toBe("student");
-    expect(routePortal(matchRoute("/student/problems/1025"))).toBe("student");
-    expect(routePortal(matchRoute("/student/categories/problems/01-basic-io-p01"))).toBe("student");
-    expect(routePortal(matchRoute("/student/categories"))).toBe("student");
-    expect(routePortal(matchRoute("/student/batches/10/problems/1025"))).toBe("student");
-    expect(routePortal(matchRoute("/teacher"))).toBe("teacher");
-    expect(routePortal(matchRoute("/teacher/categories"))).toBe("teacher");
-    expect(routePortal(matchRoute("/teacher/status"))).toBe("teacher");
-    expect(routePortal(matchRoute("/teacher/ranklist"))).toBe("teacher");
-    expect(routePortal(matchRoute("/teacher/courses/10"))).toBe("teacher");
-    expect(routePortal(matchRoute("/teacher/drafts/7"))).toBe("teacher");
-    expect(routePortal(matchRoute("/teacher/library"))).toBe("teacher");
-    expect(routePortal(matchRoute("/faq"))).toBeNull();
-  });
-
-  it("legacy 与重定向路由返回 null（由 Platform 按身份再判定）", () => {
-    expect(routePortal(matchRoute("/courses/10"))).toBeNull();
-    expect(routePortal(matchRoute("/batches/10"))).toBeNull();
-    expect(routePortal(matchRoute("/history"))).toBeNull();
-  });
-});
-
-describe("草稿按身份隔离", () => {
-  it("不同用户的草稿 key 不同，匿名身份也有独立 key", () => {
-    expect(draftStorageKey("cm_pilot_student", "10", "1025")).not.toBe(
-      draftStorageKey("cm_pilot_teacher", "10", "1025"),
-    );
-    expect(draftStorageKey("", "10", "1025")).toBe("code:anon:10:1025");
-  });
-
-  it("写入按用户隔离；旧的无用户 key 不再被读取（避免跨身份串号）", () => {
-    localStorage.clear();
-    localStorage.setItem("code:10:1025", "legacy-code");
-    expect(readDraft("cm_pilot_student", "10", "1025")).toBe("");
-    writeDraft("cm_pilot_student", "10", "1025", "student-code");
-    expect(readDraft("cm_pilot_student", "10", "1025")).toBe("student-code");
-    expect(readDraft("cm_pilot_teacher", "10", "1025")).toBe("");
-    expect(localStorage.getItem("code:10:1025")).toBe("legacy-code");
-  });
+describe('草稿身份隔离',()=>{
+ it('不同用户和匿名草稿不串号',()=>{
+  expect(draftStorageKey('a','3','1003')).not.toBe(draftStorageKey('b','3','1003'));
+  expect(draftStorageKey('','3','1003')).toBe('code:anon:3:1003');
+  localStorage.clear();localStorage.setItem('code:3:1003','legacy');
+  expect(readDraft('a','3','1003')).toBe('');writeDraft('a','3','1003','student-code');
+  expect(readDraft('a','3','1003')).toBe('student-code');expect(readDraft('b','3','1003')).toBe('');
+ });
 });

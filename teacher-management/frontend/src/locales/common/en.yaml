@@ -1,0 +1,66 @@
+nav:
+  platformModules: "Platform modules"
+  teachingModule: "Teaching"
+  programmingModule: "Programming"
+  users: "Users"
+  problemBank: "Problem bank"
+  systemSettings: "System settings"
+  announcement: "Announcement"
+  recentActions: "Recent actions"
+  preferences: "Preferences"
+  hello: "Welcome, \n{name}"
+  myAccount: "My account"
+  userDocs: User documentation
+  login: "Login"
+  sso-login: "Login with HIT SSO"
+  logout: "Log out"
+  loggedOut: "Logged out successfully."
+  confirmLogout:
+    title: "Are you sure to log out?"
+    content: "Logging out will clear your online status."
+    yes: "Comfirm Logout"
+  dashboard: "Dashboard"
+  courses: "Courses"
+  darkTheme: "Dark Theme"
+  theme: Theme
+  languages: { zh: 简体中文, en: English }
+  colorThemes: { light: "Light", dark: "Dark", systemDefault: "System Default" }
+  cycleLanguage: "Language: {current}. Switch to {next}"
+  cycleTheme: "Theme: {current}. Switch to {next}"
+  coursesList: All Courses
+  displayMode: Display mode
+  displayModes: { list: "List view", card: "Card view" }
+  cycleDisplayMode: "Display mode: {current}. Switch to {next}"
+  securityAlert:
+    title: Security Alert
+    content: "You are using the initial default password for local login.\nFor account security, please change your password as soon as possible."
+  doNotShowAgain: Do not show again
+
+dialog:
+  title: "🤔 Are your sure?"
+  confirm: "Confirm"
+  cancel: "Cancel"
+  ok: OK
+  later: Later
+  continueAnyway: Continue Anyway
+
+myProfile: My Profile
+adminAssigned: The following information is assigned by the system administrator and cannot be changed.
+username: Username
+realName: Real Name
+role: Role
+password: Password
+
+yearTerm: "{localizedTerm} Semester, {year}"
+
+error:
+  general: "Oops. Something went wrong. "
+  internal: Internal server error
+  requestGeneral: "Oops. Something went wrong in sending the request. Please try again later. "
+  responseGeneral: "Oops. Something went wrong. Please try again later. "
+  unauthorized: "Login expired. "
+  authentication_error: "Invalid username or password! "
+  checkNetwork: "Something went wrong. Please check your network connection or try disabling proxy or VPN."
+
+graded: Graded
+notGraded: Not Graded

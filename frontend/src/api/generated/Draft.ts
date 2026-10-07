@@ -2,4 +2,4 @@
 import type { Document } from "./Document";
 import type { Origin } from "./Origin";
 
-export type Draft = { draft_id: string, offering_id: number, owner_id: string, title: string, status: string, origin: Origin, batch_id: number | null, updated_at: string, document: Document, };
+export type Draft = { draft_id: string, offering_id: number | null, owner_id: string, title: string, status: string, origin: Origin, batch_id: number | null, updated_at: string, document: Document, };

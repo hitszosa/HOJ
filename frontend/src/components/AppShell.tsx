@@ -1,39 +1,61 @@
 "use client";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { api } from "@/lib/api";
 import type { Me } from "@/api/generated/Me";
-const STUDENT_NAV = [
-  ['/student', '我的课程'],
-  ['/student/categories', '算法题库'],
-  ['/student/status', '评测状态'],
-  ['/student/ranklist', '排行榜'],
-  ['/faq', '常见问答'],
-  ['/student/history', '历史课程'],
-];
-const TEACHER_NAV = [
-  ['/teacher', '教学工作台'],
-  ['/teacher/library', '我的题库'],
-  ['/teacher/categories', '算法题库'],
-  ['/teacher/status', '实时评测流'],
-  ['/faq', '常见问答'],
-];
+import { platformNavigation, platformRole, platformSection } from "@/lib/platform-navigation";
+
 export function AppShell({children}:{children:ReactNode}) {
  const path=usePathname();
- const [portal,setPortal]=useState<string|null>(null);
+ const [identity,setIdentity]=useState<Me|null>(null);
+ const [profile,setProfile]=useState<{username:string;real_name:string}|null>(null);
+ const [locale,setLocale]=useState('zh');
+ const [logoutError,setLogoutError]=useState('');
  useEffect(()=>{
-  let active=true;let broadcastReceived=false;
-  // 身份与页面同源：优先听 Platform 的广播（登录、切换、401 过期都会触发），
-  // 同时自行取一次兜底，避免时序竞争导致导航空白。
-  const onPortal=(e:Event)=>{broadcastReceived=true;if(active)setPortal((e as CustomEvent<string|null>).detail||null);};
-  window.addEventListener('hoj-portal',onPortal);
-  window.addEventListener('hustoj-portal',onPortal);
-  api<Me>('/me').then(m=>{if(active&&!broadcastReceived)setPortal(m.portal);}).catch(()=>{if(active&&!broadcastReceived)setPortal(null);});
-  return()=>{active=false;window.removeEventListener('hoj-portal',onPortal);window.removeEventListener('hustoj-portal',onPortal);};
+  let active=true,broadcastReceived=false;
+  const onIdentity=(event:Event)=>{broadcastReceived=true;if(active)setIdentity((event as CustomEvent<Me|null>).detail||null);};
+  window.addEventListener('hoj-identity',onIdentity);
+  api<Me>('/me').then(me=>{if(active&&!broadcastReceived)setIdentity(me);}).catch(()=>{if(active&&!broadcastReceived)setIdentity(null);});
+  fetch('/management-api/auth/current_user',{credentials:'same-origin'}).then(async response=>{
+   if (!response.ok) return;
+   const user=await response.json();if(active)setProfile(user);
+  }).catch(()=>{});
+  try { const stored=JSON.parse(localStorage.getItem('theme')||'{}');setLocale(stored.language||navigator.languages.map(language=>language.split('-')[0]).find(language=>language==='zh'||language==='en')||'en'); } catch {}
+  return()=>{active=false;window.removeEventListener('hoj-identity',onIdentity);};
  },[path]);
- const nav=portal==='teacher'?TEACHER_NAV:portal==='student'?STUDENT_NAV:[];
- const home=portal==='teacher'?'/teacher':portal==='student'?'/student':'/';
- return <div className="min-h-screen bg-surface-muted"><header className="border-b border-line bg-surface"><div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-5"><Link href={home} className="flex items-center gap-3"><span className="brand-symbol">hoj</span><div><span className="text-xl font-semibold tracking-tight">HOJ 教学平台</span><p className="text-meta text-fg-muted">{portal==='teacher'?'教学工作台':portal==='student'?'学生学习空间':'校内编程作业平台'}</p></div></Link><div className="flex flex-wrap items-center gap-3">{portal&&<button className="text-meta text-fg-muted hover:text-brand" onClick={async()=>{await fetch('/api/session',{method:'DELETE'});window.location.assign('/');}}>退出登录</button>}</div></div>{nav.length>0&&<nav aria-label="主导航" className="mx-auto flex max-w-7xl gap-6 overflow-x-auto px-6">{nav.map(([href,label])=><Link key={href} href={href} aria-current={path===href?'page':undefined} className={`whitespace-nowrap border-b-2 py-3 text-body ${path===href?'border-brand font-semibold text-brand':'border-transparent text-fg-muted hover:text-fg'}`}>{label}</Link>)}</nav>}</header><main className="mx-auto max-w-7xl px-6 py-10">{children}</main><footer className="mx-auto flex max-w-7xl flex-wrap justify-between gap-3 border-t border-line px-6 py-6 text-meta text-fg-muted"><span>HOJ 教学平台</span><span>本地体验环境 · 账号、题库与判题由 HOJ 提供</span><span className="text-fg-subtle">开放评测与教学题库中心</span></footer></div>;
+ const text=(zh:string,en:string)=>locale==='en'?en:zh;
+ async function logout() {
+  setLogoutError('');
+  try {
+   const csrf=document.cookie.split(';').map(value=>value.trim()).find(value=>value.startsWith('csrftoken='))?.slice('csrftoken='.length);
+   const management=await fetch('/management-api/auth/logout',{method:'POST',headers:csrf?{'X-CSRFTOKEN':decodeURIComponent(csrf)}:{}});
+   const programming=await fetch('/api/session',{method:'DELETE'});
+   if (!programming.ok || (!management.ok && management.status!==401)) throw Error(text('退出失败，请重试','Sign out failed. Please retry.'));
+   setIdentity(null);window.location.assign('/management/login');
+  } catch(error) { setLogoutError(String(error)); }
+ }
+ return <div className="min-h-screen bg-surface-muted">
+  <header className="hoj-app-header hoj-app-header--sticky">
+   <div className="hoj-app-top">
+    <a href="/management/home" className="hoj-app-brand">{text('HOJ 教学平台','HOJ Teaching Platform')}</a>
+    <div className="hoj-app-account">
+     {identity?<><span className="hoj-app-role">{platformRole(identity,locale)}</span><details className="hoj-account-menu">
+      <summary>{profile?.username===identity.user?(profile.real_name||identity.user):identity.user} <span aria-hidden="true">⌄</span></summary>
+      <div className="hoj-account-dropdown">
+       <a href="/management/change_info">{text('我的账号','My account')}</a>
+       <a href="/management/preferences">{text('偏好设置','Preferences')}</a>
+       <a href="/management/docs">{text('使用帮助','Help')}</a>
+       <button type="button" onClick={logout}>{text('退出登录','Sign out')}</button>
+      </div>
+     </details></>:<a className="hoj-app-signin" href="/management/login">{text('登录','Sign in')}</a>}
+    </div>
+   </div>
+   <nav aria-label={text('平台导航','Platform navigation')} className="hoj-app-nav">
+    {platformNavigation(identity).map(item=><a key={item.id} href={item.href} className="hoj-app-nav-link" aria-current={platformSection(path)===item.id?'page':undefined}>{locale==='en'?item.en:item.zh}</a>)}
+   </nav>
+  </header>
+  {logoutError&&<p role="alert" className="mx-auto max-w-7xl px-6 py-2 text-fg">{logoutError}</p>}
+  <main className="mx-auto max-w-7xl px-6 py-8">{children}</main>
+ </div>;
 }

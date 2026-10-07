@@ -112,30 +112,41 @@ pub struct UpdateDraftRequest {
 }
 
 async fn update(State(s): State<AppState>, who: Identity, Path(id): Path<String>, Json(body): Json<UpdateDraftRequest>) -> AppResult<ApiOk<Empty>> {
-    let row = authoring::get_draft(&s.db, &who, &id, true).await?;
-    if row.status != "draft" {
-        return Err(AppError::conflict("已发布题单不可覆盖，请复制为新草稿"));
-    }
-    let mut doc = document::validate(body.document)?;
-    // 既有只读来源不可被更新洗掉；来源引用缺失时沿用原值。
-    doc.read_only |= row.document.read_only;
-    if doc.source_ref.as_deref().is_none_or(str::is_empty) {
-        doc.source_ref = row.document.source_ref;
-    }
-    let payload = serde_json::to_string(&doc).map_err(|e| AppError::internal(e.to_string()))?;
-    sqlx::query!("UPDATE cm_authoring_draft SET title=?,payload=?,updated_at=NOW() WHERE draft_id=?", doc.title, payload, id)
-        .execute(&s.db)
-        .await?;
-    Ok(ok(Empty {}))
+    let lock=format!("hoj:publish:{id}");
+    authoring::with_lock(&s.db,&lock,async{
+        let row=authoring::get_draft(&s.db,&who,&id,true).await?;
+        let mut doc=document::validate(body.document)?;doc.read_only|=row.document.read_only;
+        if doc.source_ref.as_deref().is_none_or(str::is_empty){doc.source_ref=row.document.source_ref;}
+        if row.status=="published"{
+            let bid=row.batch_id.ok_or_else(||AppError::conflict("已发布题单关联异常，请从课程作业编辑"))?;
+            let current=crate::assignment_edit::document(&s,&who,bid).await?;
+            doc.extra.insert("revision".into(),current.extra["revision"].clone());
+            for p in &mut doc.problems{if let Some(old)=current.problems.iter().find(|x|x.slug==p.slug){p.extra.insert("problem_id".into(),old.extra["problem_id"].clone());}}
+            crate::assignment_edit::update(&s,&who,bid,doc).await?;
+        }else{
+            let payload=serde_json::to_string(&doc).map_err(|e|AppError::internal(e.to_string()))?;
+            sqlx::query("UPDATE cm_authoring_draft SET title=?,payload=?,updated_at=NOW() WHERE draft_id=?").bind(doc.title).bind(payload).bind(id).execute(&s.db).await?;
+        }
+        Ok(ok(Empty{}))
+    }).await
 }
 
-async fn remove(State(s): State<AppState>, who: Identity, Path(id): Path<String>) -> AppResult<ApiOk<Empty>> {
-    let row = authoring::get_draft(&s.db, &who, &id, true).await?;
-    if row.status == "published" {
-        return Err(AppError::conflict("已发布的题单不可直接从题库删除，请在班级作业中管理"));
-    }
-    sqlx::query!("DELETE FROM cm_authoring_draft WHERE draft_id=? AND status='draft'", id).execute(&s.db).await?;
-    Ok(ok(Empty {}))
+async fn remove(State(s):State<AppState>,who:Identity,Path(id):Path<String>)->AppResult<ApiOk<Empty>>{
+    crate::access::require_teacher(&s.db,&who).await?;
+    authoring::with_lock(&s.db,&format!("hoj:publish:{id}"),async{
+        let owner=sqlx::query_scalar::<_,String>("SELECT owner_id FROM cm_authoring_draft WHERE draft_id=?").bind(&id).fetch_optional(&s.db).await?.ok_or_else(||AppError::not_found("题单不存在"))?;
+        if owner!=who.user&&!who.is_admin(){return Err(AppError::forbidden("只能删除自己的个人题库题单"));}
+        if !id.bytes().all(|c|c.is_ascii_hexdigit())||id.len()!=32{return Err(AppError::validation("题单标识无效"));}
+        let bids=sqlx::query_scalar::<_,u32>("SELECT batch_id FROM cm_batch WHERE authoring_key=? OR source_ref=?").bind(&id).bind(format!("library:{id}")).fetch_all(&s.db).await?;
+        for bid in &bids{crate::access::batch_access(&s.db,&who,*bid,Need::TEACH_WRITE).await?;crate::assignment_edit::require_idle(&s,*bid).await?;}
+        let dir=s.cfg.root.join("data/local/assignment-backups").join(format!("library-{}",authoring::new_draft_id()));tokio::fs::create_dir_all(&dir).await.map_err(crate::course_deletion::io_error)?;
+        #[cfg(unix)]{use std::os::unix::fs::PermissionsExt;tokio::fs::set_permissions(&dir,std::fs::Permissions::from_mode(0o700)).await.map_err(crate::course_deletion::io_error)?;}
+        let mut out=tokio::fs::File::create(dir.join("rows.jsonl")).await.map_err(crate::course_deletion::io_error)?;
+        #[cfg(unix)]{use std::os::unix::fs::PermissionsExt;out.set_permissions(std::fs::Permissions::from_mode(0o600)).await.map_err(crate::course_deletion::io_error)?;}
+        crate::course_deletion::snapshot(&s.db,"codemind_course","cm_authoring_draft",&format!("draft_id='{id}'"),&mut out).await?;out.sync_all().await.map_err(crate::course_deletion::io_error)?;
+        for bid in bids{crate::assignment_edit::remove(&s,&who,bid).await?;}
+        sqlx::query("DELETE FROM cm_authoring_draft WHERE draft_id=?").bind(id).execute(&s.db).await?;Ok(ok(Empty{}))
+    }).await
 }
 
 #[derive(Deserialize, TS)]
@@ -190,7 +201,8 @@ async fn publish(State(s): State<AppState>, who: Identity, Path(id): Path<String
             source_ref: doc.source_ref.clone().filter(|r| !r.is_empty()),
             legacy_batch_id: row.batch_id,
         };
-        let batch_id = authoring::publish(&s, row.offering_id, &id, &doc, &opts).await?;
+        let oid=row.offering_id.ok_or_else(||AppError::unprocessable("请在我的题单中选择课程布置作业"))?;
+        let batch_id = authoring::publish(&s, oid, &id, &doc, &opts).await?;
         Ok(ok(PublishResponse { batch_id }))
     })
     .await

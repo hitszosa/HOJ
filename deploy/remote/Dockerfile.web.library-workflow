@@ -1,0 +1,9 @@
+FROM hoj-web:amd64
+WORKDIR /app
+COPY frontend/package.json frontend/package-lock.json ./
+COPY frontend/src ./src
+COPY frontend/public ./public
+COPY frontend/next.config.mjs frontend/tsconfig.json frontend/tailwind.config.ts frontend/postcss.config.mjs ./
+ENV NEXT_TELEMETRY_DISABLED=1
+RUN npm run typecheck && npm run build
+CMD ["npm", "start", "--", "--hostname", "0.0.0.0", "--port", "3100"]

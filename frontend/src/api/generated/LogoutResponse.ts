@@ -2,6 +2,6 @@
 
 export type LogoutResponse = { 
 /**
- * 前端随后跳转到 HUSTOJ 登出页销毁原生会话。
+ * 平台登录页。
  */
 logout_url: string, };

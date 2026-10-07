@@ -8,7 +8,7 @@ function loadAce() {
   if (window.ace) return Promise.resolve(window.ace);
   if (!loader) loader = new Promise((resolve, reject) => {
     const script = document.createElement("script");
-    script.src = "/oj/ace/ace.js";
+    script.src = "/editor/ace/ace.js";
     script.async = true;
     script.onload = () => window.ace ? resolve(window.ace) : reject(new Error("编辑器未能加载"));
     script.onerror = () => { script.remove(); loader = undefined; reject(new Error("编辑器未能加载")); };
@@ -34,7 +34,7 @@ export function CodeEditor({ value, language, onChange, readOnly = false, classN
     let ro: ResizeObserver | null = null;
     loadAce().then(ace => {
       if (!active || !host.current) return;
-      ace.config.set("basePath", "/oj/ace");
+      ace.config.set("basePath", "/editor/ace");
       const instance = ace.edit(host.current);
       editor.current = instance;
       instance.setTheme("ace/theme/xcode");

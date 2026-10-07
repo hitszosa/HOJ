@@ -1,0 +1,29 @@
+name: hoj-local
+services:
+  hustoj:
+    image: hoj-local-hustoj:arm64
+    build:
+      context: .
+    container_name: hoj-local-hustoj
+    privileged: true
+    restart: unless-stopped
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:8080:80"
+      - "127.0.0.1:13306:3306"
+    volumes:
+      - mysql:/var/lib/mysql
+      - ../../.local/judge-data:/home/judge/data
+      - ./entrypoint.sh:/opt/hoj-local-entrypoint.sh:ro
+      - ./course.php:/home/judge/src/web/course.php:ro
+      - ./platform-auth.php:/home/judge/src/web/platform-auth.php:ro
+      - ./platform-nginx.conf:/etc/nginx/sites-available/default:ro
+    entrypoint: ["/bin/bash", "/opt/hoj-local-entrypoint.sh"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+volumes:
+  mysql:

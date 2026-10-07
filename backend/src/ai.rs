@@ -15,11 +15,14 @@ const GENERATE_SYSTEM: &str = "你是编程课教师助手。只返回 JSON 题�
 const HINT_SYSTEM: &str = "你是编程课助教。只依据给定事实写 1 条中文学习建议，不超过 300 字。不得改写、质疑或猜测判题结果，不得声称看到隐藏测试或外部资料，不得给出可直接提交的完整解答。";
 
 /// 调用 chat/completions，返回首条消息文本。任何失败都归为 None，由调用方决定降级方式。
-async fn chat(state: &AppState, payload: Value, timeout: Duration) -> Option<Value> {
+async fn chat(state: &AppState, mut payload: Value, timeout: Duration) -> Option<Value> {
     let ai = &state.cfg.ai;
+    if ai.model.as_deref().is_some_and(|model| model.starts_with("deepseek-")) {
+        payload["thinking"] = json!({"type": "disabled"});
+    }
     let url = format!("{}/chat/completions", ai.url.as_deref()?.trim_end_matches('/'));
     let response = state
-        .http
+        .ai_http
         .post(url)
         .bearer_auth(ai.key.as_deref().unwrap_or(""))
         .json(&payload)

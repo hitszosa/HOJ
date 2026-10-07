@@ -2,4 +2,4 @@
 import type { LibraryProblem } from "./LibraryProblem";
 import type { Origin } from "./Origin";
 
-export type LibrarySet = { draft_id: string, offering_id: number, title: string, status: string, origin: Origin, batch_id: number | null, updated_at: string, count: number, problems: Array<LibraryProblem>, course_code: string | null, course_name: string | null, offering_term: string | null, offering_section: string | null, offering_title: string | null, };
+export type LibrarySet = { draft_id: string, offering_id: number | null, title: string, status: string, origin: Origin, batch_id: number | null, updated_at: string, count: number, assignment_count: number, problems: Array<LibraryProblem>, course_code: string | null, course_name: string | null, offering_term: string | null, offering_section: string | null, offering_title: string | null, };

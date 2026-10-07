@@ -39,7 +39,7 @@ pub struct LoginResponse {
     pub user: String,
 }
 
-fn expire(name: &str) -> HeaderValue {
+pub(crate) fn expire(name: &str) -> HeaderValue {
     HeaderValue::from_str(&format!("{name}=\"\"; expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; Path=/; SameSite=lax"))
         .expect("cookie name is ascii")
 }
@@ -59,21 +59,29 @@ async fn login(State(s): State<AppState>, Json(body): Json<LoginRequest>) -> App
     headers.append(SET_COOKIE, HeaderValue::from_str(&cookie).map_err(|e| AppError::internal(e.to_string()))?);
     // 显式选择开发身份时不能沿用原生会话。
     headers.append(SET_COOKIE, expire(&s.cfg.hustoj_cookie));
+    headers.append(SET_COOKIE, expire("sessionid"));
+    headers.append(SET_COOKIE, expire("csrftoken"));
     Ok((headers, ok(LoginResponse { user })))
 }
 
 #[derive(Serialize, TS)]
 #[ts(export)]
 pub struct LogoutResponse {
-    /// 前端随后跳转到 HUSTOJ 登出页销毁原生会话。
+    /// 平台登录页。
     pub logout_url: &'static str,
 }
 
-async fn logout() -> (HeaderMap, ApiOk<LogoutResponse>) {
-    // PHPSESSID 保留到 HUSTOJ 登出页销毁服务端会话为止。
-    let mut headers = HeaderMap::new();
+async fn logout(State(s): State<AppState>, request: HeaderMap) -> AppResult<(HeaderMap, ApiOk<LogoutResponse>)> {
+    let mut headers = if let Some(sid) = crate::auth::cookie_header(&request, &s.cfg.hustoj_cookie) {
+        let (headers, _) = super::account::exchange(&s, &request, "logout", serde_json::json!({})).await?;
+        s.sessions.invalidate(sid);
+        headers
+    } else { HeaderMap::new() };
+    headers.append(SET_COOKIE, expire(&s.cfg.hustoj_cookie));
     headers.append(SET_COOKIE, expire(DEV_COOKIE));
-    (headers, ok(LogoutResponse { logout_url: "/oj/logout.php" }))
+    headers.append(SET_COOKIE, expire("sessionid"));
+    headers.append(SET_COOKIE, expire("csrftoken"));
+    Ok((headers, ok(LogoutResponse { logout_url: "/management/login" })))
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Serialize, TS)]
@@ -105,7 +113,7 @@ pub struct Me {
     pub home: String,
 }
 
-async fn me(State(s): State<AppState>, who: Identity) -> AppResult<ApiOk<Me>> {
+pub(crate) async fn me(State(s): State<AppState>, who: Identity) -> AppResult<ApiOk<Me>> {
     // 门户只由持久化的权限推导，不看请求参数；具体教学班授权仍由 offering_access 负责。
     let assigned = sqlx::query_scalar!(
         r#"SELECT 'teacher' AS "role!: String" FROM jol.privilege WHERE user_id=? AND rightstr IN ('teacher','administrator')
@@ -139,9 +147,6 @@ async fn me(State(s): State<AppState>, who: Identity) -> AppResult<ApiOk<Me>> {
     } else {
         Portal::Student
     };
-    let home = match portal {
-        Portal::Teacher => "/teacher",
-        Portal::Student => "/student",
-    };
+    let home = "/management/courses";
     Ok(ok(Me { user: who.user, dev_login: s.cfg.dev_login, auth_source: who.source, roles, portal, home: home.into() }))
 }

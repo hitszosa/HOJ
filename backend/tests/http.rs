@@ -47,6 +47,30 @@ async fn unauthenticated_request_is_rejected() {
 }
 
 #[tokio::test]
+async fn destructive_library_and_course_operations_require_identity() {
+    let router = app(false).await;
+    for req in [
+        Request::post("/api/account/password").header("content-type","application/json")
+            .body(Body::from(r#"{"old_password":"old","new_password":"new-password"}"#)).unwrap(),
+        Request::get("/api/management/assignment-overview").body(Body::empty()).unwrap(),
+        Request::get("/api/batches/1/problems/1/teacher-ranking").body(Body::empty()).unwrap(),
+        Request::get("/api/offerings/1/student-roster?page=1&page_size=20").body(Body::empty()).unwrap(),
+        Request::get("/api/offerings/1/students/student/progress").body(Body::empty()).unwrap(),
+        Request::delete("/api/drafts/00000000000000000000000000000001").body(Body::empty()).unwrap(),
+        Request::delete("/api/batches/1").body(Body::empty()).unwrap(),
+        Request::get("/api/batches/1/document").body(Body::empty()).unwrap(),
+        Request::put("/api/batches/1/document").header("content-type","application/json").body(Body::from(r#"{"document":{}}"#)).unwrap(),
+        Request::post("/api/teacher/library/framework").header("content-type","application/json").body(Body::from(r#"{"topic":"循环"}"#)).unwrap(),
+        Request::post("/api/teacher/library/compose").header("content-type","application/json").body(Body::from(r#"{"items":[]}"#)).unwrap(),
+        Request::post("/api/management/courses/1/delete").header("content-type", "application/json")
+            .body(Body::from(r#"{"management_id":1}"#)).unwrap(),
+    ] {
+        let (status, _) = call(router.clone(), req).await;
+        assert_eq!(status, StatusCode::UNAUTHORIZED);
+    }
+}
+
+#[tokio::test]
 async fn sso_header_is_ignored_unless_configured() {
     let req = || Request::get("/api/me").header("X-Remote-User", "admin").body(Body::empty()).unwrap();
     let (status, _) = call(app(false).await, req()).await;
@@ -81,6 +105,16 @@ async fn malformed_input_uses_envelope() {
     let (status, body) = call(app(false).await, Request::get("/api/nope").body(Body::empty()).unwrap()).await;
     assert_eq!(status, StatusCode::NOT_FOUND);
     assert_eq!(body["code"], "NOT_FOUND");
+}
+
+#[tokio::test]
+async fn removed_ranklist_has_no_endpoint() {
+    let router = app(false).await;
+    for path in ["/api/ranklist", "/api/ranklist?offering_id=1", "/api/ranklist?offeringId=1"] {
+        let (status, body) = call(router.clone(), Request::get(path).body(Body::empty()).unwrap()).await;
+        assert_eq!(status, StatusCode::NOT_FOUND);
+        assert_eq!(body["code"], "NOT_FOUND");
+    }
 }
 
 #[tokio::test]

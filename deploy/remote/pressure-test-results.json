@@ -1,0 +1,2395 @@
+{
+  "target": "10.249.12.21:3100",
+  "date": "2026-10-04",
+  "independent_student_sessions": 1000,
+  "recorded_http_requests": 888885,
+  "real_cpp_submissions": 1540,
+  "reports": [
+    {
+      "mode": "judge-burst",
+      "students": 500,
+      "cpu_loop": false,
+      "accepted": 500,
+      "errors": 0,
+      "error_samples": [],
+      "acceptance_seconds": 0.944968028,
+      "acceptance_p95_ms": 833.324109,
+      "drained": true,
+      "total_seconds": 89.60109402799999,
+      "completed": 500,
+      "remaining": 0,
+      "results": {
+        "4": 500
+      },
+      "completion_p50_s": 47.593836677000006,
+      "completion_p95_s": 85.54971712799998,
+      "judged_per_second": 5.58028900678101
+    },
+    {
+      "mode": "combined-online",
+      "concurrency": 500,
+      "requested_duration_s": 180,
+      "actual_duration_s": 181.00364823,
+      "requests": 88867,
+      "rps": 490.96800461766026,
+      "successful_rps": 490.96800461766026,
+      "error_rate": 0,
+      "statuses": {
+        "200": 88867
+      },
+      "p50_ms": 4.2437559999962104,
+      "p95_ms": 51.53254699999525,
+      "p99_ms": 163.43973600000027,
+      "max_ms": 564.517402,
+      "bytes": 203898834,
+      "generator_event_loop_p99_ms": 21.495807,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 18000,
+          "errors": 0,
+          "p95_ms": 141.47677199999998
+        },
+        "/api/batches/2": {
+          "requests": 17995,
+          "errors": 0,
+          "p95_ms": 48.113618000003044
+        },
+        "/management-api/courses": {
+          "requests": 17872,
+          "errors": 0,
+          "p95_ms": 69.18047599999409
+        },
+        "/api/me": {
+          "requests": 17500,
+          "errors": 0,
+          "p95_ms": 43.73654499999975
+        },
+        "/api/courses": {
+          "requests": 17150,
+          "errors": 0,
+          "p95_ms": 36.764673999998195
+        },
+        "/api/offerings/2/grades": {
+          "requests": 350,
+          "errors": 0,
+          "p95_ms": 71.60432800000126
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "fd-baseline",
+      "concurrency": 1500,
+      "requested_duration_s": 20,
+      "actual_duration_s": 26.692639009,
+      "requests": 24949,
+      "rps": 934.6771591818967,
+      "successful_rps": 753.016589825489,
+      "error_rate": 0.19435648723395726,
+      "statuses": {
+        "0": 702,
+        "200": 20100,
+        "500": 3842,
+        "503": 305
+      },
+      "p50_ms": 438.179924,
+      "p95_ms": 4128.707843,
+      "p99_ms": 21046.234489,
+      "max_ms": 24136.580681,
+      "bytes": 39321206,
+      "generator_event_loop_p99_ms": 32.866303,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 5594,
+          "errors": 308,
+          "p95_ms": 1902.9220169999999
+        },
+        "/api/batches/2": {
+          "requests": 5438,
+          "errors": 148,
+          "p95_ms": 2287.1244099999985
+        },
+        "/management-api/courses": {
+          "requests": 5227,
+          "errors": 4373,
+          "p95_ms": 21041.466701999998
+        },
+        "/api/me": {
+          "requests": 4459,
+          "errors": 19,
+          "p95_ms": 2263.3433909999985
+        },
+        "/api/courses": {
+          "requests": 4129,
+          "errors": 1,
+          "p95_ms": 1452.5348320000012
+        },
+        "/api/offerings/2/grades": {
+          "requests": 102,
+          "errors": 0,
+          "p95_ms": 1526.0682080000006
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        }
+      ]
+    },
+    {
+      "mode": "fd-fast-baseline",
+      "concurrency": 1500,
+      "requested_duration_s": 10,
+      "actual_duration_s": 17.289024326000003,
+      "requests": 12917,
+      "rps": 747.121396583082,
+      "successful_rps": 593.0930402231883,
+      "error_rate": 0.20616242161492607,
+      "statuses": {
+        "0": 26,
+        "200": 10254,
+        "500": 2262,
+        "503": 375
+      },
+      "p50_ms": 441.81521599999905,
+      "p95_ms": 8034.607209,
+      "p99_ms": 14502.477664000002,
+      "max_ms": 15446.612933000002,
+      "bytes": 18420256,
+      "generator_event_loop_p99_ms": 31.031295,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 3180,
+          "errors": 375,
+          "p95_ms": 1906.7945449999997
+        },
+        "/api/batches/2": {
+          "requests": 3069,
+          "errors": 26,
+          "p95_ms": 11225.823236
+        },
+        "/management-api/courses": {
+          "requests": 2765,
+          "errors": 2262,
+          "p95_ms": 9656.220418
+        },
+        "/api/me": {
+          "requests": 2066,
+          "errors": 0,
+          "p95_ms": 1455.710838
+        },
+        "/api/courses": {
+          "requests": 1794,
+          "errors": 0,
+          "p95_ms": 893.29313
+        },
+        "/api/offerings/2/grades": {
+          "requests": 43,
+          "errors": 0,
+          "p95_ms": 1493.9111239999993
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        }
+      ]
+    },
+    {
+      "mode": "final-config-online",
+      "concurrency": 1000,
+      "requested_duration_s": 90,
+      "actual_duration_s": 91.009637935,
+      "requests": 88189,
+      "rps": 969.0072612198004,
+      "successful_rps": 969.0072612198004,
+      "error_rate": 0,
+      "statuses": {
+        "200": 88189
+      },
+      "p50_ms": 5.518544999998994,
+      "p95_ms": 40.82962300000054,
+      "p99_ms": 898.380163,
+      "max_ms": 1258.8570220000001,
+      "bytes": 198905172,
+      "generator_event_loop_p99_ms": 21.823487,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 18000,
+          "errors": 0,
+          "p95_ms": 879.357005
+        },
+        "/api/batches/2": {
+          "requests": 18000,
+          "errors": 0,
+          "p95_ms": 39.104159000000436
+        },
+        "/management-api/courses": {
+          "requests": 17916,
+          "errors": 0,
+          "p95_ms": 60.72948499999984
+        },
+        "/api/me": {
+          "requests": 17273,
+          "errors": 0,
+          "p95_ms": 17.10281599999871
+        },
+        "/api/courses": {
+          "requests": 16660,
+          "errors": 0,
+          "p95_ms": 14.808812999999645
+        },
+        "/api/offerings/2/grades": {
+          "requests": 340,
+          "errors": 0,
+          "p95_ms": 55.170140999995056
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "final-config-saturation",
+      "concurrency": 1500,
+      "requested_duration_s": 25,
+      "actual_duration_s": 40.736134062999994,
+      "requests": 31371,
+      "rps": 770.1025323483948,
+      "successful_rps": 750.6848821910016,
+      "error_rate": 0.02521436995951675,
+      "statuses": {
+        "0": 791,
+        "200": 30580
+      },
+      "p50_ms": 440.76138300000093,
+      "p95_ms": 3144.315329000001,
+      "p99_ms": 21074.226703,
+      "max_ms": 36036.253403,
+      "bytes": 67842358,
+      "generator_event_loop_p99_ms": 26.673151,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 6813,
+          "errors": 1,
+          "p95_ms": 1705.153044
+        },
+        "/api/batches/2": {
+          "requests": 6648,
+          "errors": 420,
+          "p95_ms": 14431.370341999998
+        },
+        "/management-api/courses": {
+          "requests": 6456,
+          "errors": 334,
+          "p95_ms": 14432.142912
+        },
+        "/api/me": {
+          "requests": 5935,
+          "errors": 32,
+          "p95_ms": 2818.523014000002
+        },
+        "/api/courses": {
+          "requests": 5406,
+          "errors": 3,
+          "p95_ms": 1500.2949980000012
+        },
+        "/api/offerings/2/grades": {
+          "requests": 113,
+          "errors": 1,
+          "p95_ms": 2336.0808939999997
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        }
+      ]
+    },
+    {
+      "mode": "final-online",
+      "concurrency": 1000,
+      "requested_duration_s": 65,
+      "actual_duration_s": 66.301762684,
+      "requests": 62650,
+      "rps": 944.9220874955524,
+      "successful_rps": 938.4667538411535,
+      "error_rate": 0.006831604150039904,
+      "statuses": {
+        "200": 62222,
+        "503": 428
+      },
+      "p50_ms": 6.69879199999923,
+      "p95_ms": 162.052408,
+      "p99_ms": 1099.2965359999998,
+      "max_ms": 1897.984252000002,
+      "bytes": 140283667,
+      "generator_event_loop_p99_ms": 22.003711,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 13000,
+          "errors": 329,
+          "p95_ms": 877.032957
+        },
+        "/api/batches/2": {
+          "requests": 12993,
+          "errors": 99,
+          "p95_ms": 352.75807399999985
+        },
+        "/management-api/courses": {
+          "requests": 12570,
+          "errors": 0,
+          "p95_ms": 165.3735139999999
+        },
+        "/api/me": {
+          "requests": 12087,
+          "errors": 0,
+          "p95_ms": 18.599142999999458
+        },
+        "/api/courses": {
+          "requests": 11760,
+          "errors": 0,
+          "p95_ms": 17.910862000000634
+        },
+        "/api/offerings/2/grades": {
+          "requests": 240,
+          "errors": 0,
+          "p95_ms": 58.89747400000124
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        }
+      ]
+    },
+    {
+      "mode": "judge-burst",
+      "students": 100,
+      "cpu_loop": true,
+      "accepted": 100,
+      "errors": 0,
+      "error_samples": [],
+      "acceptance_seconds": 0.1713987110000162,
+      "acceptance_p95_ms": 161.81969900001423,
+      "drained": true,
+      "total_seconds": 24.841619646000005,
+      "completed": 100,
+      "remaining": 0,
+      "results": {
+        "4": 100
+      },
+      "completion_p50_s": 14.636205419000005,
+      "completion_p95_s": 22.83080534600001,
+      "judged_per_second": 4.025502419931866
+    },
+    {
+      "mode": "judge-burst",
+      "students": 100,
+      "cpu_loop": false,
+      "accepted": 100,
+      "errors": 0,
+      "error_samples": [],
+      "acceptance_seconds": 0.15527291500000046,
+      "acceptance_p95_ms": 136.1749520000003,
+      "drained": true,
+      "total_seconds": 18.689978695999997,
+      "completed": 100,
+      "remaining": 0,
+      "results": {
+        "4": 100
+      },
+      "completion_p50_s": 10.544388675999999,
+      "completion_p95_s": 16.678437245999998,
+      "judged_per_second": 5.350460887438136
+    },
+    {
+      "mode": "judge-burst",
+      "students": 20,
+      "cpu_loop": false,
+      "accepted": 20,
+      "errors": 0,
+      "error_samples": [],
+      "acceptance_seconds": 0.095804975,
+      "acceptance_p95_ms": 83.53687000000002,
+      "drained": true,
+      "total_seconds": 4.1465275,
+      "completed": 20,
+      "remaining": 0,
+      "results": {
+        "4": 20
+      },
+      "completion_p50_s": 4.142849539,
+      "completion_p95_s": 4.145694263,
+      "judged_per_second": 4.8233130010593195
+    },
+    {
+      "mode": "judge-burst",
+      "students": 300,
+      "cpu_loop": false,
+      "accepted": 300,
+      "errors": 0,
+      "error_samples": [],
+      "acceptance_seconds": 0.5038296410000003,
+      "acceptance_p95_ms": 459.07858900000065,
+      "drained": true,
+      "total_seconds": 50.044041400999994,
+      "completed": 300,
+      "remaining": 0,
+      "results": {
+        "4": 300
+      },
+      "completion_p50_s": 27.063320610999998,
+      "completion_p95_s": 48.023483651999996,
+      "judged_per_second": 5.99471968293123
+    },
+    {
+      "mode": "judge-burst",
+      "students": 500,
+      "cpu_loop": false,
+      "accepted": 500,
+      "errors": 0,
+      "error_samples": [],
+      "acceptance_seconds": 0.8342698110000055,
+      "acceptance_p95_ms": 778.9647479999985,
+      "drained": true,
+      "total_seconds": 83.41155076400001,
+      "completed": 500,
+      "remaining": 0,
+      "results": {
+        "4": 500
+      },
+      "completion_p50_s": 42.895650592,
+      "completion_p95_s": 81.387747883,
+      "judged_per_second": 5.994373625958257
+    },
+    {
+      "mode": "login",
+      "concurrency": 100,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.249277774999996,
+      "requests": 7802,
+      "rps": 385.29769242597104,
+      "successful_rps": 385.29769242597104,
+      "error_rate": 0,
+      "statuses": {
+        "200": 7802
+      },
+      "p50_ms": 5.062801000000036,
+      "p95_ms": 17.42994799999724,
+      "p99_ms": 98.26104199999827,
+      "max_ms": 150.55041699999856,
+      "bytes": 546140,
+      "generator_event_loop_p99_ms": 21.168127,
+      "think_ms": 250,
+      "endpoints": {
+        "/api/account/login": {
+          "requests": 7802,
+          "errors": 0,
+          "p95_ms": 17.42994799999724
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "login",
+      "concurrency": 25,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.246383401,
+      "requests": 1963,
+      "rps": 96.95558762870432,
+      "successful_rps": 96.95558762870432,
+      "error_rate": 0,
+      "statuses": {
+        "200": 1963
+      },
+      "p50_ms": 4.855950000000121,
+      "p95_ms": 9.379077999999936,
+      "p99_ms": 44.422684,
+      "max_ms": 50.713612,
+      "bytes": 137410,
+      "generator_event_loop_p99_ms": 21.528575,
+      "think_ms": 250,
+      "endpoints": {
+        "/api/account/login": {
+          "requests": 1963,
+          "errors": 0,
+          "p95_ms": 9.379077999999936
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "login",
+      "concurrency": 300,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.28421107599999,
+      "requests": 21237,
+      "rps": 1046.9719487945645,
+      "successful_rps": 1046.9719487945645,
+      "error_rate": 0,
+      "statuses": {
+        "200": 21237
+      },
+      "p50_ms": 30.035519000011845,
+      "p95_ms": 49.549050999994506,
+      "p99_ms": 301.1850560000021,
+      "max_ms": 442.93792500000563,
+      "bytes": 1486590,
+      "generator_event_loop_p99_ms": 20.840447,
+      "think_ms": 250,
+      "endpoints": {
+        "/api/account/login": {
+          "requests": 21237,
+          "errors": 0,
+          "p95_ms": 49.549050999994506
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "login",
+      "concurrency": 50,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.253531420999998,
+      "requests": 3404,
+      "rps": 168.0694556046923,
+      "successful_rps": 168.0694556046923,
+      "error_rate": 0,
+      "statuses": {
+        "200": 3404
+      },
+      "p50_ms": 5.722144999999728,
+      "p95_ms": 17.045492999997805,
+      "p99_ms": 2550.366495000002,
+      "max_ms": 2609.7748199999987,
+      "bytes": 238280,
+      "generator_event_loop_p99_ms": 21.463039,
+      "think_ms": 250,
+      "endpoints": {
+        "/api/account/login": {
+          "requests": 3404,
+          "errors": 0,
+          "p95_ms": 17.045492999997805
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "login",
+      "concurrency": 500,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.471488918000002,
+      "requests": 21669,
+      "rps": 1058.4965307993334,
+      "successful_rps": 1058.4965307993334,
+      "error_rate": 0,
+      "statuses": {
+        "200": 21669
+      },
+      "p50_ms": 210.2370349999983,
+      "p95_ms": 232.68212099999073,
+      "p99_ms": 522.7025770000037,
+      "max_ms": 659.6530159999966,
+      "bytes": 1516830,
+      "generator_event_loop_p99_ms": 20.905983,
+      "think_ms": 250,
+      "endpoints": {
+        "/api/account/login": {
+          "requests": 21669,
+          "errors": 0,
+          "p95_ms": 232.68212099999073
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "online",
+      "concurrency": 100,
+      "requested_duration_s": 35,
+      "actual_duration_s": 35.660839387,
+      "requests": 3500,
+      "rps": 98.14687652237117,
+      "successful_rps": 98.14687652237117,
+      "error_rate": 0,
+      "statuses": {
+        "200": 3500
+      },
+      "p50_ms": 4.513581999999587,
+      "p95_ms": 38.15411300000005,
+      "p99_ms": 140.546226,
+      "max_ms": 158.38890100000003,
+      "bytes": 7833448,
+      "generator_event_loop_p99_ms": 21.184511,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 700,
+          "errors": 0,
+          "p95_ms": 140.546226
+        },
+        "/api/batches/2": {
+          "requests": 700,
+          "errors": 0,
+          "p95_ms": 40.157375
+        },
+        "/management-api/courses": {
+          "requests": 700,
+          "errors": 0,
+          "p95_ms": 35.60832699999992
+        },
+        "/api/me": {
+          "requests": 700,
+          "errors": 0,
+          "p95_ms": 9.649133999999322
+        },
+        "/api/courses": {
+          "requests": 686,
+          "errors": 0,
+          "p95_ms": 8.14612500000294
+        },
+        "/api/offerings/2/grades": {
+          "requests": 14,
+          "errors": 0,
+          "p95_ms": 52.32766400000037
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "online",
+      "concurrency": 1000,
+      "requested_duration_s": 35,
+      "actual_duration_s": 36.00501248600002,
+      "requests": 33901,
+      "rps": 941.5633451920581,
+      "successful_rps": 941.5633451920581,
+      "error_rate": 0,
+      "statuses": {
+        "200": 33901
+      },
+      "p50_ms": 5.730008000013186,
+      "p95_ms": 188.27563600000576,
+      "p99_ms": 721.4913520000118,
+      "max_ms": 1581.7185129999998,
+      "bytes": 73107320,
+      "generator_event_loop_p99_ms": 21.069823,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 7000,
+          "errors": 0,
+          "p95_ms": 717.1928650000191
+        },
+        "/api/batches/2": {
+          "requests": 7000,
+          "errors": 0,
+          "p95_ms": 246.92707999999402
+        },
+        "/management-api/courses": {
+          "requests": 7000,
+          "errors": 0,
+          "p95_ms": 175.63302300000214
+        },
+        "/api/me": {
+          "requests": 6885,
+          "errors": 0,
+          "p95_ms": 17.596286999993026
+        },
+        "/api/courses": {
+          "requests": 5896,
+          "errors": 0,
+          "p95_ms": 14.833957000024384
+        },
+        "/api/offerings/2/grades": {
+          "requests": 120,
+          "errors": 0,
+          "p95_ms": 46.229089000000386
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "online",
+      "concurrency": 300,
+      "requested_duration_s": 35,
+      "actual_duration_s": 35.96127237500001,
+      "requests": 10500,
+      "rps": 291.98077004915757,
+      "successful_rps": 291.98077004915757,
+      "error_rate": 0,
+      "statuses": {
+        "200": 10500
+      },
+      "p50_ms": 4.329270000001998,
+      "p95_ms": 95.43521000000328,
+      "p99_ms": 287.03280899999663,
+      "max_ms": 312.81203999999707,
+      "bytes": 23500344,
+      "generator_event_loop_p99_ms": 21.331967,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 2100,
+          "errors": 0,
+          "p95_ms": 287.03280899999663
+        },
+        "/api/batches/2": {
+          "requests": 2100,
+          "errors": 0,
+          "p95_ms": 126.31873700000142
+        },
+        "/management-api/courses": {
+          "requests": 2100,
+          "errors": 0,
+          "p95_ms": 77.84888000000501
+        },
+        "/api/me": {
+          "requests": 2100,
+          "errors": 0,
+          "p95_ms": 8.779465999999957
+        },
+        "/api/courses": {
+          "requests": 2058,
+          "errors": 0,
+          "p95_ms": 11.549849000002723
+        },
+        "/api/offerings/2/grades": {
+          "requests": 42,
+          "errors": 0,
+          "p95_ms": 41.87765599999693
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "online",
+      "concurrency": 500,
+      "requested_duration_s": 35,
+      "actual_duration_s": 36.005110648999995,
+      "requests": 17368,
+      "rps": 482.3759651598898,
+      "successful_rps": 482.3759651598898,
+      "error_rate": 0,
+      "statuses": {
+        "200": 17368
+      },
+      "p50_ms": 4.6481930000009015,
+      "p95_ms": 86.01940699999977,
+      "p99_ms": 402.53439400000207,
+      "max_ms": 448.78103399999964,
+      "bytes": 37653848,
+      "generator_event_loop_p99_ms": 21.315583,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 3500,
+          "errors": 0,
+          "p95_ms": 401.8852110000007
+        },
+        "/api/batches/2": {
+          "requests": 3500,
+          "errors": 0,
+          "p95_ms": 162.06753099999332
+        },
+        "/management-api/courses": {
+          "requests": 3500,
+          "errors": 0,
+          "p95_ms": 70.26142900000559
+        },
+        "/api/me": {
+          "requests": 3500,
+          "errors": 0,
+          "p95_ms": 12.852254999990691
+        },
+        "/api/courses": {
+          "requests": 3304,
+          "errors": 0,
+          "p95_ms": 12.328613999998197
+        },
+        "/api/offerings/2/grades": {
+          "requests": 64,
+          "errors": 0,
+          "p95_ms": 43.24737699999241
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "online",
+      "concurrency": 800,
+      "requested_duration_s": 35,
+      "actual_duration_s": 36.001169591,
+      "requests": 27445,
+      "rps": 762.3363438409242,
+      "successful_rps": 762.3363438409242,
+      "error_rate": 0,
+      "statuses": {
+        "200": 27445
+      },
+      "p50_ms": 4.495682000007946,
+      "p95_ms": 175.5610330000054,
+      "p99_ms": 588.0508910000062,
+      "max_ms": 1069.6741219999967,
+      "bytes": 59062236,
+      "generator_event_loop_p99_ms": 21.118975,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 5600,
+          "errors": 0,
+          "p95_ms": 585.9322639999882
+        },
+        "/api/batches/2": {
+          "requests": 5600,
+          "errors": 0,
+          "p95_ms": 304.65915700000187
+        },
+        "/management-api/courses": {
+          "requests": 5600,
+          "errors": 0,
+          "p95_ms": 116.24869500000204
+        },
+        "/api/me": {
+          "requests": 5600,
+          "errors": 0,
+          "p95_ms": 12.734327999991365
+        },
+        "/api/courses": {
+          "requests": 4947,
+          "errors": 0,
+          "p95_ms": 12.464953000002424
+        },
+        "/api/offerings/2/grades": {
+          "requests": 98,
+          "errors": 0,
+          "p95_ms": 45.83424899999227
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "php-fixed-online",
+      "concurrency": 1000,
+      "requested_duration_s": 90,
+      "actual_duration_s": 91.01678636200002,
+      "requests": 87948,
+      "rps": 966.283292514915,
+      "successful_rps": 964.5143880475605,
+      "error_rate": 0.0018306271887933779,
+      "statuses": {
+        "200": 87787,
+        "503": 161
+      },
+      "p50_ms": 6.314362999999503,
+      "p95_ms": 50.7674769999976,
+      "p99_ms": 980.248919,
+      "max_ms": 1276.313069,
+      "bytes": 198664326,
+      "generator_event_loop_p99_ms": 21.823487,
+      "think_ms": 1000,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 18000,
+          "errors": 161,
+          "p95_ms": 942.9851219999999
+        },
+        "/api/batches/2": {
+          "requests": 18000,
+          "errors": 0,
+          "p95_ms": 41.117231000000174
+        },
+        "/management-api/courses": {
+          "requests": 17890,
+          "errors": 0,
+          "p95_ms": 81.84448800000064
+        },
+        "/api/me": {
+          "requests": 17058,
+          "errors": 0,
+          "p95_ms": 26.069821999997657
+        },
+        "/api/courses": {
+          "requests": 16660,
+          "errors": 0,
+          "p95_ms": 31.48671700000341
+        },
+        "/api/offerings/2/grades": {
+          "requests": 340,
+          "errors": 0,
+          "p95_ms": 63.21598199999971
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        }
+      ]
+    },
+    {
+      "mode": "php-fixed-saturation",
+      "concurrency": 1500,
+      "requested_duration_s": 25,
+      "actual_duration_s": 32.352058828000004,
+      "requests": 30493,
+      "rps": 942.5366145046995,
+      "successful_rps": 915.1195031327234,
+      "error_rate": 0.0290886432951825,
+      "statuses": {
+        "0": 795,
+        "200": 29606,
+        "503": 92
+      },
+      "p50_ms": 452.6106039999977,
+      "p95_ms": 3135.965594000001,
+      "p99_ms": 22054.679147,
+      "max_ms": 24683.210411,
+      "bytes": 67690724,
+      "generator_event_loop_p99_ms": 26.787839,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 6672,
+          "errors": 98,
+          "p95_ms": 1597.565308
+        },
+        "/api/batches/2": {
+          "requests": 6484,
+          "errors": 481,
+          "p95_ms": 21022.610242
+        },
+        "/management-api/courses": {
+          "requests": 6174,
+          "errors": 178,
+          "p95_ms": 4535.753082000001
+        },
+        "/api/me": {
+          "requests": 5736,
+          "errors": 111,
+          "p95_ms": 2919.303602
+        },
+        "/api/courses": {
+          "requests": 5311,
+          "errors": 18,
+          "p95_ms": 1493.7152829999995
+        },
+        "/api/offerings/2/grades": {
+          "requests": 116,
+          "errors": 1,
+          "p95_ms": 2569.5220800000025
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        },
+        {
+          "path": "/api/batches/2/problems/1002",
+          "status": 503,
+          "message": "账号服务暂时不可用"
+        }
+      ]
+    },
+    {
+      "mode": "judge-burst",
+      "students": 20,
+      "cpu_loop": false,
+      "accepted": 20,
+      "errors": 0,
+      "error_samples": [],
+      "acceptance_seconds": 0.057984543,
+      "acceptance_p95_ms": 48.03823,
+      "drained": true,
+      "total_seconds": 6.118864123,
+      "completed": 20,
+      "remaining": 0,
+      "results": {
+        "4": 20
+      },
+      "completion_p50_s": 4.107637469,
+      "completion_p95_s": 6.117952139,
+      "judged_per_second": 3.2685805074217367
+    },
+    {
+      "mode": "saturation",
+      "concurrency": 100,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.117185548999988,
+      "requests": 23906,
+      "rps": 1188.3372026256602,
+      "successful_rps": 1188.3372026256602,
+      "error_rate": 0,
+      "statuses": {
+        "200": 23906
+      },
+      "p50_ms": 81.18345800001407,
+      "p95_ms": 95.09846599999582,
+      "p99_ms": 105.92904100002488,
+      "max_ms": 137.4419099999941,
+      "bytes": 51950313,
+      "generator_event_loop_p99_ms": 21.168127,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 4814,
+          "errors": 0,
+          "p95_ms": 91.69718200000352
+        },
+        "/api/batches/2": {
+          "requests": 4795,
+          "errors": 0,
+          "p95_ms": 92.54549899999984
+        },
+        "/management-api/courses": {
+          "requests": 4794,
+          "errors": 0,
+          "p95_ms": 100.65432900001178
+        },
+        "/api/me": {
+          "requests": 4767,
+          "errors": 0,
+          "p95_ms": 90.7048440000217
+        },
+        "/api/courses": {
+          "requests": 4647,
+          "errors": 0,
+          "p95_ms": 91.29661000001943
+        },
+        "/api/offerings/2/grades": {
+          "requests": 89,
+          "errors": 0,
+          "p95_ms": 124.18779999998515
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "saturation",
+      "concurrency": 1000,
+      "requested_duration_s": 20,
+      "actual_duration_s": 26.146566812000003,
+      "requests": 24200,
+      "rps": 925.5517244005197,
+      "successful_rps": 913.3512698516037,
+      "error_rate": 0.013181818181818182,
+      "statuses": {
+        "0": 319,
+        "200": 23881
+      },
+      "p50_ms": 435.59752599999774,
+      "p95_ms": 1846.3353910000296,
+      "p99_ms": 14499.632224,
+      "max_ms": 23108.207223000005,
+      "bytes": 50690434,
+      "generator_event_loop_p99_ms": 23.134207,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 5221,
+          "errors": 1,
+          "p95_ms": 1492.143580999982
+        },
+        "/api/batches/2": {
+          "requests": 5068,
+          "errors": 2,
+          "p95_ms": 1579.566439999966
+        },
+        "/management-api/courses": {
+          "requests": 4935,
+          "errors": 295,
+          "p95_ms": 14496.712453999964
+        },
+        "/api/me": {
+          "requests": 4626,
+          "errors": 21,
+          "p95_ms": 2468.733959999983
+        },
+        "/api/courses": {
+          "requests": 4265,
+          "errors": 0,
+          "p95_ms": 1450.575668000034
+        },
+        "/api/offerings/2/grades": {
+          "requests": 85,
+          "errors": 0,
+          "p95_ms": 1741.3914860000368
+        }
+      },
+      "errors": [
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 0,
+          "message": "ECONNRESET"
+        }
+      ]
+    },
+    {
+      "mode": "saturation",
+      "concurrency": 1500,
+      "requested_duration_s": 20,
+      "actual_duration_s": 28.66092088499997,
+      "requests": 25149,
+      "rps": 877.4665720235815,
+      "successful_rps": 731.9722937088043,
+      "error_rate": 0.16581176189908148,
+      "statuses": {
+        "0": 588,
+        "200": 20979,
+        "500": 3582
+      },
+      "p50_ms": 438.06912900001043,
+      "p95_ms": 3496.567204000021,
+      "p99_ms": 21013.121540000022,
+      "max_ms": 24134.484381999995,
+      "bytes": 42259099,
+      "generator_event_loop_p99_ms": 24.543231,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 5617,
+          "errors": 5,
+          "p95_ms": 1796.7913829999743
+        },
+        "/api/batches/2": {
+          "requests": 5445,
+          "errors": 204,
+          "p95_ms": 5352.789928999962
+        },
+        "/management-api/courses": {
+          "requests": 5244,
+          "errors": 3908,
+          "p95_ms": 20406.21354800003
+        },
+        "/api/me": {
+          "requests": 4527,
+          "errors": 44,
+          "p95_ms": 2810.5615509999916
+        },
+        "/api/courses": {
+          "requests": 4211,
+          "errors": 9,
+          "p95_ms": 1873.457556999987
+        },
+        "/api/offerings/2/grades": {
+          "requests": 105,
+          "errors": 0,
+          "p95_ms": 1475.174003000022
+        }
+      },
+      "errors": [
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        },
+        {
+          "path": "/management-api/courses",
+          "status": 500,
+          "message": "Internal server error"
+        }
+      ]
+    },
+    {
+      "mode": "saturation",
+      "concurrency": 25,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.02226064600001,
+      "requests": 23913,
+      "rps": 1194.3206825038146,
+      "successful_rps": 1194.3206825038146,
+      "error_rate": 0,
+      "statuses": {
+        "200": 23913
+      },
+      "p50_ms": 19.87622200002079,
+      "p95_ms": 28.040161999990232,
+      "p99_ms": 32.99771100000362,
+      "max_ms": 44.745114000019385,
+      "bytes": 30033482,
+      "generator_event_loop_p99_ms": 21.086207,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 4792,
+          "errors": 0,
+          "p95_ms": 28.251450000010664
+        },
+        "/api/batches/2": {
+          "requests": 4787,
+          "errors": 0,
+          "p95_ms": 28.183382999995956
+        },
+        "/management-api/courses": {
+          "requests": 4783,
+          "errors": 0,
+          "p95_ms": 32.40522099999362
+        },
+        "/api/me": {
+          "requests": 4778,
+          "errors": 0,
+          "p95_ms": 26.726299000001745
+        },
+        "/api/courses": {
+          "requests": 4773,
+          "errors": 0,
+          "p95_ms": 26.809045000001788
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "saturation",
+      "concurrency": 300,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.250047426999984,
+      "requests": 23925,
+      "rps": 1181.4787143708163,
+      "successful_rps": 1181.4787143708163,
+      "error_rate": 0,
+      "statuses": {
+        "200": 23925
+      },
+      "p50_ms": 252.58026299998164,
+      "p95_ms": 270.8932349999668,
+      "p99_ms": 290.3935219999985,
+      "max_ms": 396.03756799999974,
+      "bytes": 52237972,
+      "generator_event_loop_p99_ms": 21.512191,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 4850,
+          "errors": 0,
+          "p95_ms": 258.11255900000106
+        },
+        "/api/batches/2": {
+          "requests": 4800,
+          "errors": 0,
+          "p95_ms": 264.28727199998684
+        },
+        "/management-api/courses": {
+          "requests": 4800,
+          "errors": 0,
+          "p95_ms": 290.0564730000333
+        },
+        "/api/me": {
+          "requests": 4794,
+          "errors": 0,
+          "p95_ms": 264.0178650000016
+        },
+        "/api/courses": {
+          "requests": 4591,
+          "errors": 0,
+          "p95_ms": 261.6862830000464
+        },
+        "/api/offerings/2/grades": {
+          "requests": 90,
+          "errors": 0,
+          "p95_ms": 288.98294200003147
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "saturation",
+      "concurrency": 50,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.04455526600001,
+      "requests": 23525,
+      "rps": 1173.6354180880028,
+      "successful_rps": 1173.6354180880028,
+      "error_rate": 0,
+      "statuses": {
+        "200": 23525
+      },
+      "p50_ms": 40.829029000015,
+      "p95_ms": 51.38034999999218,
+      "p99_ms": 60.31282099999953,
+      "max_ms": 94.21790200000396,
+      "bytes": 49699628,
+      "generator_event_loop_p99_ms": 21.135359,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 4721,
+          "errors": 0,
+          "p95_ms": 50.65643299999647
+        },
+        "/api/batches/2": {
+          "requests": 4713,
+          "errors": 0,
+          "p95_ms": 50.241906000010204
+        },
+        "/management-api/courses": {
+          "requests": 4707,
+          "errors": 0,
+          "p95_ms": 54.88082200000645
+        },
+        "/api/me": {
+          "requests": 4696,
+          "errors": 0,
+          "p95_ms": 49.199760999996215
+        },
+        "/api/courses": {
+          "requests": 4606,
+          "errors": 0,
+          "p95_ms": 49.655632999987574
+        },
+        "/api/offerings/2/grades": {
+          "requests": 82,
+          "errors": 0,
+          "p95_ms": 80.72140099998796
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "saturation",
+      "concurrency": 500,
+      "requested_duration_s": 20,
+      "actual_duration_s": 20.440631704,
+      "requests": 24062,
+      "rps": 1177.1651849336602,
+      "successful_rps": 1177.1651849336602,
+      "error_rate": 0,
+      "statuses": {
+        "200": 24062
+      },
+      "p50_ms": 416.95421100000385,
+      "p95_ms": 458.56368999998085,
+      "p99_ms": 503.97930899995845,
+      "max_ms": 817.1343140000245,
+      "bytes": 53126956,
+      "generator_event_loop_p99_ms": 22.953983,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 5000,
+          "errors": 0,
+          "p95_ms": 430.99324999999953
+        },
+        "/api/batches/2": {
+          "requests": 5000,
+          "errors": 0,
+          "p95_ms": 425.64911499997834
+        },
+        "/management-api/courses": {
+          "requests": 4964,
+          "errors": 0,
+          "p95_ms": 501.39457800000673
+        },
+        "/api/me": {
+          "requests": 4598,
+          "errors": 0,
+          "p95_ms": 443.1452500000014
+        },
+        "/api/courses": {
+          "requests": 4410,
+          "errors": 0,
+          "p95_ms": 427.098508999974
+        },
+        "/api/offerings/2/grades": {
+          "requests": 90,
+          "errors": 0,
+          "p95_ms": 458.1323060000432
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "saturation",
+      "concurrency": 800,
+      "requested_duration_s": 20,
+      "actual_duration_s": 24.818325063000024,
+      "requests": 24547,
+      "rps": 989.0675514035987,
+      "successful_rps": 982.1371884736513,
+      "error_rate": 0.007006966228052308,
+      "statuses": {
+        "0": 172,
+        "200": 24375
+      },
+      "p50_ms": 433.1521889999858,
+      "p95_ms": 1443.3690470000147,
+      "p99_ms": 3894.018473000033,
+      "max_ms": 22088.659477999958,
+      "bytes": 52762449,
+      "generator_event_loop_p99_ms": 22.265855,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 5286,
+          "errors": 0,
+          "p95_ms": 637.3606459999573
+        },
+        "/api/batches/2": {
+          "requests": 5121,
+          "errors": 159,
+          "p95_ms": 2677.4915509999846
+        },
+        "/management-api/courses": {
+          "requests": 4831,
+          "errors": 0,
+          "p95_ms": 611.831383999961
+        },
+        "/api/me": {
+          "requests": 4742,
+          "errors": 12,
+          "p95_ms": 1647.1224910000456
+        },
+        "/api/courses": {
+          "requests": 4477,
+          "errors": 1,
+          "p95_ms": 450.2246739999973
+        },
+        "/api/offerings/2/grades": {
+          "requests": 90,
+          "errors": 0,
+          "p95_ms": 482.34857999999076
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        }
+      ]
+    },
+    {
+      "mode": "saturation-fixed",
+      "concurrency": 1000,
+      "requested_duration_s": 25,
+      "actual_duration_s": 29.090691334999995,
+      "requests": 29917,
+      "rps": 1028.4045729778118,
+      "successful_rps": 1013.2450845035926,
+      "error_rate": 0.014740782832503258,
+      "statuses": {
+        "0": 441,
+        "200": 29476
+      },
+      "p50_ms": 449.8290449999913,
+      "p95_ms": 1690.1545539999934,
+      "p99_ms": 14264.210568000002,
+      "max_ms": 21083.707816000002,
+      "bytes": 64558834,
+      "generator_event_loop_p99_ms": 22.659071,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 6353,
+          "errors": 14,
+          "p95_ms": 858.0975130000006
+        },
+        "/api/batches/2": {
+          "requests": 6193,
+          "errors": 298,
+          "p95_ms": 5827.027124
+        },
+        "/management-api/courses": {
+          "requests": 6087,
+          "errors": 44,
+          "p95_ms": 1926.5503199999948
+        },
+        "/api/me": {
+          "requests": 5734,
+          "errors": 69,
+          "p95_ms": 1870.399590999994
+        },
+        "/api/courses": {
+          "requests": 5441,
+          "errors": 16,
+          "p95_ms": 1457.696186000001
+        },
+        "/api/offerings/2/grades": {
+          "requests": 109,
+          "errors": 0,
+          "p95_ms": 1493.704574999996
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        }
+      ]
+    },
+    {
+      "mode": "saturation-fixed",
+      "concurrency": 1500,
+      "requested_duration_s": 25,
+      "actual_duration_s": 34.79136098,
+      "requests": 30975,
+      "rps": 890.3072236181316,
+      "successful_rps": 866.651925957511,
+      "error_rate": 0.026569814366424537,
+      "statuses": {
+        "0": 823,
+        "200": 30152
+      },
+      "p50_ms": 447.4582609999925,
+      "p95_ms": 3500.4108720000077,
+      "p99_ms": 21098.737120000005,
+      "max_ms": 24099.085527999996,
+      "bytes": 64378900,
+      "generator_event_loop_p99_ms": 23.986175,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 6763,
+          "errors": 8,
+          "p95_ms": 1333.9577040000004
+        },
+        "/api/batches/2": {
+          "requests": 6621,
+          "errors": 736,
+          "p95_ms": 21065.003943999996
+        },
+        "/management-api/courses": {
+          "requests": 6394,
+          "errors": 47,
+          "p95_ms": 4373.619949999993
+        },
+        "/api/me": {
+          "requests": 5739,
+          "errors": 29,
+          "p95_ms": 2527.714206000004
+        },
+        "/api/courses": {
+          "requests": 5356,
+          "errors": 3,
+          "p95_ms": 1472.2823930000013
+        },
+        "/api/offerings/2/grades": {
+          "requests": 102,
+          "errors": 0,
+          "p95_ms": 1496.3446189999959
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "ECONNRESET"
+        }
+      ]
+    },
+    {
+      "mode": "saturation-fixed",
+      "concurrency": 500,
+      "requested_duration_s": 25,
+      "actual_duration_s": 25.444301009,
+      "requests": 28909,
+      "rps": 1136.1679768595131,
+      "successful_rps": 1136.1679768595131,
+      "error_rate": 0,
+      "statuses": {
+        "200": 28909
+      },
+      "p50_ms": 433.169883,
+      "p95_ms": 468.2534619999999,
+      "p99_ms": 505.97504499999997,
+      "max_ms": 665.475547,
+      "bytes": 63795962,
+      "generator_event_loop_p99_ms": 23.969791,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 6000,
+          "errors": 0,
+          "p95_ms": 503.4763740000001
+        },
+        "/api/batches/2": {
+          "requests": 6000,
+          "errors": 0,
+          "p95_ms": 438.318303
+        },
+        "/management-api/courses": {
+          "requests": 5842,
+          "errors": 0,
+          "p95_ms": 476.260307999999
+        },
+        "/api/me": {
+          "requests": 5567,
+          "errors": 0,
+          "p95_ms": 469.70921799999996
+        },
+        "/api/courses": {
+          "requests": 5390,
+          "errors": 0,
+          "p95_ms": 449.73316799999884
+        },
+        "/api/offerings/2/grades": {
+          "requests": 110,
+          "errors": 0,
+          "p95_ms": 472.47062200000073
+        }
+      },
+      "errors": []
+    },
+    {
+      "mode": "saturation-fixed",
+      "concurrency": 800,
+      "requested_duration_s": 25,
+      "actual_duration_s": 26.263515961000003,
+      "requests": 29684,
+      "rps": 1130.237095599814,
+      "successful_rps": 1121.2131705338809,
+      "error_rate": 0.007984099178008354,
+      "statuses": {
+        "0": 237,
+        "200": 29447
+      },
+      "p50_ms": 448.8496579999992,
+      "p95_ms": 639.2194309999977,
+      "p99_ms": 4469.159052999996,
+      "max_ms": 21121.325011,
+      "bytes": 64559287,
+      "generator_event_loop_p99_ms": 23.560191,
+      "think_ms": 0,
+      "endpoints": {
+        "/api/batches/2/problems/1002": {
+          "requests": 6275,
+          "errors": 0,
+          "p95_ms": 638.4550449999988
+        },
+        "/api/batches/2": {
+          "requests": 6059,
+          "errors": 209,
+          "p95_ms": 1511.324274999999
+        },
+        "/management-api/courses": {
+          "requests": 5965,
+          "errors": 28,
+          "p95_ms": 1205.8092409999954
+        },
+        "/api/me": {
+          "requests": 5773,
+          "errors": 0,
+          "p95_ms": 1015.2287679999936
+        },
+        "/api/courses": {
+          "requests": 5501,
+          "errors": 0,
+          "p95_ms": 473.93303800000285
+        },
+        "/api/offerings/2/grades": {
+          "requests": 111,
+          "errors": 0,
+          "p95_ms": 531.237973000003
+        }
+      },
+      "errors": [
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        },
+        {
+          "path": "/api/batches/2",
+          "status": 0,
+          "message": "timeout"
+        }
+      ]
+    }
+  ],
+  "resources": {
+    "metrics-browse": {
+      "samples": 76,
+      "host_cpu_peak_percent": 46.13579212070411,
+      "host_cpu_mean_percent": 27.108900998826318,
+      "memory_available_min_gib": 59.539798736572266,
+      "load_peak": 6.61,
+      "container_cpu_peak": {
+        "hoj-load-test": 60.17,
+        "hoj-core-1": 19.44,
+        "hoj-web-1": 119.01,
+        "hoj-management-api-1": 221.19,
+        "hoj-db-1": 492.91,
+        "hoj-management-web-1": 0.02,
+        "hoj-api-1": 99.78,
+        "hoj-storage-1": 11.58
+      }
+    },
+    "metrics-fd-baseline": {
+      "samples": 5,
+      "host_cpu_peak_percent": 34.51505016722408,
+      "host_cpu_mean_percent": 28.858249260410343,
+      "memory_available_min_gib": 59.49946212768555,
+      "load_peak": 2.03,
+      "container_cpu_peak": {
+        "hoj-load-test": 65.73,
+        "hoj-core-1": 0.46,
+        "hoj-web-1": 102.19,
+        "hoj-management-api-1": 27.72,
+        "hoj-db-1": 101.88,
+        "hoj-management-web-1": 0.0,
+        "hoj-api-1": 61.7,
+        "hoj-storage-1": 0.03
+      }
+    },
+    "metrics-fixed": {
+      "samples": 24,
+      "host_cpu_peak_percent": 44.166946027489104,
+      "host_cpu_mean_percent": 36.24890249168853,
+      "memory_available_min_gib": 59.467140197753906,
+      "load_peak": 4.67,
+      "container_cpu_peak": {
+        "hoj-load-test": 59.15,
+        "hoj-management-api-1": 117.87,
+        "hoj-api-1": 80.23,
+        "hoj-core-1": 12.63,
+        "hoj-web-1": 112.94,
+        "hoj-db-1": 313.39,
+        "hoj-management-web-1": 0.02,
+        "hoj-storage-1": 0.98
+      }
+    },
+    "metrics-login": {
+      "samples": 22,
+      "host_cpu_peak_percent": 42.81345565749235,
+      "host_cpu_mean_percent": 21.373895503969287,
+      "memory_available_min_gib": 59.60186767578125,
+      "load_peak": 3.5,
+      "container_cpu_peak": {
+        "hoj-load-test": 39.2,
+        "hoj-management-api-1": 0.01,
+        "hoj-api-1": 61.31,
+        "hoj-core-1": 128.32,
+        "hoj-web-1": 105.2,
+        "hoj-db-1": 142.17,
+        "hoj-management-web-1": 0.0,
+        "hoj-storage-1": 0.08
+      }
+    },
+    "metrics-judge": {
+      "samples": 35,
+      "host_cpu_peak_percent": 56.1744966442953,
+      "host_cpu_mean_percent": 51.41584521896782,
+      "memory_available_min_gib": 58.99693298339844,
+      "load_peak": 6.33,
+      "container_cpu_peak": {
+        "hoj-load-test": 23.66,
+        "hoj-management-api-1": 4.79,
+        "hoj-api-1": 31.4,
+        "hoj-core-1": 597.19,
+        "hoj-web-1": 42.18,
+        "hoj-db-1": 31.96,
+        "hoj-management-web-1": 0.0,
+        "hoj-storage-1": 5.74
+      }
+    },
+    "metrics-combined": {
+      "samples": 35,
+      "host_cpu_peak_percent": 72.85738339787842,
+      "host_cpu_mean_percent": 45.12197185902879,
+      "memory_available_min_gib": 58.913658142089844,
+      "load_peak": 8.03,
+      "container_cpu_peak": {
+        "hoj-load-interactive": 27.28,
+        "hoj-management-api-1": 44.96,
+        "hoj-api-1": 64.5,
+        "hoj-core-1": 613.18,
+        "hoj-web-1": 85.09,
+        "hoj-db-1": 90.87,
+        "hoj-management-web-1": 0.02,
+        "hoj-storage-1": 0.62,
+        "hoj-load-test": 31.25
+      }
+    },
+    "metrics-final-online": {
+      "samples": 12,
+      "host_cpu_peak_percent": 39.551735760026965,
+      "host_cpu_mean_percent": 37.90797702952101,
+      "memory_available_min_gib": 59.4434700012207,
+      "load_peak": 2.61,
+      "container_cpu_peak": {
+        "hoj-load-test": 60.23,
+        "hoj-management-api-1": 4.86,
+        "hoj-api-1": 58.92,
+        "hoj-core-1": 26.86,
+        "hoj-web-1": 95.5,
+        "hoj-db-1": 137.41,
+        "hoj-management-web-1": 0.0,
+        "hoj-storage-1": 4.7
+      }
+    },
+    "metrics-php-fixed": {
+      "samples": 24,
+      "host_cpu_peak_percent": 48.678045515394906,
+      "host_cpu_mean_percent": 38.53200522264906,
+      "memory_available_min_gib": 59.58746337890625,
+      "load_peak": 3.14,
+      "container_cpu_peak": {
+        "hoj-load-test": 82.8,
+        "hoj-management-api-1": 79.52,
+        "hoj-api-1": 59.74,
+        "hoj-core-1": 28.27,
+        "hoj-web-1": 117.47,
+        "hoj-db-1": 175.67,
+        "hoj-management-web-1": 0.02,
+        "hoj-storage-1": 11.46
+      }
+    },
+    "metrics-full-final": {
+      "samples": 26,
+      "host_cpu_peak_percent": 45.90437980608492,
+      "host_cpu_mean_percent": 35.33103043437677,
+      "memory_available_min_gib": 59.55503463745117,
+      "load_peak": 3.44,
+      "container_cpu_peak": {
+        "hoj-load-test": 82.52,
+        "hoj-core-1": 37.45,
+        "hoj-management-api-1": 67.37,
+        "hoj-api-1": 65.18,
+        "hoj-web-1": 119.48,
+        "hoj-db-1": 192.64,
+        "hoj-management-web-1": 0.0,
+        "hoj-storage-1": 8.89
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package suggest.extractor.v1;
+
+service SuggestExtractor {
+  rpc ExtractFromUrl(ExtractFromUrlRequest) returns (ExtractResponse);
+  rpc ExtractBytes(ExtractBytesRequest) returns (ExtractResponse);
+}
+
+message ExtractFromUrlRequest {
+  string request_id = 1;
+  string url = 2;
+  string filename = 3;
+  ExtractOptions options = 4;
+}
+
+message ExtractBytesRequest {
+  string request_id = 1;
+  string filename = 2;
+  bytes content = 3;
+  ExtractOptions options = 4;
+}
+
+message ExtractOptions {
+  uint64 max_zip_depth = 1;
+  uint64 max_archive_files = 2;
+  uint64 max_file_bytes = 3;
+  uint64 max_total_uncompressed_bytes = 4;
+  optional bool include_summary_when_no_suggestion = 5;
+}
+
+message ExtractResponse {
+  repeated FileResult files = 1;
+  repeated string warnings = 2;
+}
+
+message FileResult {
+  string source_path = 1;
+  string file_type = 2;
+  string status = 3;
+  repeated ExtractedSection sections = 4;
+  repeated string errors = 5;
+  repeated string warnings = 6;
+}
+
+message ExtractedSection {
+  string heading = 1;
+  string text = 2;
+  string kind = 3;
+  float confidence = 4;
+  uint64 start_line = 5;
+  uint64 end_line = 6;
+}

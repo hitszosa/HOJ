@@ -1,0 +1,5 @@
+/target
+/.local/
+/.env
+/tool/node_modules/
+/test/node_modules/

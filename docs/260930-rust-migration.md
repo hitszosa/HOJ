@@ -1,5 +1,7 @@
 # 后端迁移到 Rust（Axum + sqlx）记录 · 2026-09-30
 
+> 2026-10-05：全站与班级排行榜已从 Rust、旧 Python 及前端删除，`/api/ranklist` 现返回 404。以下迁移经过保留为历史记录。
+
 分支：`exp/rust-backend`（从 `exp/monorepo` 切出）。旧 Python 版移到 `backend/legacy/`，迁移期保留做对照，切换完成后删除。
 
 ## 1. 接口对照（45 个，全部迁移）
@@ -32,7 +34,6 @@
 | GET `/api/submissions/{sid}/analysis` | `submissions.py::analysis` | `submissions.rs::analysis` |
 | GET `/api/submissions/{sid}/code` | `submissions.py::get_submission_code` | `submissions.rs::code` |
 | GET `/api/status` | `submissions.py::get_status_stream` | `submissions.rs::status` |
-| GET `/api/ranklist` | `ranking.py::get_ranklist` | `ranking.rs::ranklist` |
 | GET `/api/teacher/library` | `teacher_library.py::get_teacher_library` | `teacher_library.rs::library` |
 | POST `/api/teacher/library/sets` | `teacher_library.py::create_library_set` | `teacher_library.rs::create_set` |
 | POST `/api/teacher/library/deploy` | `teacher_library.py::deploy_library_set` | `teacher_library.rs::deploy` |

@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import {useSearchParams} from "next/navigation";
+import {useLibraryBasket} from "./LibraryBasket";
 import { useEffect, useRef, useState, useMemo } from "react";
 import { Badge, Button, Card, CardTitle, Empty } from "@/components/ui";
 import { api } from "@/lib/api";
@@ -39,7 +41,9 @@ const AVAILABLE_LANGUAGES = [
   { id: "python", label: "Python 3", desc: "CPython 3.10" },
 ];
 
-export function CategoryTreeView({ portal, user }: { portal: "teacher" | "student" | null; user?: string }) {
+export function CategoryTreeView({ portal, user, unified=false }: { portal: "teacher" | "student" | null; user?: string; unified?: boolean }) {
+  const params=useSearchParams();
+  const mineHref=(tab:string)=>`/library?view=mine&tab=${tab}${Number(params.get("oid"))>0?`&oid=${Number(params.get("oid"))}`:""}`;
   const [treeData, setTreeData] = useState<TreeNode | null>(null);
   const [totalProblems, setTotalProblems] = useState(0);
   const [totalSets, setTotalSets] = useState(0);
@@ -81,7 +85,9 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
   const [myStatus, setMyStatus] = useState<Partial<Record<string, SolvedStatus>>>({});
 
   // Teacher Problem Basket & Multi-Class Publishing
-  const [basket, setBasket] = useState<BasketItem[]>([]);
+  const [localBasket,setLocalBasket]=useState<BasketItem[]>([]);
+  const sharedBasket=useLibraryBasket();
+  const basket=sharedBasket?.basket??localBasket,setBasket=sharedBasket?.setBasket??setLocalBasket;
   const [teacherOfferings, setTeacherOfferings] = useState<CourseOffering[]>([]);
   const [selectedOfferingIds, setSelectedOfferingIds] = useState<number[]>([]);
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -389,9 +395,9 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
 
   // Toggle problem basket
   const handleToggleBasket = (p: ProblemItem & { parentSetTitle: string; parentSetId: string }) => {
-    const exists = basket.some((b) => b.slug === p.slug);
+    const exists = basket.some((b) => b.slug === p.slug && b.setId===p.parentSetId);
     if (exists) {
-      setBasket(basket.filter((b) => b.slug !== p.slug));
+      setBasket(basket.filter((b) => b.slug !== p.slug || b.setId!==p.parentSetId));
     } else {
       if (basket.length >= 100) {
         alert("选题篮最多可容纳 100 道题目");
@@ -489,7 +495,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
             </span>
           </div>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-fg">
-            算法题库
+            {unified?"别人的题":"题库"}
           </h1>
           <p className="mt-1 text-meta text-fg-muted">
             全面覆盖程序设计入门、核心数据结构、进阶算法模型、数论专项与高校竞赛真题，支持多级折叠检索与选题组合。
@@ -498,24 +504,16 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
 
         {/* Actions & View Mode Switcher */}
         <div className="flex flex-wrap items-center gap-3">
-          {portal === "teacher" && (
+          {portal === "teacher" && !unified && (
             <div className="flex items-center gap-2">
               <Link
-                href={
-                  selectedOfferingIds.length === 1
-                    ? `/teacher/offerings/${selectedOfferingIds[0]}?tab=ai`
-                    : "/teacher"
-                }
+                href={mineHref("create")}
                 className="flex items-center gap-1 rounded-control border border-brand/40 bg-brand/5 px-3 py-1.5 text-xs font-semibold text-brand hover:bg-brand/10 transition"
               >
-                <span>🤖 AI 辅助出题 →</span>
+                <span>✏️ 去出题 →</span>
               </Link>
               <Link
-                href={
-                  selectedOfferingIds.length === 1
-                    ? `/teacher/offerings/${selectedOfferingIds[0]}?tab=import`
-                    : "/teacher"
-                }
+                href={mineHref("import")}
                 className="flex items-center gap-1 rounded-control border border-line bg-surface px-3 py-1.5 text-xs font-medium text-fg-muted hover:text-fg hover:bg-surface-muted transition"
               >
                 <span>📂 导入题单 →</span>
@@ -663,7 +661,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                 >
                   <span className="flex items-center gap-2">
                     <span>🎓</span>
-                    <span>全部题库全景</span>
+                    <span>全部公开题目</span>
                   </span>
                   <span className="rounded-full bg-surface-muted px-1.5 py-0.5 text-xs font-mono text-fg-muted">
                     {totalProblems}
@@ -872,7 +870,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
               ) : (
                 filteredProblems.map((prob, idx) => {
                   const isExpanded = expandedProblemSlug === prob.slug;
-                  const inBasket = basket.some((b) => b.slug === prob.slug);
+                  const inBasket = basket.some((b) => b.slug === prob.slug && b.setId===prob.parentSetId);
                   const tone = getDifficultyTone(prob.difficulty || "L1");
                   const status = myStatus[prob.slug];
 
@@ -905,7 +903,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                             )}
                             {portal === "student" ? (
                               <Link
-                                href={`/student/problems/${prob.slug}`}
+                                href={`/library/problems/${prob.slug}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="text-base font-semibold text-fg hover:text-brand transition hover:underline"
                               >
@@ -942,7 +940,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                         <div className="flex items-center gap-2">
                           {portal === "student" && (
                             <Link
-                              href={`/student/problems/${prob.slug}`}
+                              href={`/library/problems/${prob.slug}`}
                               className="rounded-control bg-brand px-3 py-1.5 text-xs font-medium text-brand-fg hover:opacity-90 transition inline-flex items-center gap-1"
                             >
                               {status === "passed" ? "再次练习 →" : "开始解题 →"}
@@ -1025,7 +1023,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                           {portal === "student" && (
                             <div className="pt-3 flex justify-end border-t border-line/60">
                               <Link
-                                href={`/student/problems/${prob.slug}`}
+                                href={`/library/problems/${prob.slug}`}
                                 className="inline-flex items-center gap-1.5 rounded-control bg-brand px-4 py-2 text-xs font-medium text-brand-fg hover:opacity-90 transition shadow-sm"
                               >
                                 进入解题工作台并提交代码 →
@@ -1044,7 +1042,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
       </div>
 
       {/* Floating Teacher Problem Basket Bar */}
-      {portal === "teacher" && basket.length > 0 && (
+      {!sharedBasket && portal === "teacher" && basket.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t-2 border-brand bg-surface shadow-2xl transition-all">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-3.5">
             <div className="flex items-center gap-3">
@@ -1102,7 +1100,7 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
       )}
 
       {/* Multi-Class Publishing Modal */}
-      {showPublishModal && (
+      {!sharedBasket && showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-fg/40 p-4 backdrop-blur-sm">
           <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
             {publishResult ? (
@@ -1129,12 +1127,12 @@ export function CategoryTreeView({ portal, user }: { portal: "teacher" | "studen
                           <div className="font-medium text-fg">
                             {off ? `${off.code} · ${off.name} (${off.section}班)` : `教学班 #${r.offering_id}`}
                           </div>
-                          <Link
-                            href={r.batch_id ? `/teacher/batches/${r.batch_id}` : `/teacher/courses/${r.offering_id}`}
+                          <a
+                            href={r.batch_id ? `/assignments/${r.batch_id}` : `/courses/${r.offering_id}`}
                             className="text-xs text-brand hover:underline font-medium"
                           >
-                            前往班级查看 →
-                          </Link>
+                            {r.batch_id ? '查看编程作业 →' : '返回课程 →'}
+                          </a>
                         </div>
                       );
                     })}

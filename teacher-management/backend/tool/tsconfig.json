@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "types": ["bun"],
+    "strict": true,
+    "noEmit": true
+  },
+  "include": ["migrate-legacy.ts"]
+}

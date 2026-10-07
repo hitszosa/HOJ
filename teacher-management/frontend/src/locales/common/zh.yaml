@@ -1,0 +1,66 @@
+nav:
+  platformModules: "平台模块"
+  teachingModule: "教学管理"
+  programmingModule: "编程题库"
+  users: "用户"
+  problemBank: "题库"
+  systemSettings: "系统设置"
+  announcement: "站点公告"
+  recentActions: "最近动作"
+  preferences: "偏好设置"
+  hello: "您好，\n{name}"
+  myAccount: "帐号信息"
+  userDocs: 用户文档
+  login: "登录"
+  sso-login: "统一身份认证登录"
+  logout: "登出"
+  loggedOut: "登出成功"
+  confirmLogout:
+    title: "确认登出？"
+    content: "登出后将清除您的在线状态。"
+    yes: "确认登出"
+  dashboard: "总览"
+  courses: "课程"
+  darkTheme: "深色主题"
+  theme: 主题
+  languages: { zh: 简体中文, en: English }
+  colorThemes: { light: "浅色", dark: "深色", systemDefault: "跟随系统" }
+  cycleLanguage: "语言：{current}，点击切换为{next}"
+  cycleTheme: "主题：{current}，点击切换为{next}"
+  coursesList: "课程列表"
+  displayMode: 显示方式
+  displayModes: { list: "列表式", card: "卡片式" }
+  cycleDisplayMode: "显示方式：{current}，点击切换为{next}"
+  securityAlert:
+    title: 安全提示
+    content: "您的本地登录密码还是初始默认密码。（默认与用户名相同）\n为了您的帐号安全，请尽快修改密码。"
+  doNotShowAgain: 不再提示
+
+dialog:
+  title: "🤔 你确定吗？"
+  confirm: "确定"
+  cancel: "取消"
+  ok: 好
+  later: 以后再说
+  continueAnyway: 仍要继续
+
+myProfile: 我的资料
+adminAssigned: 以下信息为系统管理员指派，不可更改。
+username: 用户名
+realName: 姓名
+role: 角色
+password: 密码
+
+yearTerm: "{year}年{localizedTerm}学期"
+
+error:
+  general: 出错了。
+  internal: 内部错误
+  requestGeneral: 很抱歉，请求出错了。请稍后再试。
+  responseGeneral: 很抱歉，出错了。请稍后再试。
+  unauthorized: 登录已过期。
+  authentication_error: 用户名或密码错误！
+  checkNetwork: 出错了，请检查网络连接，或关闭VPN/代理软件。
+
+graded: 已批改
+notGraded: 未批改

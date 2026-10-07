@@ -241,6 +241,8 @@ struct Picked {
     knowledge: Vec<String>,
     samples: Vec<Case>,
     tests: Vec<Case>,
+    score:f64,
+    read_only:bool,
 }
 
 fn cases(v: &[BankCase]) -> Vec<Case> {
@@ -255,7 +257,7 @@ async fn load_set(s: &AppState, who: &Identity, set_id: &str) -> AppResult<(Stri
             .document
             .problems
             .into_iter()
-            .map(|p| Picked { slug: p.slug, title: p.title, statement: p.statement, knowledge: p.knowledge, samples: p.samples, tests: p.tests })
+            .map(|p| Picked { slug: p.slug, title: p.title, statement: p.statement, knowledge: p.knowledge, samples: p.samples, tests: p.tests, score:p.score,read_only:draft.document.read_only })
             .collect();
         return Ok((format!("draft:{}", did.chars().take(8).collect::<String>()), picked));
     }
@@ -270,13 +272,14 @@ async fn load_set(s: &AppState, who: &Identity, set_id: &str) -> AppResult<(Stri
             knowledge: p.knowledge.clone(),
             samples: cases(&p.samples),
             tests: cases(&p.tests),
+            score:100.0,read_only:false,
         })
         .collect();
     Ok((code, picked))
 }
 
 /// 按选择组装草稿文档。`tests_fallback_to_samples`：直接发布时无隐藏测试的题用样例充当测试。
-async fn compose(s: &AppState, who: &Identity, sel: &Selection, tests_fallback_to_samples: bool, allowed_languages: Option<String>) -> AppResult<Document> {
+pub(crate) async fn compose(s: &AppState, who: &Identity, sel: &Selection, tests_fallback_to_samples: bool, allowed_languages: Option<String>) -> AppResult<Document> {
     let mut sources: Vec<String> = Vec::new();
     let mut chosen: Vec<Picked> = Vec::new();
     if let Some(items) = sel.items.as_ref().filter(|i| !i.is_empty()) {
@@ -295,7 +298,7 @@ async fn compose(s: &AppState, who: &Identity, sel: &Selection, tests_fallback_t
             }
             if let Some(i) = problems.iter().position(|p| p.slug == slug) {
                 chosen.push(problems.swap_remove(i));
-            }
+            } else {return Err(AppError::unprocessable("选题已删除或重复，请刷新题库并重新选择"));}
         }
         if chosen.is_empty() {
             return Err(AppError::unprocessable("未在指定题单中找到勾选的题目"));
@@ -316,7 +319,8 @@ async fn compose(s: &AppState, who: &Identity, sel: &Selection, tests_fallback_t
             return Err(AppError::unprocessable("未选中任何题目"));
         }
     }
-    chosen.truncate(100);
+    if chosen.len()>100{return Err(AppError::unprocessable("一个题单最多 100 道题，请减少选题"));}
+    let read_only=chosen.iter().any(|p|p.read_only);
 
     let mut used = std::collections::HashSet::new();
     let problems: Vec<serde_json::Value> = chosen
@@ -336,7 +340,7 @@ async fn compose(s: &AppState, who: &Identity, sel: &Selection, tests_fallback_t
             let tests = if !p.tests.is_empty() { p.tests } else if tests_fallback_to_samples { samples.clone() } else { Vec::new() };
             serde_json::json!({
                 "slug": slug, "seq": seq, "title": title, "statement": statement,
-                "knowledge": p.knowledge, "samples": samples, "tests": tests,
+                "knowledge": p.knowledge, "samples": samples, "tests": tests, "score":p.score,
             })
         })
         .collect();
@@ -352,7 +356,7 @@ async fn compose(s: &AppState, who: &Identity, sel: &Selection, tests_fallback_t
         source_ref = source_ref.chars().take(255).collect();
     }
     document::validate(serde_json::json!({
-        "title": title, "source_ref": source_ref, "read_only": false,
+        "title": title, "source_ref": source_ref, "read_only": read_only,
         "allowed_languages": allowed_languages, "problems": problems,
     }))
 }

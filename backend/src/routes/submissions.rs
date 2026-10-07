@@ -14,7 +14,8 @@ use crate::{
     extract::{Path, Query},
     hustoj,
     response::{ApiOk, ok},
-    routes::{batches::load_problem, ranking::limit_offset},
+    pagination::limit_offset,
+    routes::batches::load_problem,
     state::AppState,
 };
 
@@ -270,6 +271,7 @@ struct StatusRow {
     offering_title: Option<String>,
     sim: Option<i32>,
     sim_s_id: Option<i32>,
+    can_view_code: i64,
 }
 
 #[derive(Serialize, TS)]
@@ -315,9 +317,9 @@ fn like_pattern(s: &str) -> String {
 }
 
 /// 两段查询共用的 WHERE：自测（problem_id=0）永不出现在状态流里。
-fn push_filters(qb: &mut QueryBuilder<'_, sqlx::MySql>, q: &StatusQuery, who: &Identity) {
+fn push_filters(qb: &mut QueryBuilder<'_, sqlx::MySql>, q: &StatusQuery, who: &Identity, force_mine: bool) {
     qb.push(" WHERE s.problem_id > 0");
-    if q.only_mine == Some(true) {
+    if force_mine || q.only_mine == Some(true) {
         qb.push(" AND s.user_id = ").push_bind(who.user.clone());
     } else if let Some(u) = q.user_id.as_deref().map(str::trim).filter(|u| !u.is_empty()) {
         let pattern = like_pattern(u);
@@ -339,13 +341,21 @@ fn push_filters(qb: &mut QueryBuilder<'_, sqlx::MySql>, q: &StatusQuery, who: &I
 
 async fn status(State(s): State<AppState>, who: Identity, Query(q): Query<StatusQuery>) -> AppResult<ApiOk<StatusPage>> {
     let (limit, offset) = limit_offset(q.page, q.page_size, 20);
-    if let Some(oid) = q.offering_id.filter(|&o| o > 0) {
-        offering_access(&s.db, &who, oid, Need::READ).await?;
-    }
+    // 无班级范围时只查本人；学生不能通过 only_mine=false 或 user_id 绕过。
+    let force_mine = if let Some(oid) = q.offering_id.filter(|&o| o > 0) {
+        offering_access(&s.db, &who, oid, Need::READ).await?.role != Role::Teacher
+    } else { true };
     let mut qb = QueryBuilder::new(
         "SELECT s.solution_id, s.problem_id, s.user_id, COALESCE(NULLIF(u.nick,''), NULLIF(s.nick,''), s.user_id) AS nick,
                 s.result, s.time, s.memory, s.language, s.code_length, s.in_date, p.title AS problem_title,
-                cs.offering_id, cs.batch_id, o.title AS offering_title, sm.sim, sm.sim_s_id
+                cs.offering_id, cs.batch_id, o.title AS offering_title, sm.sim, sm.sim_s_id,
+                CASE WHEN ");
+    qb.push_bind(who.user.clone()).push("='admin' OR s.user_id=").push_bind(who.user.clone())
+        .push(" OR o.teacher_id=").push_bind(who.user.clone())
+        .push(" OR EXISTS(SELECT 1 FROM cm_enrollment staff WHERE staff.offering_id=cs.offering_id AND staff.user_id=")
+        .push_bind(who.user.clone()).push(" AND staff.role='teacher' AND staff.status='active')")
+        .push(" OR (cs.offering_id IS NULL AND EXISTS(SELECT 1 FROM cm_enrollment pupil JOIN cm_offering owned ON owned.offering_id=pupil.offering_id WHERE pupil.user_id=s.user_id AND pupil.status='active' AND owned.teacher_id=")
+        .push_bind(who.user.clone()).push(")) THEN 1 ELSE 0 END AS can_view_code
          FROM jol.solution s
          LEFT JOIN jol.sim sm ON sm.s_id=s.solution_id
          LEFT JOIN jol.problem p ON p.problem_id=s.problem_id
@@ -353,7 +363,7 @@ async fn status(State(s): State<AppState>, who: Identity, Query(q): Query<Status
          LEFT JOIN cm_submission cs ON cs.submission_id=s.solution_id
          LEFT JOIN cm_offering o ON o.offering_id=cs.offering_id",
     );
-    push_filters(&mut qb, &q, &who);
+    push_filters(&mut qb, &q, &who, force_mine);
     qb.push(" ORDER BY s.solution_id DESC LIMIT ").push_bind(limit).push(" OFFSET ").push_bind(offset);
     let rows: Vec<StatusRow> = qb.build_query_as().fetch_all(&s.db).await?;
 
@@ -361,7 +371,7 @@ async fn status(State(s): State<AppState>, who: Identity, Query(q): Query<Status
         "SELECT COUNT(*) FROM jol.solution s LEFT JOIN jol.users u ON u.user_id=s.user_id
          LEFT JOIN cm_submission cs ON cs.submission_id=s.solution_id",
     );
-    push_filters(&mut count, &q, &who);
+    push_filters(&mut count, &q, &who, force_mine);
     let total: i64 = count.build_query_scalar().fetch_one(&s.db).await?;
 
     let items = rows
@@ -370,7 +380,7 @@ async fn status(State(s): State<AppState>, who: Identity, Query(q): Query<Status
             problem_title: r.problem_title.unwrap_or_else(|| format!("题目 #{}", r.problem_id)),
             result_label: hustoj::result_label(r.result),
             language_name: hustoj::language_name(r.language),
-            can_view_code: who.is_admin() || r.user_id == who.user,
+            can_view_code: r.can_view_code != 0,
             offering_title: r.offering_title.unwrap_or_default(),
             solution_id: r.solution_id,
             problem_id: r.problem_id,
@@ -426,7 +436,7 @@ pub struct SubmissionCode {
     pub sim: Option<Similarity>,
 }
 
-/// 本人、管理员、该提交所属教学班的教师，或该学生任一教学班的主讲教师可看源码。
+/// 本人、管理员、该提交所属教学班的教师可看源码；任课不授权查看学生在其他班或自由练习中的代码。
 async fn code(State(s): State<AppState>, who: Identity, Path(sid): Path<u32>) -> AppResult<ApiOk<SubmissionCode>> {
     let row = sqlx::query!(
         r#"SELECT s.solution_id, s.user_id, s.problem_id, p.title AS "problem_title?", s.result, s.time, s.memory, s.language,
@@ -444,17 +454,6 @@ async fn code(State(s): State<AppState>, who: Identity, Path(sid): Path<u32>) ->
     let mut allowed = row.user_id == who.user || who.is_admin();
     if !allowed && let Some(oid) = row.offering_id {
         allowed = offering_access(&s.db, &who, oid, Need::TEACH).await.is_ok();
-    }
-    if !allowed {
-        allowed = sqlx::query_scalar!(
-            r#"SELECT 1 AS "x!: i32" FROM cm_enrollment e JOIN cm_offering o ON o.offering_id=e.offering_id
-               WHERE e.user_id=? AND o.teacher_id=? LIMIT 1"#,
-            row.user_id,
-            who.user
-        )
-        .fetch_optional(&s.db)
-        .await?
-        .is_some();
     }
     if !allowed {
         return Err(AppError::forbidden("仅提交者本人或授课教师可以查看源代码"));

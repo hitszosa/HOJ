@@ -12,6 +12,7 @@ pub struct AppState {
     /// 运维账号：写 jol.problem / jol.users / custominput。
     pub ops: MySqlPool,
     pub http: reqwest::Client,
+    pub ai_http: reqwest::Client,
     pub key: SigningKey,
     pub sessions: SessionCache,
     pub bank: Arc<ProblemBank>,
@@ -29,10 +30,15 @@ impl AppState {
         let db = pool(&cfg.database_url)?;
         let ops = pool(&cfg.ops_database_url)?;
         let http = reqwest::Client::builder().no_proxy().redirect(reqwest::redirect::Policy::none()).build()?;
+        let mut ai_http = reqwest::Client::builder().no_proxy()
+            .connect_timeout(std::time::Duration::from_secs(6))
+            .redirect(reqwest::redirect::Policy::none());
+        if let Some(proxy) = &cfg.ai.proxy { ai_http = ai_http.proxy(reqwest::Proxy::all(proxy)?); }
+        let ai_http = ai_http.build()?;
         let key = SigningKey::load_or_create(&cfg.root.join("data/local/session.key"))?;
         let bank = Arc::new(ProblemBank::load(&cfg.root.join("data")));
         let sessions = SessionCache::new(cfg.session_cache_ttl);
-        Ok(Self { cfg: Arc::new(cfg), db, ops, http, key, sessions, bank })
+        Ok(Self { cfg: Arc::new(cfg), db, ops, http, ai_http, key, sessions, bank })
     }
 }
 

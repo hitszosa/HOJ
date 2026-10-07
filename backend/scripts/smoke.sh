@@ -39,7 +39,6 @@ echo "== insights student (403)"; St $B/offerings/1/insights
 echo "== students"; T $B/offerings/1/students
 echo "== add students"; T -X POST $B/offerings/1/students -d '{"students":[{"raw_text":"s002,2026002,乙\ns003"}]}'
 echo "== drop"; T -X DELETE $B/offerings/1/students/s003
-echo "== ranklist"; St "$B/ranklist?offering_id=1&page_size=5"
 echo "== status"; St "$B/status?only_mine=true&page_size=2"
 echo "== settings"; T -X PATCH $B/batches/$BID -d '{"ai_enabled":false,"allowed_languages":null}'
 echo "== copy"; T -X POST $B/batches/$BID/copy

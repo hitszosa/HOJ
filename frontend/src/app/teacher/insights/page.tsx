@@ -1,2 +1,2 @@
-import { Platform } from "@/components/Platform";
-export default function Page() { return <Platform/>; }
+import { redirect } from "next/navigation";
+export default function Page() { redirect("/management/courses"); }

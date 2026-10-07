@@ -5,6 +5,8 @@ use std::{collections::HashMap, sync::LazyLock};
 use axum::{
     Router,
     extract::State,
+    http::HeaderMap,
+    response::{IntoResponse, Response},
     routing::{delete, get, post},
 };
 use chrono::NaiveDateTime;
@@ -16,7 +18,7 @@ use crate::{
     access::{Batch, Need, Offering, Role, offering_access, offering_batches},
     auth::Identity,
     error::{AppError, AppResult},
-    extract::{Json, Path},
+    extract::{Json, Path, Query},
     hustoj,
     response::{ApiOk, Empty, ok},
     state::AppState,
@@ -28,6 +30,8 @@ pub fn router() -> Router<AppState> {
         .route("/api/courses/{cid}/offerings", post(create_offering))
         .route("/api/offerings/{oid}", get(offering).patch(update_offering))
         .route("/api/offerings/{oid}/insights", get(insights))
+        .route("/api/offerings/{oid}/grades", get(grades))
+        .route("/api/offerings/{oid}/grades/export", get(export_grades))
         .route("/api/offerings/{oid}/students", get(students).post(add_students))
         .route("/api/offerings/{oid}/students/{uid}", delete(drop_student))
 }
@@ -55,18 +59,34 @@ pub struct CourseOffering {
     pub role: Option<Role>,
 }
 
-/// 当前用户参与的全部教学班（管理员为全部）。
+#[derive(sqlx::FromRow)]
+struct CourseOfferingRow {
+    course_id: u32,
+    code: String,
+    name: String,
+    credit: Option<f64>,
+    hoa_repo: Option<String>,
+    offering_id: u32,
+    term: String,
+    section: String,
+    title: Option<String>,
+    status: String,
+    teacher_id: String,
+    role: Option<String>,
+}
+
+/// 当前用户参与的活跃教学班；历史记录仅通过明确的历史详情请求读取。
 async fn courses(State(s): State<AppState>, who: Identity) -> AppResult<ApiOk<Vec<CourseOffering>>> {
-    let rows = sqlx::query!(
+    let rows = sqlx::query_as::<_, CourseOfferingRow>(
         r#"SELECT c.course_id, c.code, c.name, CAST(c.credit AS DOUBLE) AS credit, c.hoa_repo,
                   o.offering_id, o.term, o.section, o.title, o.status, o.teacher_id,
-                  CASE WHEN o.teacher_id=? OR ?='admin' THEN 'teacher' ELSE e.role END AS "role?: String"
+                  CASE WHEN o.teacher_id=? OR ?='admin' THEN 'teacher' ELSE e.role END AS role
            FROM cm_course c JOIN cm_offering o ON o.course_id=c.course_id
            LEFT JOIN cm_enrollment e ON e.offering_id=o.offering_id AND e.user_id=? AND e.status='active'
-           WHERE ?='admin' OR o.teacher_id=? OR e.user_id IS NOT NULL
-           ORDER BY o.term DESC, c.code"#,
-        who.user, who.user, who.user, who.user, who.user
+           WHERE o.status='active' AND (?='admin' OR o.teacher_id=? OR e.user_id IS NOT NULL)
+           ORDER BY o.term DESC, c.code"#
     )
+    .bind(&who.user).bind(&who.user).bind(&who.user).bind(&who.user).bind(&who.user)
     .fetch_all(&s.db)
     .await?;
     Ok(ok(rows
@@ -196,7 +216,9 @@ async fn result_counts(s: &AppState, oid: u32) -> AppResult<Vec<ResultCount>> {
     Ok(rows.into_iter().map(|r| ResultCount { result: r.result, label: hustoj::result_label(r.result), count: r.count }).collect())
 }
 
-async fn offering(State(s): State<AppState>, who: Identity, Path(oid): Path<u32>) -> AppResult<ApiOk<OfferingDetail>> {
+#[derive(Default,Deserialize)]
+struct DetailQuery { include_insights: Option<bool> }
+async fn offering(State(s): State<AppState>, who: Identity, Path(oid): Path<u32>, Query(query): Query<DetailQuery>) -> AppResult<ApiOk<OfferingDetail>> {
     let off = offering_access(&s.db, &who, oid, Need::READ).await?;
     let student = off.role == Role::Student;
     // 题单与统计各一次查询，按 batch_id 合并，避免逐题单 N+1。学生只看已开放题单与已放开的题目。
@@ -256,7 +278,7 @@ async fn offering(State(s): State<AppState>, who: Identity, Path(oid): Path<u32>
             BatchSummary { batch, problem_count, done, student_count: total, staff }
         })
         .collect();
-    let insights = if off.role.is_staff() {
+    let insights = if off.role.is_staff() && query.include_insights.unwrap_or(true) {
         Some(OfferingInsights { students: student_stats(&s, oid).await?, results: result_counts(&s, oid).await? })
     } else {
         None
@@ -286,6 +308,67 @@ async fn insights(State(s): State<AppState>, who: Identity, Path(oid): Path<u32>
         offering: off,
         source: "HUSTOJ 实际提交，按结果码统计",
     }))
+}
+
+#[derive(Serialize, sqlx::FromRow)]
+struct GradeRow {
+    user_id: String, student_no: String, real_name: String,
+    batch_id: u32, batch_title: String, required: i64, passed: i64, attempts: i64, score: f64,
+    total_weight: f64, passed_weight: f64,
+}
+
+async fn grades(State(s): State<AppState>, who: Identity, Path(oid): Path<u32>) -> AppResult<ApiOk<Vec<GradeRow>>> {
+    Ok(ok(grade_rows(&s, &who, oid).await?))
+}
+
+async fn grade_rows(s: &AppState, who: &Identity, oid: u32) -> AppResult<Vec<GradeRow>> {
+    let off = offering_access(&s.db, &who, oid, Need::READ).await?;
+    if !off.role.is_staff() { return Err(AppError::forbidden("仅本班教师与助教可导出成绩")); }
+    let mut rows = sqlx::query_as::<_, GradeRow>(r#"
+        SELECT e.user_id, COALESCE(NULLIF(e.student_no,''),e.user_id) AS student_no,
+          COALESCE(NULLIF(u.nick,''),e.user_id) AS real_name, b.batch_id, b.title AS batch_title,
+          COUNT(CASE WHEN bp.required=1 AND bp.score>0 THEN bp.problem_id END) AS required,
+          COUNT(CASE WHEN bp.required=1 AND bp.score>0 AND progress.passed=1 THEN bp.problem_id END) AS passed,
+          CAST(COALESCE(SUM(CASE WHEN bp.required=1 THEN bp.score ELSE 0 END),0) AS DOUBLE) AS total_weight,
+          CAST(COALESCE(SUM(CASE WHEN bp.required=1 AND progress.passed=1 THEN bp.score ELSE 0 END),0) AS DOUBLE) AS passed_weight,
+          CAST(COALESCE(SUM(progress.attempts),0) AS SIGNED) AS attempts, CAST(0 AS DOUBLE) AS score
+        FROM cm_enrollment e JOIN jol.users u ON u.user_id=e.user_id COLLATE utf8mb4_general_ci
+        JOIN cm_batch b ON b.offering_id=e.offering_id AND b.status IN ('published','closed')
+        LEFT JOIN cm_batch_problem bp ON bp.batch_id=b.batch_id
+        LEFT JOIN (
+          SELECT cs.batch_id,cs.user_id,s.problem_id,MAX(s.result=4) AS passed,COUNT(*) AS attempts
+          FROM cm_submission cs JOIN jol.solution s ON s.solution_id=cs.submission_id
+          WHERE cs.submit_state='promoted' AND cs.offering_id=? GROUP BY cs.batch_id,cs.user_id,s.problem_id
+        ) progress ON progress.batch_id=b.batch_id AND progress.user_id=e.user_id AND progress.problem_id=bp.problem_id
+        WHERE e.offering_id=? AND e.role='student' AND (e.status='active' OR ?=1) AND u.defunct='N'
+        GROUP BY e.user_id,e.student_no,u.nick,b.batch_id,b.title
+        ORDER BY e.student_no,e.user_id,b.seq
+    "#).bind(oid).bind(oid).bind(off.archived()).fetch_all(&s.db).await?;
+    for row in &mut rows {
+        // Each problem contributes once even after multiple AC/WA submissions.
+        row.score = if row.total_weight > 0.0 { (row.passed_weight * 10000.0 / row.total_weight).round() / 100.0 } else { 0.0 };
+    }
+    Ok(rows)
+}
+
+fn csv_cell(value: &str) -> String {
+    let guarded = if value.starts_with(['=', '+', '-', '@', '\t', '\r']) {
+        format!("'{value}")
+    } else { value.to_owned() };
+    format!("\"{}\"", guarded.replace('"', "\"\""))
+}
+
+async fn export_grades(State(s): State<AppState>, who: Identity, Path(oid): Path<u32>) -> AppResult<Response> {
+    let rows = grade_rows(&s, &who, oid).await?;
+    let mut csv = String::from("\u{feff}学号,姓名,实验,通过题数,必做题数,提交次数,成绩（100分）,状态\r\n");
+    for row in rows {
+        let status = if row.attempts == 0 { "未提交" } else if row.required > 0 && row.passed == row.required { "全部通过" } else { "未全部通过" };
+        let values = [row.student_no, row.real_name, row.batch_title, row.passed.to_string(), row.required.to_string(), row.attempts.to_string(), row.score.to_string(), status.to_owned()];
+        csv.push_str(&values.iter().map(|v| csv_cell(v)).collect::<Vec<_>>().join(","));
+        csv.push_str("\r\n");
+    }
+    let filename = format!("attachment; filename=\"programming-grades-{oid}.csv\"");
+    Ok(([("content-type", "text/csv; charset=utf-8"), ("content-disposition", filename.as_str())], csv).into_response())
 }
 
 // ---------------------------------------------------------------- 学生名单
@@ -423,6 +506,7 @@ async fn add_students(
     State(s): State<AppState>,
     who: Identity,
     Path(oid): Path<u32>,
+    headers: HeaderMap,
     Json(body): Json<AddStudentsRequest>,
 ) -> AppResult<ApiOk<AddStudentsResponse>> {
     offering_access(&s.db, &who, oid, Need::TEACH_WRITE).await?;
@@ -430,16 +514,17 @@ async fn add_students(
     if entries.is_empty() {
         return Err(AppError::unprocessable("有效学生名单不能为空"));
     }
+    if entries.iter().any(|st| !ENROLL_ID.is_match(&st.user_id)) {
+        return Err(AppError::validation("名单包含不合法的学生账号"));
+    }
+    if !who.is_admin() && entries.iter().any(|st| st.role == "teacher") {
+        return Err(AppError::forbidden("负责教师名单由管理员维护"));
+    }
     let mut count = 0;
-    for st in entries.iter().filter(|st| ENROLL_ID.is_match(&st.user_id)) {
-        sqlx::query!(
-            "INSERT IGNORE INTO jol.users(user_id,email,ip,nick,school,reg_time) VALUES(?,?,'127.0.0.1',?,'HITSZ',NOW())",
-            st.user_id,
-            format!("{}@hitsz.edu.cn", st.user_id),
-            st.nick
-        )
-        .execute(&s.ops)
-        .await?;
+    for st in &entries {
+        super::account::exchange(&s, &headers, "provision", serde_json::json!({
+            "username":st.user_id, "real_name":st.nick, "role": if st.role == "teacher" { 1 } else { 0 }
+        })).await?;
         sqlx::query!(
             "INSERT INTO cm_enrollment(offering_id,user_id,role,student_no,status,created_at,updated_at) VALUES(?,?,?,?,'active',NOW(),NOW())
              ON DUPLICATE KEY UPDATE status='active', role=VALUES(role), student_no=COALESCE(VALUES(student_no),student_no), updated_at=NOW()",

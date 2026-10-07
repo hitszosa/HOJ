@@ -1,0 +1,7 @@
+FROM hoj-api-builder:library-delete AS build
+RUN rm -rf /src/src /src/tests
+COPY backend/src /src/src
+COPY backend/tests /src/tests
+RUN SQLX_OFFLINE=true CARGO_BUILD_JOBS=4 cargo test --locked --offline --test http && SQLX_OFFLINE=true CARGO_BUILD_JOBS=4 cargo build --locked --offline --release --bin hoj
+FROM hoj-api:amd64
+COPY --from=build /src/target/release/hoj /usr/local/bin/hoj

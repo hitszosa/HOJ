@@ -36,10 +36,10 @@ async fn health(State(s): State<AppState>) -> ApiOk<Health> {
         dev_login: s.cfg.dev_login,
         sso_configured: s.cfg.sso_configured,
         sso_header: s.cfg.sso_header.clone(),
-        ai_configured: s.cfg.ai.url.is_some(),
-        login_url: "/oj/loginpage.php",
-        logout_url: "/oj/logout.php",
-        hustoj_url: "/oj/course.php",
+        ai_configured: s.cfg.ai.configured(),
+        login_url: "/management/login",
+        logout_url: "/management/login",
+        hustoj_url: "/management/home",
     })
 }
 

@@ -12,6 +12,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     // 单一蓝白风格：变量固定在 globals.css 的 :root，组件树对风格无感知
     <html lang="zh-CN">
+      <head><link rel="stylesheet" href="/platform-shell.css" /></head>
       <body>
         <AppShell>{children}</AppShell>
       </body>

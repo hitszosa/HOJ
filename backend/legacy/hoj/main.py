@@ -10,7 +10,7 @@ import os
 from fastapi import FastAPI, Response
 
 from hoj import config  # noqa: F401  加载 backend/.env，须先于读取环境变量的模块
-from hoj.api import (batches, drafts, offerings, problem_sets, public_problems, ranking, session,
+from hoj.api import (batches, drafts, offerings, problem_sets, public_problems, session,
                      submissions, system, teacher_library)
 
 
@@ -34,5 +34,5 @@ async def request_guard(request, call_next):
 
 
 for module in (system, session, offerings, batches, submissions, drafts, teacher_library,
-               problem_sets, public_problems, ranking):
+               problem_sets, public_problems):
     app.include_router(module.router)

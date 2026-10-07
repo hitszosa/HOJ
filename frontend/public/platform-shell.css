@@ -1,0 +1,24 @@
+/* One navigation shell for courses, authoring, practice and administration. */
+.hoj-app-header { width:100%; height:104px; font-family:Arial,"PingFang SC","Microsoft YaHei",sans-serif; box-shadow:0 1px 5px #00000014; }
+.hoj-app-header--sticky { position:sticky; top:0; z-index:50; }
+.hoj-unified-toolbar .v-toolbar__content { display:block; }
+.hoj-app-top { display:flex; align-items:center; justify-content:space-between; gap:16px; height:56px; padding:0 24px; background:#2563eb; color:#fff; }
+.hoj-app-brand { color:#fff; font-size:20px; font-weight:600; text-decoration:none; white-space:nowrap; }
+.hoj-app-account { display:flex; align-items:center; gap:14px; }
+.hoj-app-role { padding:3px 9px; border:1px solid #ffffff60; border-radius:20px; font-size:12px; white-space:nowrap; }
+.hoj-app-signin { color:#fff; text-decoration:none; }
+.hoj-app-nav { display:flex; gap:8px; align-items:stretch; height:48px; padding:0 24px; background:#fff; color:#475569; overflow-x:auto; scrollbar-width:thin; }
+.hoj-app-nav-link { display:flex; align-items:center; padding:0 16px; border-bottom:3px solid transparent; color:#475569; font-size:14px; text-decoration:none; white-space:nowrap; }
+.hoj-app-nav-link:hover { color:#2563eb; background:#eff6ff; }
+.hoj-app-nav-link[aria-current="page"] { border-bottom-color:#2563eb; color:#2563eb; font-weight:600; }
+.hoj-app-header a:focus-visible,.hoj-app-header summary:focus-visible { outline:2px solid currentColor; outline-offset:-3px; }
+.hoj-account-menu { position:relative; font-size:14px; }
+.hoj-account-menu summary { cursor:pointer; list-style:none; color:#fff; }
+.hoj-account-menu summary::-webkit-details-marker { display:none; }
+.hoj-account-dropdown { position:absolute; right:0; top:32px; width:180px; border-radius:8px; border:1px solid #e2e8f0; background:#fff; color:#334155; box-shadow:0 8px 24px #00000014; overflow:hidden; }
+.hoj-account-dropdown a,.hoj-account-dropdown button { display:block; width:100%; padding:12px 16px; font:inherit; color:inherit; text-align:left; text-decoration:none; border:0; background:transparent; cursor:pointer; }
+.hoj-account-dropdown a:hover,.hoj-account-dropdown button:hover { background:#eff6ff; }
+.v-theme--dark .hoj-app-nav { background:rgb(var(--v-theme-surface)); }
+.v-theme--dark .hoj-app-nav-link { color:rgb(var(--v-theme-on-surface)); }
+.v-theme--dark .hoj-app-nav-link[aria-current="page"] { color:#93c5fd; border-bottom-color:#93c5fd; }
+@media(max-width:600px) { .hoj-app-top,.hoj-app-nav { padding-left:12px; padding-right:12px; } .hoj-app-brand { font-size:16px; } .hoj-app-account { gap:8px; } .hoj-app-nav { gap:0; } .hoj-app-nav-link { padding:0 12px; } }

@@ -1,0 +1,40 @@
+name: hoj-management
+services:
+  db:
+    image: mariadb:11.8
+    container_name: hoj-management-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: grader
+      MARIADB_USER: grader
+      MARIADB_PASSWORD: ${MANAGEMENT_DB_PASSWORD}
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+      TZ: Asia/Shanghai
+    ports:
+      - "127.0.0.1:13307:3306"
+    volumes:
+      - database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+  storage:
+    image: hoj-local-minio:2025-10-15
+    build:
+      context: .
+      dockerfile: Dockerfile.storage
+    container_name: hoj-management-storage
+    command: server /data --console-address :9001
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: hoj-local-storage
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    ports:
+      - "127.0.0.1:9002:9000"
+      - "127.0.0.1:9003:9001"
+    volumes:
+      - objects:/data
+volumes:
+  database:
+  objects:

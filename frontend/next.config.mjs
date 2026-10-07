@@ -1,16 +1,21 @@
 /** @type {import('next').NextConfig} */
-// HUSTOJ 是账号/题库/判题的主体：/oj 前缀代理到 HUSTOJ 根（8080），
-// 用于原生登录/课程/退出入口；/template 代理其绝对资源路径。不开放泛代理，
-// /api 始终指向 Course Service。
-const HUSTOJ = process.env.COURSE_HUSTOJ_URL || "http://127.0.0.1:8080";
+// All browser traffic stays in the teaching UI; account and judge adapters are internal.
 const nextConfig = {
   reactStrictMode: true,
-  async rewrites() {
+  async redirects() {
     return [
-      { source: "/api/:path*", destination: `${process.env.COURSE_API_URL || "http://127.0.0.1:8100"}/api/:path*` },
-      { source: "/oj/:path*", destination: `${HUSTOJ}/:path*` },
-      { source: "/template/:path*", destination: `${HUSTOJ}/template/:path*` },
+      { source: "/", destination: "/management/home", permanent: false },
+      { source: "/login", destination: "/management/login", permanent: false },
+      { source: "/oj/:path*", destination: "/management/home", permanent: false },
+      { source: "/template/:path*", destination: "/management/home", permanent: false },
     ];
+  },
+  async rewrites() {
+    return { beforeFiles: [
+      { source: "/management-api/:path*", destination: `${process.env.MANAGEMENT_API_URL || "http://127.0.0.1:8101"}/api/:path*` },
+      { source: "/management/:path*", destination: `${process.env.MANAGEMENT_WEB_URL || "http://127.0.0.1:3101"}/management/:path*` },
+      { source: "/api/:path*", destination: `${process.env.COURSE_API_URL || "http://127.0.0.1:8100"}/api/:path*` },
+    ], afterFiles: [], fallback: [] };
   },
 };
 
