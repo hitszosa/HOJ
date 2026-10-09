@@ -1,4 +1,4 @@
-# Apply only after repeating the isolated AC/WA checks on the destination host.
+# Compatibility override; these settings are also the defaults in compose.yml.
 # SYS_ADMIN is needed for the existing chroot compiler's bind mounts.
 services:
   core:

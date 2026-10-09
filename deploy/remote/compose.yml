@@ -1,6 +1,6 @@
 name: hoj
 x-common: &common
-  network_mode: host
+  network_mode: service:db
   restart: unless-stopped
   logging:
     driver: json-file
@@ -8,6 +8,10 @@ x-common: &common
 services:
   db:
     <<: *common
+    network_mode: bridge
+    ports:
+      - "3100:3100"
+      - "9002:9002"
     image: mariadb:11.8
     environment:
       MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
@@ -24,7 +28,10 @@ services:
   core:
     <<: *common
     image: hoj-core:amd64
-    privileged: true
+    privileged: false
+    cap_add: [SYS_ADMIN, SYS_PTRACE]
+    cap_drop: [NET_RAW]
+    security_opt: ["no-new-privileges:true"]
     environment:
       JUDGE_DB_PASSWORD: ${JUDGE_DB_PASSWORD}
       HOJ_ALLOWED_ORIGINS: ${HOJ_ORIGINS}

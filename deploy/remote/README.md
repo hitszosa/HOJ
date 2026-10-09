@@ -22,13 +22,13 @@
 | 原生账号适配器 | `127.0.0.1:8080` | PHP 会话及 `jol` 数据库 |
 | C/C++ 评测器 | 无对外 HTTP 页面，6 个评测任务槽 | `data/judge`、`data/judge-log` |
 
-数据库、内部网页与接口使用 Linux host networking 并明确绑定 loopback。只有统一入口与用于签名附件传输的存储端口对网络监听。数据库应用账户限定为 localhost / 127.0.0.1。评测器单独运行，保留 chroot、ptrace 和非特权 judge 用户；评测容器需要 privileged，当前部署应作为专用测试机器使用。
+平台服务共用数据库容器的 bridge 网络命名空间，内部网页和 API 绑定该命名空间的 loopback，不使用主机网络。只向主机发布 3100 与 9002；数据库和内部端口不发布。数据库应用账户仍限定 localhost / 127.0.0.1。判题容器关闭 privileged，保留现有 chroot、ptrace、非特权 judge 用户及 SYS_ADMIN / SYS_PTRACE，移除 NET_RAW 并启用 no-new-privileges。SYS_ADMIN 仍较宽，同一平台的服务仍共享网络命名空间；这不等于完全隔离，不宜在此主机放无关敏感业务。
 
 ## 全新安装
 
 准备已提交的源代码。现用判题与账号适配源码快照已纳入 `vendor/hustoj/`，文件哈希和来源见其中的 `snapshot.json`；评测器在 x86_64 上重新编译。
 
-上传时排除 `.env`、`.env.local`、`.local`、`backend/data/local`、`node_modules`、`target`、`.next` 和 `.git`，避免携带本机密码、会话密钥和测试数据。保留 `backend/.sqlx` 与公共题库数据。教师页面现在由镜像中的 Node 构建阶段编译，无需上传本机 `dist`。根目录 `.dockerignore` 排除私有配置与运行数据。教学界面已移除监控和存储控制台页面，后台对象存储继续用于作业附件。
+源码通过 Git bundle 或干净 Git checkout 同步，保留版本历史；构建使用 git archive，只包含已提交的源码。`.env`、`.local`、运行数据与私有账户文件由 `.gitignore` 和 `.dockerignore` 排除，单独传输备份。保留 `backend/.sqlx` 与公共题库数据。教师页面由镜像中的 Node 构建阶段编译，无需上传本机 `dist`。教学界面已移除监控和存储控制台页面，后台对象存储继续用于作业附件。
 
 安装 Docker、Compose 与 Buildx 后，在全新部署目录中执行：
 
@@ -56,7 +56,11 @@ docker compose --env-file .env -f deploy/remote/compose.yml logs --tail 100 api 
 bash deploy/remote/backup.sh
 ```
 
-`backup.sh` 生成数据库转储与配置、评测数据、会话密钥和附件的文件归档，保存在 `backups/`。备份含密码，应按私有文件保存，并另行复制到其他机器；本机备份不能覆盖整机磁盘损坏风险。文件归档应在无并行附件写入时执行。容器设置 `unless-stopped`，Docker 已启用开机启动；不要使用删除数据卷或删除 `data/` 的方式重启。
+`backup.sh` 调用 `backup.py`：先暂停统一入口，等待判题队列清空，再停止写入服务；数据库锁表转储、应用用户授权、私有配置、评测数据、附件与完整 Git bundle 一起保存。无论成功或失败都恢复原先运行的容器；超时未完成的判题会取消备份。备份在 `backups/sets/<时间>/`，完整后才发布 SHA-256 清单，默认保留 14 份。私有只读导出位于 `/home/lhy/.hoj-backups`。每日 04:00 的 systemd timer 运行备份，期间平台短暂停止服务；失败可用 `systemctl status hoj-backup` 检查。
+
+`backup-pull.py` 使用受限制 SSH 密钥从独立机器下载并核对所有文件，保留 30 份。该密钥只能列出和读取已完成备份，不能开 shell、转发端口或修改文件。本机 Mac 的 LaunchAgent 在 04:30、登录及联网后定期重试；Mac 休眠或不能访问校园网时不会产生新的独立副本，成功时间见其 `last-success.json`。备份含密码，目录 0700、文件 0600。单机服务可用性仍需另一台服务器；备份本身不是高可用。
+
+`active-release.json` 固定实际镜像源码版本，`active-deployment.json` 记录配置 Git commit、七个镜像 ID、网络及验证记录。应用镜像源码与部署配置允许使用不同 commit，分别记录；升级配置不冒充重新构建应用。`start.sh` 默认使用活动清单，不依赖可变 amd64 标签。容器设置 `unless-stopped`，Docker 已启用开机启动；不要删除数据目录来重启。
 
 ## 验证与边界
 
@@ -77,7 +81,7 @@ python3 deploy/remote/smoke.py \
 
 2026-10-05 课程入口统一为「教学管理 → 课程」。课程页直接列出编程实验，提供教师选题、新建编程题单及成绩导出入口。编程题库仅提供题库和题单；独立编程课程列表、开班和名单页面已从前端删除。旧课程/名单链接按已授权的课程关联跳转，不假设管理课程 ID 与编程教学班 ID 相同。
 
-2026-10-05 已从代码移除全站及班级排行榜：页面、导航、前端类型、Rust/Python 接口及排行 SQL 均删除。旧排行榜页面显示页面未找到，`/api/ranklist` 返回 404。教师仍可查看学生作业完成情况、代码和成绩并导出；这些教学数据不生成名次。
+学生没有全站或班级排行榜，旧 `/api/ranklist` 返回 404。后续按教师反馈加入的每题排行仅课程授权教师可用，学生不能查询其他学生的排行、代码或成绩。
 
 服务器判题启用 C、C++ 和 Python 3。Java 尚未安装运行环境，提交接口会明确拒绝，避免进入无人处理的队列。Python 沙箱保留 chroot、ptrace 与资源限制；`patch-python-runtime.py` 使复制到沙箱的解释器及标准库可由 judge 用户读取、执行，不修改 bind mount 的系统库权限。
 

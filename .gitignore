@@ -50,3 +50,5 @@ teacher-management/backend/test/node_modules/
 /build-logs/
 /*-deploy-stamp
 /hustoj-src/
+/active-release.json
+/active-deployment.json

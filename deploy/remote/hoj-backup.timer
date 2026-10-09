@@ -1,0 +1,10 @@
+[Unit]
+Description=Daily HOJ backup
+
+[Timer]
+OnCalendar=*-*-* 04:00:00 Asia/Shanghai
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

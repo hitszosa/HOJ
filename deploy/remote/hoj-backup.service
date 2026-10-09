@@ -1,0 +1,11 @@
+[Unit]
+Description=Consistent HOJ database and file backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/hoj
+ExecStart=/usr/bin/python3 /opt/hoj/deploy/remote/backup.py
+UMask=0077
+TimeoutStartSec=15min
