@@ -22,8 +22,9 @@ def main():
     os.umask(0o077)
     root = Path(args.output).resolve()
     root.mkdir(parents=True, mode=0o700, exist_ok=True)
-    ssh = ['ssh', '-p', str(args.port), '-i', args.key, '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes',
-           '-o', 'StrictHostKeyChecking=yes', '-o', 'UserKnownHostsFile=' + args.known_hosts,
+    known_hosts = str(Path(args.known_hosts).resolve()).replace('\\', '\\\\').replace('"', '\\"')
+    ssh = ['ssh', '-F', '/dev/null', '-p', str(args.port), '-i', args.key, '-o', 'IdentitiesOnly=yes', '-o', 'BatchMode=yes',
+           '-o', 'StrictHostKeyChecking=yes', '-o', 'UserKnownHostsFile="' + known_hosts + '"',
            '-o', 'ConnectTimeout=15', '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=3', args.host]
     with (root / '.pull.lock').open('w') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
