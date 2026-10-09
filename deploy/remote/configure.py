@@ -48,7 +48,7 @@ rights={'jol':['ALL ON jol.*'],'grader':['ALL ON grader.*'],
                 'INSERT ON jol.source_code','INSERT ON jol.source_code_user']}
 for user,key in [('jol','JUDGE_DB_PASSWORD'),('codemind','COURSE_DB_PASSWORD'),
                  ('codemind_ops','COURSE_OPS_PASSWORD'),('grader','MANAGEMENT_DB_PASSWORD')]:
-    # Host networking uses loopback, so application database accounts are local only.
+    # Services share an isolated network namespace and connect over its loopback.
     for host in ['localhost','127.0.0.1']:
         sql+=f"CREATE USER '{user}'@'{host}' IDENTIFIED BY '{values[key]}';\n"
         for right in rights[user]:

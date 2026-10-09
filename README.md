@@ -13,9 +13,9 @@
 
 统一入口包含教学管理、课程作业与题库。当前部署由七个服务组成：编程 API、教学管理 API、Next.js 页面、教师管理页面、判题器、MariaDB 和附件对象存储。
 
-服务器安装与操作见 [远程部署说明](deploy/remote/README.md)，Harbor 发布、版本清单和 dell0 迁移进度见 [发布记录](deploy/remote/harbor-releases.md)。镜像从已提交的 Git 源码构建，使用 commit 标签和发布 digest；`build.sh` 与 `start.sh` 共用这套清单。功能修改直接进入正式源码和六个 Dockerfile，不再新增按功能命名的补丁 Dockerfile。
+交给新机器部署的步骤见 [部署交接说明](deploy/remote/handoff.md)，现有服务器操作见 [远程部署说明](deploy/remote/README.md)。本次先整理源码与现有部署，Harbor 发布和 dell0 迁移暂缓。镜像从已提交的 Git 源码构建，使用 commit 标签；发布到仓库后使用 digest。`build.sh` 与 `start.sh` 共用版本清单。功能修改直接进入正式源码和六个 Dockerfile，不再新增按功能命名的补丁 Dockerfile。
 
-判题与账号适配源码快照及文件哈希保存在 `vendor/hustoj/`。私有 `.env`、数据库、隐藏测试、学生附件和部署备份不纳入 Git 或构建上下文。当前新增提交保存在本机及私有 Git 恢复归档中，尚未推送到 GitHub。
+判题与账号适配源码快照及文件哈希保存在 `vendor/hustoj/`。本次整理分支为 `codex/deployment-cleanup`。私有 `.env`、数据库、隐藏测试、学生附件和部署备份不纳入 Git 或构建上下文；迁移业务数据需要另外传输私有备份。
 
 ## 🏗️ 架构概览
 
