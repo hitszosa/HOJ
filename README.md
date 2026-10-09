@@ -15,7 +15,7 @@
 
 交给新机器部署的步骤见 [部署交接说明](deploy/remote/handoff.md)，现有服务器操作见 [远程部署说明](deploy/remote/README.md)。本次先整理源码与现有部署，Harbor 发布和 dell0 迁移暂缓。镜像从已提交的 Git 源码构建，使用 commit 标签；发布到仓库后使用 digest。`build.sh` 与 `start.sh` 共用版本清单。功能修改直接进入正式源码和六个 Dockerfile，不再新增按功能命名的补丁 Dockerfile。
 
-判题与账号适配源码快照及文件哈希保存在 `vendor/hustoj/`。本次整理分支为 `codex/deployment-cleanup`。私有 `.env`、数据库、隐藏测试、学生附件和部署备份不纳入 Git 或构建上下文；迁移业务数据需要另外传输私有备份。
+判题与账号适配源码快照及文件哈希保存在 `vendor/hustoj/`。本次整理已合入 `main`，部署以主分支已提交源码为准。私有 `.env`、数据库、隐藏测试、学生附件和部署备份不纳入 Git 或构建上下文；迁移业务数据需要另外传输私有备份。
 
 ## 🏗️ 架构概览
 

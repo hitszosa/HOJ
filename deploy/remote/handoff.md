@@ -1,13 +1,13 @@
 # 部署交接：整理后的教学平台
 
-2026-10-09：源码整理分支为 `codex/deployment-cleanup`，包含现有教学功能、正式构建入口、版本清单、网络权限调整和备份工具。Harbor 暂缓；尚未迁移到 dell0。现有平台继续运行在 `10.249.12.21:3100`，服务器目录 `/opt/hoj`。
+2026-10-09：源码整理已合入 `main`（原整理分支 `codex/deployment-cleanup`），包含现有教学功能、正式构建入口、版本清单、网络权限调整和备份工具。Harbor 暂缓；尚未迁移到 dell0。现有平台继续运行在 `10.249.12.21:3100`，服务器目录 `/opt/hoj`。
 
 ## 先取得正确源码
 
 目标环境为 Linux x86_64，安装 Git、Python 3.10+、Docker Engine、Compose 插件与 Buildx。构建需要能访问依赖和基础镜像源。以下安装和恢复命令在目标机器以 root 执行，项目目录固定为 `/opt/hoj`：
 
 ```bash
-git clone --branch codex/deployment-cleanup --single-branch \
+git clone --branch main --single-branch \
   https://github.com/hitszosa/HOJ.git /opt/hoj
 cd /opt/hoj
 git status --short
@@ -56,7 +56,7 @@ python3 deploy/remote/create-admin.py
 
 恢复顺序：
 
-1. 在空 `/opt/hoj` 签出本分支，解包 `files.tar.gz` 到项目根目录，保留文件原有所有者和权限。创建空的 `init`、`data/mysql`、`data/judge-log` 目录。不要复制正在运行的 `data/mysql`。
+1. 在空 `/opt/hoj` 签出 `main`，解包 `files.tar.gz` 到项目根目录，保留文件原有所有者和权限。创建空的 `init`、`data/mysql`、`data/judge-log` 目录。不要复制正在运行的 `data/mysql`。
 2. 导入并校验七个镜像；使用恢复的 `active-release.json` 生成覆盖配置。下面命令只启动数据库，不启动写入服务。
 
    ```bash
