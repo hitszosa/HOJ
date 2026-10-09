@@ -21,4 +21,11 @@
 .v-theme--dark .hoj-app-nav { background:rgb(var(--v-theme-surface)); }
 .v-theme--dark .hoj-app-nav-link { color:rgb(var(--v-theme-on-surface)); }
 .v-theme--dark .hoj-app-nav-link[aria-current="page"] { color:#93c5fd; border-bottom-color:#93c5fd; }
+/* 教学前端（Next）没有 Vuetify：由 <html data-theme="dark"> 启用同一套深色导航。 */
+:root[data-theme="dark"] .hoj-app-nav { background:#212121; }
+:root[data-theme="dark"] .hoj-app-nav-link { color:#eeeeee; }
+:root[data-theme="dark"] .hoj-app-nav-link:hover,.v-theme--dark .hoj-app-nav-link:hover { color:#93c5fd; background:#ffffff14; }
+:root[data-theme="dark"] .hoj-app-nav-link[aria-current="page"] { color:#93c5fd; border-bottom-color:#93c5fd; }
+:root[data-theme="dark"] .hoj-account-dropdown,.v-theme--dark .hoj-account-dropdown { border-color:#3d3d3d; background:#2a2a2a; color:#eeeeee; }
+:root[data-theme="dark"] .hoj-account-dropdown a:hover,:root[data-theme="dark"] .hoj-account-dropdown button:hover,.v-theme--dark .hoj-account-dropdown a:hover,.v-theme--dark .hoj-account-dropdown button:hover { background:#ffffff14; }
 @media(max-width:600px) { .hoj-app-top,.hoj-app-nav { padding-left:12px; padding-right:12px; } .hoj-app-brand { font-size:16px; } .hoj-app-account { gap:8px; } .hoj-app-nav { gap:0; } .hoj-app-nav-link { padding:0 12px; } }

@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { api } from "@/lib/api";
 import type { Me } from "@/api/generated/Me";
 import { platformNavigation, platformRole, platformSection } from "@/lib/platform-navigation";
+import { watchTheme } from "@/lib/theme";
 
 export function AppShell({children}:{children:ReactNode}) {
  const path=usePathname();
@@ -12,6 +13,8 @@ export function AppShell({children}:{children:ReactNode}) {
  const [profile,setProfile]=useState<{username:string;real_name:string}|null>(null);
  const [locale,setLocale]=useState('zh');
  const [logoutError,setLogoutError]=useState('');
+ // 深色模式跟随与教学管理端共享的偏好及系统设置
+ useEffect(()=>watchTheme(),[]);
  useEffect(()=>{
   let active=true,broadcastReceived=false;
   const onIdentity=(event:Event)=>{broadcastReceived=true;if(active)setIdentity((event as CustomEvent<Me|null>).detail||null);};
