@@ -52,3 +52,4 @@ teacher-management/backend/test/node_modules/
 /hustoj-src/
 /active-release.json
 /active-deployment.json
+/compose.start.json
