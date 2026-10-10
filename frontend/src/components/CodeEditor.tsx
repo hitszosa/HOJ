@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useThemeName, type ThemeName } from "@/lib/theme";
 
 declare global { interface Window { ace?: any } }
 let loader: Promise<any> | undefined;
@@ -18,6 +19,7 @@ function loadAce() {
 }
 
 const modes: Record<string, string> = { python: "python", c: "c_cpp", cpp: "c_cpp", java: "java" };
+const ACE_THEMES: Record<ThemeName, string> = { light: "ace/theme/xcode", dark: "ace/theme/tomorrow_night" };
 const filenames: Record<string, string> = { python: "main.py", c: "main.c", cpp: "main.cpp", java: "Main.java" };
 
 export function CodeEditor({ value, language, onChange, readOnly = false, className }: {
@@ -28,6 +30,9 @@ export function CodeEditor({ value, language, onChange, readOnly = false, classN
   const current = useRef({ value, language, onChange, readOnly });
   current.current = { value, language, onChange, readOnly };
   const [state, setState] = useState<"loading" | "ready" | "fallback">("loading");
+  const theme = useThemeName();
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
 
   useEffect(() => {
     let active = true;
@@ -37,7 +42,7 @@ export function CodeEditor({ value, language, onChange, readOnly = false, classN
       ace.config.set("basePath", "/editor/ace");
       const instance = ace.edit(host.current);
       editor.current = instance;
-      instance.setTheme("ace/theme/xcode");
+      instance.setTheme(ACE_THEMES[themeRef.current]);
       instance.session.setUseWorker(false);
       instance.session.setUseWrapMode(false);
       instance.session.setTabSize(4);
@@ -66,6 +71,7 @@ export function CodeEditor({ value, language, onChange, readOnly = false, classN
   useEffect(() => { if (editor.current && editor.current.getValue() !== value) editor.current.setValue(value, -1); }, [value]);
   useEffect(() => { editor.current?.session.setMode(`ace/mode/${modes[language] || "text"}`); }, [language]);
   useEffect(() => { editor.current?.setReadOnly(readOnly); }, [readOnly]);
+  useEffect(() => { editor.current?.setTheme(ACE_THEMES[theme]); }, [theme]);
 
   return <div className={`code-frame ${className || ""}`}>
     <div className="code-toolbar shrink-0"><span className="font-mono">{filenames[language] || "source"}</span><span>{readOnly ? "只读" : "UTF-8 · 4 空格缩进"}</span></div>

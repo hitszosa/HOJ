@@ -4,7 +4,8 @@
 
 /* ============================================================================
    单一蓝白风格：一组 CSS 变量。组件只消费变量，不定义颜色。
-   用户已确认取消多风格（hustoj-portals-3），保留教学蓝作为唯一风格。
+   用户已确认取消多风格（hustoj-portals-3），保留教学蓝作为唯一风格；
+   深色模式只是同一风格的另一组变量值（见下方 data-theme="dark"）。
    ========================================================================== */
 
 :root {
@@ -52,6 +53,46 @@
   --lh-body: 1.6;
 
   --shadow-card: none;
+}
+
+/* 深色：与教学管理端（Vuetify dark，背景 #121212 / 表面 #212121）一致。
+   由 <html data-theme="dark"> 启用，见 src/lib/theme.ts。 */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --brand: 96 165 250;
+  --brand-fg: 15 23 42;
+  --brand-soft: 30 58 95;
+
+  --surface: 33 33 33;
+  --surface-raised: 40 40 40;
+  --surface-muted: 18 18 18;
+
+  --border: 61 61 61;
+  --border-strong: 82 82 82;
+
+  --fg: 238 238 238;
+  --fg-muted: 170 170 170;
+  --fg-subtle: 128 128 128;
+
+  --ok: 74 222 128;
+  --ok-soft: 20 60 35;
+  --warn: 251 191 36;
+  --warn-soft: 66 50 10;
+  --danger: 248 113 113;
+  --danger-soft: 70 25 25;
+
+  --chart-1: 96 165 250;
+  --chart-2: 125 211 252;
+  --chart-3: 251 191 36;
+  --chart-4: 244 114 182;
+
+  --zebra: 38 38 38;
+}
+
+body {
+  background-color: rgb(var(--surface-muted));
+  color: rgb(var(--fg));
 }
 
 @layer components {

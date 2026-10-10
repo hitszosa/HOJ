@@ -8,6 +8,7 @@ import { Badge, Button, Card, CardTitle, Empty } from "@/components/ui";
 import { api } from "@/lib/api";
 import * as echarts from "echarts";
 import { MarkdownView } from "./MarkdownView";
+import { themeColor, useThemeName } from "@/lib/theme";
 
 import type { TreeNode } from "@/api/generated/TreeNode";
 import type { BankProblem as ProblemItem } from "@/api/generated/BankProblem";
@@ -44,6 +45,7 @@ const AVAILABLE_LANGUAGES = [
 export function CategoryTreeView({ portal, user, unified=false }: { portal: "teacher" | "student" | null; user?: string; unified?: boolean }) {
   const params=useSearchParams();
   const mineHref=(tab:string)=>`/library?view=mine&tab=${tab}${Number(params.get("oid"))>0?`&oid=${Number(params.get("oid"))}`:""}`;
+  const themeName = useThemeName();
   const [treeData, setTreeData] = useState<TreeNode | null>(null);
   const [totalProblems, setTotalProblems] = useState(0);
   const [totalSets, setTotalSets] = useState(0);
@@ -196,10 +198,15 @@ export function CategoryTreeView({ portal, user, unified=false }: { portal: "tea
 
       const echartsData = formatNode(treeData);
 
+      // echarts 不读 CSS 变量：按当前主题取色，深色模式下文字与连线不至于看不见。
+      const fg = themeColor("--fg");
       const option: echarts.EChartsOption = {
         tooltip: {
           trigger: "item",
           triggerOn: "mousemove",
+          backgroundColor: themeColor("--surface-raised"),
+          borderColor: themeColor("--border-strong"),
+          textStyle: { color: fg },
           formatter: (params: any) => {
             const d = params.data;
             const isLeaf = d.kind === "leaf";
@@ -225,7 +232,10 @@ export function CategoryTreeView({ portal, user, unified=false }: { portal: "tea
               verticalAlign: "middle",
               align: "right",
               fontSize: 12,
+              color: fg,
             },
+            lineStyle: { color: themeColor("--border-strong") },
+            itemStyle: { color: themeColor("--surface"), borderColor: themeColor("--brand") },
             leaves: {
               label: {
                 position: "right",
@@ -287,7 +297,7 @@ export function CategoryTreeView({ portal, user, unified=false }: { portal: "tea
       ro.disconnect();
       window.removeEventListener("resize", handleResize);
     };
-  }, [treeData]);
+  }, [treeData, themeName]);
 
   // When viewMode toggles to "echarts", resize chart smoothly
   useEffect(() => {

@@ -41,6 +41,8 @@ describe("风格：不动组件", () => {
     const offenders: string[] = [];
     for (const file of listFiles(SRC_ROOT)) {
       if (file.endsWith(".test.tsx") || file.endsWith(".test.ts") || file.endsWith("setup.ts")) continue;
+      // theme.ts 只把 globals.css 的 token 转成 echarts 需要的 rgb() 字符串，本身不定义颜色。
+      if (relative(SRC_ROOT, file) === join("lib", "theme.ts")) continue;
       const source = readFileSync(file, "utf8");
       source.split("\n").forEach((line, index) => {
         if (
